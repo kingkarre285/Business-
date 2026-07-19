@@ -1,0 +1,20 @@
+{
+  "name": "quiverquant-client",
+  "version": "1.0.0",
+  "description": "TypeScript client for the QuiverQuantitative alternative-data API",
+  "type": "module",
+  "main": "dist/quiverClient.js",
+  "types": "dist/quiverClient.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "example": "tsx src/example.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
