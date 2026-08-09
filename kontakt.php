@@ -1,6 +1,6 @@
 <?php
 /* ============================================================================
- * Kontaktformular – Praxis am Lindenhof
+ * Kontaktformular – Psychotherapiepraxis Jessica Holm
  * ----------------------------------------------------------------------------
  * Läuft auf jedem IONOS-Webhosting-Paket mit PHP 7.4 oder neuer.
  * Kein Framework, keine Datenbank, keine Cookies, keine Sessions.
@@ -11,11 +11,11 @@
 /* --- Konfiguration -------------------------------------------------------- */
 
 // Wohin sollen die Anfragen gehen?
-$empfaenger = 'praxis@ihre-domain.de';
+$empfaenger = 'kontakt@holm-psychotherapie.de';
 
 // Absenderadresse. MUSS eine Adresse Ihrer eigenen Domain sein, sonst
 // stuft der Mailserver die Nachricht als Spam ein oder lehnt sie ab.
-$absender = 'website@ihre-domain.de';
+$absender = 'website@holm-psychotherapie.de';
 
 // Betreffzeile der Benachrichtigungs-E-Mail
 $betreff = 'Neue Terminanfrage über die Website';
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $fehler['versand'] = 'Die Nachricht konnte technisch nicht versendet werden. '
-                           . 'Bitte rufen Sie stattdessen an oder schreiben Sie direkt an praxis@ihre-domain.de.';
+                           . 'Bitte rufen Sie stattdessen an oder schreiben Sie direkt an kontakt@holm-psychotherapie.de.';
     }
 }
 ?>
@@ -141,10 +141,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kontakt &amp; Terminanfrage | Praxis am Lindenhof</title>
-<meta name="description" content="Terminanfrage und Kontakt zur Praxis am Lindenhof in Musterstadt. Telefonzeiten, Anfahrt und Kontaktformular.">
+<title>Kontakt &amp; Terminanfrage | Psychotherapiepraxis Jessica Holm</title>
+<meta name="description" content="Terminanfrage und Kontakt zur Psychotherapiepraxis Jessica Holm in Frankfurt am Main. Telefonzeiten, Anfahrt und Kontaktformular.">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://www.ihre-domain.de/kontakt.php">
+<link rel="canonical" href="https://www.holm-psychotherapie.de/kontakt.php">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -155,9 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <header class="site-header">
   <div class="container site-header__inner">
     <a class="brand" href="index.html">
-      <span class="brand__mark" aria-hidden="true">l.</span>
+      <span class="brand__mark" aria-hidden="true">jh.</span>
       <span class="brand__text">
-        <span class="brand__name">Praxis am Lindenhof</span>
+        <span class="brand__name">Psychotherapiepraxis Jessica Holm</span>
         <span class="brand__sub">Tiefenpsychologisch fundierte Psychotherapie</span>
       </span>
     </a>
@@ -311,29 +311,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <dl class="data-list">
               <dt>Adresse</dt>
               <dd>
-                Musterstraße 12<br>
-                12345 Musterstadt<br>
-                <span class="text-sm text-muted">2. Obergeschoss, Aufzug vorhanden</span>
+                Sömmerringstraße 23<br>
+                60322 Frankfurt am Main<br>
+                <span class="text-sm text-muted">Praxisgemeinschaft für Psychotherapie</span>
               </dd>
 
               <dt>Telefon</dt>
-              <dd><a href="tel:+49301234567">030 1234567</a></dd>
+              <dd><a href="tel:+491716581464">0171 6581464</a></dd>
 
               <dt>Telefonzeit</dt>
-              <dd>Dienstag &amp; Donnerstag<br>12:00–13:00 Uhr</dd>
+              <dd>[Telefonzeit eintragen]</dd>
 
               <dt>E-Mail</dt>
-              <dd><a href="mailto:praxis@ihre-domain.de">praxis@ihre-domain.de</a></dd>
+              <dd><a href="mailto:kontakt@holm-psychotherapie.de">kontakt@holm-psychotherapie.de</a></dd>
             </dl>
 
             <hr style="margin: 1.5rem 0;">
 
             <h3 style="font-size: 1.0625rem;">Sprechzeiten</h3>
             <dl class="data-list text-sm">
-              <dt>Mo – Do</dt>
-              <dd>09:00 – 18:00 Uhr</dd>
-              <dt>Freitag</dt>
-              <dd>09:00 – 13:00 Uhr</dd>
+              <dt>Zeiten</dt>
+              <dd>[Bitte hier Ihre Zeiten eintragen]</dd>
             </dl>
             <p class="text-sm text-muted" style="margin-top: 1rem; margin-bottom: 0;">
               Termine ausschließlich nach Vereinbarung.
@@ -343,17 +341,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="card" style="margin-top: 1.5rem;">
             <h3 style="font-size: 1.0625rem;">Anfahrt</h3>
             <p class="text-sm">
-              <strong>Öffentlich:</strong> U-Bahn-Linie [x], Station [Name],
-              zwei Minuten Fußweg. Buslinien [x] und [y] halten direkt vor dem Haus.
+              Die Praxis befindet sich in der Praxisgemeinschaft für Psychotherapie,
+              in unmittelbarer Nähe des Oeder Wegs im Nordend.
             </p>
             <p class="text-sm">
-              <strong>Mit dem Auto:</strong> Parkplätze in der [Straße], Parkhaus
-              [Name] in 200 Metern Entfernung.
+              <strong>Öffentliche Verkehrsmittel:</strong><br>
+              Haltestelle Grüneburgweg (U1, U2, U3, U8)<br>
+              Haltestelle Musterschule (U5)<br>
+              Haltestelle Adlerflychtplatz (Bus 36)
             </p>
             <p class="text-sm mb-0">
-              <strong>Barrierefreiheit:</strong> Das Haus verfügt über einen Aufzug.
-              Bitte geben Sie mir vorab Bescheid, wenn Sie besondere Unterstützung
-              benötigen.
+              <strong>Mit dem Auto:</strong> Umliegend finden Sie kostenpflichtige
+              Parkplätze. Das nächstgelegene Parkhaus ist das Turmcenter,
+              Querstraße 7–9, 60322 Frankfurt am Main.
             </p>
             <!-- HINWEIS ZUM DATENSCHUTZ: Eine eingebettete Google Maps oder OpenStreetMap
                  Karte lädt Daten von fremden Servern und überträgt die IP-Adresse Ihrer
@@ -393,9 +393,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="container">
     <div class="footer__grid">
       <div>
-        <p class="footer__title">Praxis am Lindenhof</p>
+        <p class="footer__title">Psychotherapiepraxis Jessica Holm</p>
         <p class="text-sm" style="opacity: 0.85;">
-          Dr. phil. Anna Muster<br>
+          Dipl.-Psych. Jessica Holm<br>
           Psychologische Psychotherapeutin<br>
           Tiefenpsychologisch fundierte Psychotherapie
         </p>
@@ -404,9 +404,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div>
         <p class="footer__title">Kontakt</p>
         <ul class="footer__list">
-          <li>Musterstraße 12<br>12345 Musterstadt</li>
-          <li><a href="tel:+49301234567">030 1234567</a></li>
-          <li><a href="mailto:praxis@ihre-domain.de">praxis@ihre-domain.de</a></li>
+          <li>Sömmerringstraße 23<br>60322 Frankfurt am Main</li>
+          <li><a href="tel:+491716581464">0171 6581464</a></li>
+          <li><a href="mailto:kontakt@holm-psychotherapie.de">kontakt@holm-psychotherapie.de</a></li>
         </ul>
       </div>
 
@@ -424,7 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="footer__bottom">
-      <span>&copy; <span data-current-year>2026</span> Praxis am Lindenhof</span>
+      <span>&copy; <span data-current-year>2026</span> Psychotherapiepraxis Jessica Holm</span>
       <span>Diese Website verwendet keine Cookies und kein Tracking.</span>
     </div>
   </div>

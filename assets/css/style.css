@@ -335,7 +335,11 @@ hr {
   letter-spacing: -0.01em;
 }
 
-.brand__text { display: flex; flex-direction: column; }
+.brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;   /* erlaubt dem langen Praxisnamen zu schrumpfen statt zu überlaufen */
+}
 
 .brand__name {
   font-family: var(--font-head);
@@ -351,9 +355,13 @@ hr {
   letter-spacing: 0.02em;
 }
 
-@media (max-width: 30rem) {
+@media (max-width: 34rem) {
+  .site-header__inner { gap: var(--sp-3); min-height: 5rem; }
+  .brand { gap: var(--sp-3); }
   .brand__mark { width: 2.75rem; height: 2.75rem; font-size: 1.125rem; }
+  .brand__name { font-size: var(--fs-sm); line-height: 1.3; }
   .brand__sub { display: none; }
+  .nav-toggle { padding: var(--sp-2); }
 }
 
 .nav-toggle {
@@ -540,6 +548,138 @@ hr {
 .hero__text { max-width: 34rem; }
 
 .hero__text h1 { margin-bottom: var(--sp-5); }
+
+/* Bild im Hero – das Schlüsselmotiv der Praxis */
+.hero__bild {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--c-bg-alt);
+}
+
+.hero__bild img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+/* Kontaktstreifen direkt unter dem Hero */
+.kontaktstreifen {
+  background: var(--c-bg-alt);
+  padding-block: var(--sp-6);
+}
+
+.kontaktstreifen__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (max-width: 56rem) {
+  .kontaktstreifen__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 30rem) {
+  .kontaktstreifen__grid { grid-template-columns: 1fr; }
+}
+
+.kontaktstreifen dt {
+  font-family: var(--font-head);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: var(--sp-2);
+}
+
+.kontaktstreifen dd {
+  margin: 0;
+  color: var(--c-heading);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+/* Vollbreites Bildband, etwa für ein Zitat */
+.bildband {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: 26rem;
+  padding-block: var(--sp-8);
+  color: #fff;
+  /* Dient als Rückfall, falls das Bild nicht geladen werden kann */
+  background-color: var(--c-bg-deep);
+}
+
+.bildband__bild {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* picture ist standardmäßig inline und hat keine eigene Höhe – ohne diese
+   Regel liefe height: 100% am Bild ins Leere. */
+.bildband__bild picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bildband__bild img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Der untere Bildbereich mit den Felsen ist strukturreicher als der
+     gleichmäßige Horizont und trägt den Ausschnitt besser. */
+  object-position: center 72%;
+}
+
+/* Abdunkelung, damit der Text auf jedem Bildausschnitt sicher lesbar bleibt */
+.bildband::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(46, 48, 71, 0.74);
+}
+
+/* Der Inhalt liegt über Bild und Abdunkelung */
+.bildband > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.bildband .quote { color: #fff; }
+
+/* Auf dem Bild braucht die Quellenangabe vollen Kontrast */
+.bildband .quote footer { opacity: 1; color: #e8eaf0; }
+
+/* Bild-Text-Abschnitt, im Wechsel links und rechts */
+.medien {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-8);
+  align-items: center;
+}
+
+@media (max-width: 56rem) {
+  .medien { grid-template-columns: 1fr; gap: var(--sp-6); }
+}
+
+.medien__bild {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.medien__bild img { width: 100%; height: auto; }
+
+/* Bild zuerst im Quelltext, aber rechts dargestellt */
+.medien--gedreht .medien__bild { order: 2; }
+
+@media (max-width: 56rem) {
+  .medien--gedreht .medien__bild { order: 0; }
+}
 
 .hero__aside {
   background: var(--c-bg-alt);

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # ANPASSEN: eigene Domain eintragen
-Sitemap: https://www.ihre-domain.de/sitemap.xml
+Sitemap: https://www.holm-psychotherapie.de/sitemap.xml

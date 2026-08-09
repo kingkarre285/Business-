@@ -29,6 +29,7 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `assets/fonts/` | Nunito und Roboto als lokale Dateien |
 | `assets/js/main.js` | Mobiles Menü (die Seite funktioniert auch ohne JavaScript) |
 | `assets/img/favicon.svg` | Symbol im Browser-Tab |
+| `assets/img/*.jpg` / `*.webp` | Bilder, übernommen von der bisherigen Website |
 
 ## 1a. Gestaltung
 
@@ -57,54 +58,61 @@ Alle Farben stehen gesammelt im Block `:root` ganz oben in `style.css`.
 
 ### Unbedingt erforderlich
 
-- [ ] **Impressum ausfüllen.** Alle `[eckigen Klammern]` in `impressum.html` ersetzen.
-      Als Heilberuf brauchen Sie zusätzlich: Berufsbezeichnung, verleihenden Staat,
-      zuständige Kammer, Aufsichtsbehörde (KV) und die berufsrechtlichen Regelungen.
-      Ein unvollständiges Impressum ist abmahnfähig.
-- [ ] **Datenschutzerklärung prüfen.** Platzhalter in `datenschutz.html` ersetzen,
-      besonders Hoster, Speicherdauer der Logfiles und die zuständige
-      Landesdatenschutzbehörde.
+- [ ] **Impressum durchlesen.** Anschrift, Kammer, Aufsichtsbehörde und
+      berufsrechtliche Regelungen sind eingetragen. Offen: die
+      Berufshaftpflichtversicherung und die Bildnachweise. Ein unvollständiges
+      Impressum ist abmahnfähig.
+- [ ] **Datenschutzerklärung prüfen.** Verantwortliche Stelle und Aufsichtsbehörde
+      (Hessischer Beauftragter für Datenschutz) sind eingetragen. Offen: die
+      Speicherdauer der Logfiles bei IONOS und das Datum unter „Stand".
 - [ ] **Auftragsverarbeitungsvertrag mit IONOS abschließen.** Im IONOS-Kundenkonto
       unter „Vertrag zur Auftragsverarbeitung“. Muss vor dem Livegang stehen.
-- [ ] **E-Mail-Adressen in `kontakt.php` eintragen** (siehe Abschnitt 4).
+- [ ] **Absenderpostfach anlegen** und die Werte in `kontakt.php` prüfen (Abschnitt 4).
 - [ ] **SSL-Zertifikat bei IONOS aktivieren** (im Paket enthalten, ein Klick).
 
 ### Inhalte anpassen
 
-Suchen und ersetzen Sie in **allen** Dateien:
+Die echten Praxisdaten sind bereits eingesetzt – Name, Anschrift, Telefon,
+E-Mail, Kammer, Aufsichtsbehörde, Werdegang und Anfahrt stammen von
+holm-psychotherapie.de. Offen sind noch:
 
-| Suchen | Ersetzen durch |
+- [ ] **Sprechzeiten und Telefonzeit.** Stehen als `[Bitte hier Ihre Zeiten
+      eintragen]` in `kontakt.php` und `ablauf-kosten.html`. Auf der alten
+      Website waren keine Zeiten angegeben.
+- [ ] **Honorare** in der Tabelle in `ablauf-kosten.html` (`[xxx] €`) –
+      für Selbstzahler, Coaching und die ADHS-Diagnostik.
+- [ ] **Wartezeit** in `leistungen.html` – und diese Angabe regelmäßig aktualisieren.
+- [ ] **Berufshaftpflichtversicherung** im Impressum (Versicherer und Geltungsbereich).
+- [ ] **Bildnachweise** im Impressum – siehe Hinweis unten.
+- [ ] **Anschrift der KV Hessen** im Impressum gegenprüfen.
+- [ ] **Sitzungsfrequenz prüfen:** Die alte Website nennt ein- bis zweimal
+      wöchentlich und 24–100 Sitzungen. Die neuen Texte nennen die Regelwerte
+      der Psychotherapie-Richtlinie. Bitte einmal durchlesen, ob das zu Ihrer
+      Arbeitsweise passt.
+
+### Zu den Bildern
+
+Vier Motive wurden von der bisherigen Website übernommen, verkleinert und
+zusätzlich als WebP gespeichert (moderne Browser laden dann die kleinere Datei):
+
+| Datei | Verwendung |
 |---|---|
-| `Praxis am Lindenhof` | Ihren Praxisnamen |
-| `Dr. phil. Anna Muster` | Ihren Namen mit Titel |
-| `Musterstraße 12` | Ihre Straße |
-| `12345 Musterstadt` | PLZ und Ort |
-| `030 1234567` | Ihre Telefonnummer (auch in den `tel:`-Links: `+49301234567`) |
-| `praxis@ihre-domain.de` | Ihre E-Mail-Adresse |
-| `www.ihre-domain.de` | Ihre Domain |
+| `baum-kopf` | Startseite, neben der Hauptüberschrift |
+| `hero-meer` | Zitatband auf der Startseite |
+| `raum` | Abschnitt „Wohin Sie kommen" auf der Ablauf-Seite |
+| `portraet` | Über-mich-Seite |
 
-Danach noch durchgehen:
+Zwei Dinge dazu:
 
-- [ ] **Telefonzeiten und Sprechzeiten** (auf Startseite und Kontaktseite)
-- [ ] **Werdegang und Qualifikationen** in `ueber-mich.html` – nur tatsächlich
-      Vorhandenes nennen, Berufsbezeichnungen sind gesetzlich geschützt
-- [ ] **Honorare** in der Tabelle in `ablauf-kosten.html` (`[xxx] €`)
-- [ ] **Wartezeit** in `leistungen.html` – und diese Angabe regelmäßig aktualisieren
-- [ ] **Anfahrtsbeschreibung** in `kontakt.php`
-- [ ] **Porträtfoto** als `assets/img/portraet.jpg` ablegen (ca. 800 × 1000 px)
-      und in `ueber-mich.html` den Platzhalter-Block durch das auskommentierte
-      `<img>`-Tag ersetzen
-- [ ] **Logo-Kürzel** im Mint-Kreis: in allen Dateien steht
-      `<span class="brand__mark" aria-hidden="true">l.</span>` – ersetzen Sie
-      `l.` durch Ihr Kürzel (ein bis vier Zeichen, gern mit Punkt). Auch in
-      `assets/img/favicon.svg` anpassen.
-- [ ] **Bildnachweise** im Impressum ergänzen
-- [ ] Die Kommentare `<!-- ANPASSEN: ... -->` im Quelltext abarbeiten
+**Lizenzen prüfen.** Bitte stellen Sie sicher, dass die Nutzungsrechte an den
+Bildern auch die neue Website abdecken. Bei Stockfotos ist die Lizenz manchmal
+an ein bestimmtes Projekt gebunden. Die geforderten Nennungen gehören in den
+Abschnitt „Bildnachweise" im Impressum.
 
-> **Tipp:** Alle Stellen finden Sie mit der Suchfunktion Ihres Editors –
-> suchen Sie nach `Muster`, `ihre-domain`, `[` und `ANPASSEN`.
-
----
+**Auflösung des Porträts.** Das Foto liegt auf der alten Website nur in
+356 × 399 px vor. Auf modernen Bildschirmen wirkt es dadurch etwas weich.
+Falls die Originaldatei der Fotografin noch existiert, lohnt sich der Austausch
+gegen eine Fassung mit mindestens 800 × 1000 px.
 
 ## 3. Auf IONOS hochladen
 
@@ -134,8 +142,8 @@ Danach noch durchgehen:
 Ganz oben in `kontakt.php` stehen vier Werte:
 
 ```php
-$empfaenger = 'praxis@ihre-domain.de';   // wohin die Anfragen gehen
-$absender   = 'website@ihre-domain.de';  // Absender der Benachrichtigung
+$empfaenger = 'kontakt@holm-psychotherapie.de';   // wohin die Anfragen gehen
+$absender   = 'website@holm-psychotherapie.de';  // Absender der Benachrichtigung
 $betreff    = 'Neue Terminanfrage über die Website';
 $mindestzeit = 3;                        // Sekunden – Bremse gegen Bots
 ```
@@ -143,7 +151,13 @@ $mindestzeit = 3;                        // Sekunden – Bremse gegen Bots
 **Wichtig:** `$absender` muss eine E-Mail-Adresse **Ihrer eigenen Domain** sein
 und im IONOS-Konto tatsächlich existieren. Eine fremde Adresse (etwa `@gmail.com`)
 lässt der Mailserver nicht durch oder die Nachricht landet im Spam. Legen Sie
-dafür im IONOS-Konto ein Postfach oder eine Weiterleitung `website@ihre-domain.de` an.
+dafür im IONOS-Konto ein Postfach oder eine Weiterleitung
+`website@holm-psychotherapie.de` an.
+
+> **Hinweis:** Im alten Impressum stand `kontakt@holm-therapie.de`, auf der
+> Kontaktseite dagegen `kontakt@holm-psychotherapie.de`. Ich habe durchgehend
+> die zweite Adresse eingetragen. Falls das falsch ist, bitte einmal global
+> ersetzen.
 
 **Wenn keine E-Mails ankommen:**
 

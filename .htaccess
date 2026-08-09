@@ -29,13 +29,13 @@ AddDefaultCharset UTF-8
 
   # --- Eine einzige Adressvariante (gut für Google) --------------------------
   # Variante A: immer MIT www (Standard, unten aktiv)
-  RewriteCond %{HTTP_HOST} ^ihre-domain\.de$ [NC]
-  RewriteRule ^(.*)$ https://www.ihre-domain.de/$1 [R=301,L]
+  RewriteCond %{HTTP_HOST} ^holm-psychotherapie\.de$ [NC]
+  RewriteRule ^(.*)$ https://www.holm-psychotherapie.de/$1 [R=301,L]
 
   # Variante B: immer OHNE www – dafür Variante A auskommentieren und
   # die folgenden zwei Zeilen aktivieren:
-  # RewriteCond %{HTTP_HOST} ^www\.ihre-domain\.de$ [NC]
-  # RewriteRule ^(.*)$ https://ihre-domain.de/$1 [R=301,L]
+  # RewriteCond %{HTTP_HOST} ^www\.holm-psychotherapie\.de$ [NC]
+  # RewriteRule ^(.*)$ https://holm-psychotherapie.de/$1 [R=301,L]
 </IfModule>
 
 # --- Sicherheits-Header ------------------------------------------------------
