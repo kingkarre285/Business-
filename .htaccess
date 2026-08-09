@@ -1,0 +1,92 @@
+# =============================================================================
+# Serverkonfiguration für Apache (IONOS Webhosting)
+# Diese Datei ins Hauptverzeichnis (meist /) hochladen.
+# Der Dateiname beginnt mit einem Punkt – manche FTP-Programme blenden solche
+# Dateien aus. Im FileZilla: Server > Versteckte Dateien anzeigen erzwingen.
+# =============================================================================
+
+# --- Startseite --------------------------------------------------------------
+DirectoryIndex index.html index.php
+
+# --- Eigene Fehlerseiten -----------------------------------------------------
+ErrorDocument 404 /404.html
+
+# --- Verzeichnisauflistung verbieten -----------------------------------------
+Options -Indexes
+
+# --- Zeichensatz -------------------------------------------------------------
+AddDefaultCharset UTF-8
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # --- HTTPS erzwingen -------------------------------------------------------
+  # Erst aktivieren, wenn das SSL-Zertifikat bei IONOS eingerichtet ist,
+  # sonst ist die Seite nicht erreichbar.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+  # --- Eine einzige Adressvariante (gut für Google) --------------------------
+  # Variante A: immer MIT www (Standard, unten aktiv)
+  RewriteCond %{HTTP_HOST} ^ihre-domain\.de$ [NC]
+  RewriteRule ^(.*)$ https://www.ihre-domain.de/$1 [R=301,L]
+
+  # Variante B: immer OHNE www – dafür Variante A auskommentieren und
+  # die folgenden zwei Zeilen aktivieren:
+  # RewriteCond %{HTTP_HOST} ^www\.ihre-domain\.de$ [NC]
+  # RewriteRule ^(.*)$ https://ihre-domain.de/$1 [R=301,L]
+</IfModule>
+
+# --- Sicherheits-Header ------------------------------------------------------
+<IfModule mod_headers.c>
+  # Verhindert das Einbetten der Seite in fremde Frames (Clickjacking)
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # Browser soll den Dateityp nicht selbst raten
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Referrer sparsam übertragen
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Nicht benötigte Browserfunktionen abschalten
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), interest-cohort=()"
+
+  # Inhalte dürfen nur von der eigenen Domain geladen werden.
+  # WICHTIG: Sobald Sie externe Dienste einbinden (Karten, Videos, Schriften),
+  # muss diese Regel erweitert werden – sonst werden sie blockiert.
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; form-action 'self'; frame-ancestors 'self'; base-uri 'self'"
+
+  # HSTS – erst aktivieren, wenn HTTPS zuverlässig läuft.
+  # Die Einstellung ist im Browser für die angegebene Dauer bindend.
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# --- Zwischenspeicherung im Browser ------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css              "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType image/svg+xml         "access plus 1 month"
+  ExpiresByType image/jpeg            "access plus 1 month"
+  ExpiresByType image/png             "access plus 1 month"
+  ExpiresByType image/webp            "access plus 1 month"
+  ExpiresByType text/html             "access plus 1 hour"
+</IfModule>
+
+# --- Komprimierung -----------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml \
+    application/javascript application/json image/svg+xml
+</IfModule>
+
+# --- Interne Dateien vor dem Abruf schützen ----------------------------------
+# Falls die Projektdateien (Anleitung, Git-Ordner) versehentlich mit
+# hochgeladen wurden, sind sie so nicht über den Browser abrufbar.
+<FilesMatch "\.(md|json|yml|yaml|log|bak|sql|ini)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
