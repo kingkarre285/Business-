@@ -25,8 +25,31 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `.htaccess` | HTTPS-Umleitung, Sicherheits-Header, Caching |
 | `robots.txt`, `sitemap.xml` | Für Suchmaschinen |
 | `assets/css/style.css` | Gesamtes Design |
+| `assets/css/fonts.css` | Einbindung der Schriften |
+| `assets/fonts/` | Nunito und Roboto als lokale Dateien |
 | `assets/js/main.js` | Mobiles Menü (die Seite funktioniert auch ohne JavaScript) |
 | `assets/img/favicon.svg` | Symbol im Browser-Tab |
+
+## 1a. Gestaltung
+
+Das Design ist an **loew-psychotherapie.de** angelehnt: kühles Blaugrau statt
+warmer Töne, Mint als einzige Akzentfarbe, sehr viel Weißraum, eine kurze
+Mint-Linie unter jeder Überschrift, Buttons als dunkelblaue Pillen in
+Versalien. Schriften sind Roboto (Überschriften, kräftig) und Nunito Light
+(Fließtext) – wie bei der Vorlage.
+
+Die Schriften liegen **lokal** unter `assets/fonts/` und werden nicht von
+Google geladen. Beide Lizenzen erlauben das ausdrücklich (Nunito: SIL Open
+Font License, Roboto: Apache 2.0). Bitte binden Sie sie nicht versehentlich
+wieder über die Google-Fonts-URL ein – genau das ist in Deutschland bereits
+abgemahnt worden.
+
+Zwei Farben weichen bewusst von der Vorlage ab: Fließtext und die kleinen
+Labels sind etwas dunkler gehalten. Die Originalwerte liegen an der Grenze
+des Lesbaren; bei einer Praxis-Website, die auch erschöpfte oder ältere
+Menschen erreichen soll, ist der Kontrast wichtiger als die letzte Nuance.
+
+Alle Farben stehen gesammelt im Block `:root` ganz oben in `style.css`.
 
 ---
 
@@ -71,6 +94,10 @@ Danach noch durchgehen:
 - [ ] **Porträtfoto** als `assets/img/portraet.jpg` ablegen (ca. 800 × 1000 px)
       und in `ueber-mich.html` den Platzhalter-Block durch das auskommentierte
       `<img>`-Tag ersetzen
+- [ ] **Logo-Kürzel** im Mint-Kreis: in allen Dateien steht
+      `<span class="brand__mark" aria-hidden="true">l.</span>` – ersetzen Sie
+      `l.` durch Ihr Kürzel (ein bis vier Zeichen, gern mit Punkt). Auch in
+      `assets/img/favicon.svg` anpassen.
 - [ ] **Bildnachweise** im Impressum ergänzen
 - [ ] Die Kommentare `<!-- ANPASSEN: ... -->` im Quelltext abarbeiten
 

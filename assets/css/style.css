@@ -1,43 +1,57 @@
 /* ==========================================================================
    Praxis für tiefenpsychologisch fundierte Psychotherapie
    Stylesheet – keine externen Ressourcen (DSGVO-konform ohne Cookie-Banner)
+
+   Gestaltung angelehnt an loew-psychotherapie.de:
+   kühles Blaugrau, Mint als einzige Akzentfarbe, sehr viel Weißraum,
+   Roboto für Überschriften, Nunito Light für den Fließtext,
+   Pill-Buttons in Dunkelblau, kurze Mint-Linie unter jeder Überschrift.
    ========================================================================== */
+
+@import url("fonts.css");
 
 /* --- 1. Design-Tokens ---------------------------------------------------- */
 
 :root {
-  /* Farben: warm, gedeckt, beruhigend */
-  --c-bg:            #fbf9f6;
-  --c-bg-alt:        #f2eee7;
-  --c-bg-deep:       #2f4640;
+  /* Farben: kühl, klar, zurückhaltend */
+  --c-bg:            #ffffff;
+  --c-bg-alt:        #eff0f4;   /* Blaugrau 10 % auf Weiß */
+  --c-bg-deep:       #2e3047;   /* Dunkles Blau-Anthrazit */
   --c-surface:       #ffffff;
-  --c-border:        #e2dcd2;
+  --c-border:        #e3e5ec;
 
-  --c-text:          #2b2925;
-  --c-text-muted:    #5f5a52;
-  --c-text-invert:   #f4f1ec;
+  /* Fließtext: das Blaugrau der Vorlage (#707793) ergibt auf Weiß nur 4,6:1.
+     Eine Spur dunkler wirkt optisch identisch, liest sich aber deutlich
+     leichter – bei einer Praxis-Website ist das die richtige Abwägung. */
+  --c-text:          #5f6685;
+  --c-heading:       #2e3047;   /* Überschriften */
+  --c-text-muted:    #7a819c;
+  --c-text-invert:   #eef0f5;
 
-  --c-accent:        #3f6157;
-  --c-accent-dark:   #2f4640;
-  --c-accent-light:  #e8efeb;
-  --c-highlight:     #b08968;
+  --c-accent:        #2e3047;
+  --c-accent-dark:   #1f2133;
+  --c-accent-light:  #eaf4f4;
+  --c-mint:          #c7e5e5;   /* Akzent: Trennlinien, Logo, Details */
+  --c-mint-dark:     #3f7f7f;   /* Nur für Text – helles Mint hat auf Weiß zu wenig Kontrast */
+  --c-highlight:     var(--c-mint-dark);
 
-  --c-focus:         #b08968;
+  --c-focus:         #2e3047;
 
   /* Typografie */
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-head: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-sans: Nunito, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-serif: var(--font-head);
 
   --fs-xs:   0.8125rem;
   --fs-sm:   0.9375rem;
   --fs-base: 1.0625rem;
   --fs-lg:   1.1875rem;
-  --fs-xl:   1.4375rem;
-  --fs-2xl:  1.75rem;
-  --fs-3xl:  2.25rem;
-  --fs-4xl:  2.875rem;
+  --fs-xl:   1.3125rem;
+  --fs-2xl:  1.625rem;
+  --fs-3xl:  2rem;
+  --fs-4xl:  3rem;
 
-  /* Abstände */
+  /* Abstände – bewusst großzügig, das prägt die Referenz am stärksten */
   --sp-1: 0.25rem;
   --sp-2: 0.5rem;
   --sp-3: 0.75rem;
@@ -45,14 +59,15 @@
   --sp-5: 1.5rem;
   --sp-6: 2rem;
   --sp-7: 3rem;
-  --sp-8: 4rem;
-  --sp-9: 6rem;
+  --sp-8: 5.5rem;
+  --sp-9: 8rem;
 
-  --radius:    4px;
-  --radius-lg: 10px;
+  --radius:    3px;
+  --radius-lg: 6px;
+  --radius-pill: 50px;
 
-  --shadow-sm: 0 1px 2px rgba(43, 41, 37, 0.06);
-  --shadow-md: 0 4px 16px rgba(43, 41, 37, 0.08);
+  --shadow-sm: 0 1px 2px rgba(46, 48, 71, 0.05);
+  --shadow-md: 0 6px 28px rgba(46, 48, 71, 0.07);
 
   --maxw:        72rem;
   --maxw-text:   40rem;
@@ -84,7 +99,8 @@ body {
   color: var(--c-text);
   font-family: var(--font-sans);
   font-size: var(--fs-base);
-  line-height: 1.7;
+  font-weight: 300;
+  line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   /* Lange Komposita und URLs sollen auf schmalen Displays umbrechen,
      statt die Seite seitlich herauszuschieben. */
@@ -107,22 +123,65 @@ img {
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-serif);
-  font-weight: 600;
-  line-height: 1.25;
-  color: var(--c-accent-dark);
+  font-family: var(--font-head);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--c-heading);
   margin: 0 0 var(--sp-4);
+}
+
+h1 {
+  font-size: var(--fs-4xl);
+  font-weight: 900;
+  line-height: 1.18;
   letter-spacing: -0.01em;
 }
 
-h1 { font-size: var(--fs-4xl); }
 h2 { font-size: var(--fs-3xl); }
-h3 { font-size: var(--fs-xl); }
-h4 { font-size: var(--fs-lg); }
+
+h3 {
+  font-size: var(--fs-xl);
+  letter-spacing: 0.04em;
+}
+
+h4 { font-size: var(--fs-lg); letter-spacing: 0.03em; }
 
 @media (max-width: 40rem) {
-  h1 { font-size: var(--fs-3xl); }
+  h1 { font-size: 2.125rem; }
   h2 { font-size: var(--fs-2xl); }
+}
+
+/* Kurze Mint-Linie unter Überschriften – das prägendste Element der Referenz.
+   Sie erscheint automatisch bei jeder Überschrift in .section__head und .prose. */
+.section__head h1,
+.section__head h2,
+.prose > h2,
+.card--linie h3 {
+  position: relative;
+  padding-bottom: var(--sp-5);
+}
+
+.section__head h1::after,
+.section__head h2::after,
+.prose > h2::after,
+.card--linie h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 13.5rem;
+  max-width: 60%;
+  height: 3px;
+  background-color: var(--c-mint);
+}
+
+/* In zentrierten Bereichen mittig ausrichten */
+.text-center .section__head h2::after,
+.section__head--center h2::after {
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20rem;
+  max-width: 80%;
 }
 
 p { margin: 0 0 var(--sp-4); }
@@ -139,6 +198,12 @@ a:hover { color: var(--c-accent-dark); }
   outline: 3px solid var(--c-focus);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+/* Auf den dunklen Flächen braucht der Fokusrahmen eine helle Farbe */
+.section--deep :focus-visible,
+.site-footer :focus-visible {
+  outline-color: var(--c-mint);
 }
 
 ul, ol { margin: 0 0 var(--sp-4); padding-left: 1.35em; }
@@ -177,7 +242,7 @@ hr {
 .section--deep h2,
 .section--deep h3 { color: #ffffff; }
 
-.section--deep a { color: #d9c3a8; }
+.section--deep a { color: var(--c-mint); }
 
 .section__head {
   max-width: var(--maxw-text);
@@ -186,19 +251,20 @@ hr {
 
 .eyebrow {
   display: block;
-  font-family: var(--font-sans);
+  font-family: var(--font-head);
   font-size: var(--fs-xs);
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-weight: 400;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--c-highlight);
-  margin-bottom: var(--sp-3);
+  color: var(--c-text-muted);
+  margin-bottom: var(--sp-4);
 }
 
 .lead {
   font-size: var(--fs-lg);
-  color: var(--c-text-muted);
-  line-height: 1.65;
+  color: var(--c-text);
+  font-weight: 300;
+  line-height: 1.75;
 }
 
 .prose { max-width: var(--maxw-text); }
@@ -228,7 +294,7 @@ hr {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(251, 249, 246, 0.94);
+  background-color: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--c-border);
 }
@@ -238,27 +304,56 @@ hr {
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-4);
-  min-height: 4.5rem;
+  min-height: 6rem;
 }
 
 .brand {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
   text-decoration: none;
-  color: var(--c-accent-dark);
-  line-height: 1.2;
+  color: var(--c-heading);
+  line-height: 1.25;
 }
 
+/* Mint-Kreis mit Wortzeichen – gleiche Idee wie das Logo der Referenz.
+   ANPASSEN: Im HTML den Text in .brand__mark durch Ihr Kürzel ersetzen
+   (ein bis vier Zeichen, gern mit Punkt, z. B. „r.“ oder „mb.“). */
+.brand__mark {
+  flex-shrink: 0;
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 50%;
+  background-color: var(--c-mint);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-style: italic;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.brand__text { display: flex; flex-direction: column; }
+
 .brand__name {
-  font-family: var(--font-serif);
-  font-size: var(--fs-lg);
-  font-weight: 600;
+  font-family: var(--font-head);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .brand__sub {
   font-size: var(--fs-xs);
-  color: var(--c-text-muted);
-  letter-spacing: 0.04em;
+  font-weight: 300;
+  color: var(--c-text);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 30rem) {
+  .brand__mark { width: 2.75rem; height: 2.75rem; font-size: 1.125rem; }
+  .brand__sub { display: none; }
 }
 
 .nav-toggle {
@@ -314,19 +409,21 @@ hr {
 .nav__list li { margin: 0; }
 
 .nav__link {
+  font-family: var(--font-head);
   font-size: var(--fs-sm);
+  font-weight: 400;
   text-decoration: none;
-  color: var(--c-text);
+  color: var(--c-heading);
   padding-block: var(--sp-2);
   border-bottom: 2px solid transparent;
 }
 
-.nav__link:hover { color: var(--c-accent); }
+.nav__link:hover { color: var(--c-mint-dark); }
 
 .nav__link[aria-current="page"] {
-  color: var(--c-accent-dark);
-  font-weight: 600;
-  border-bottom-color: var(--c-highlight);
+  color: var(--c-heading);
+  font-weight: 500;
+  border-bottom-color: var(--c-mint);
 }
 
 @media (max-width: 56rem) {
@@ -372,15 +469,18 @@ hr {
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  padding: 0.7rem 1.4rem;
+  padding: 0.95rem 1.9rem;
   border: 1px solid transparent;
-  border-radius: var(--radius);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 600;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-head);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .btn--primary {
@@ -389,8 +489,8 @@ hr {
 }
 
 .btn--primary:hover {
-  background-color: var(--c-accent-dark);
-  color: #fff;
+  background-color: var(--c-mint);
+  color: var(--c-heading);
 }
 
 .btn--ghost {
@@ -400,16 +500,16 @@ hr {
 }
 
 .btn--ghost:hover {
-  background-color: var(--c-accent-light);
-  color: var(--c-accent-dark);
+  background-color: var(--c-accent);
+  color: #fff;
 }
 
 .btn--light {
   background-color: #fff;
-  color: var(--c-accent-dark);
+  color: var(--c-heading);
 }
 
-.btn--light:hover { background-color: var(--c-bg-alt); color: var(--c-accent-dark); }
+.btn--light:hover { background-color: var(--c-mint); color: var(--c-heading); }
 
 .btn-row {
   display: flex;
@@ -421,11 +521,8 @@ hr {
 /* --- 6. Hero ------------------------------------------------------------- */
 
 .hero {
-  background:
-    linear-gradient(180deg, rgba(232, 239, 235, 0.55), rgba(251, 249, 246, 0) 70%),
-    var(--c-bg);
+  background-color: var(--c-bg);
   padding-block: var(--sp-9) var(--sp-8);
-  border-bottom: 1px solid var(--c-border);
 }
 
 .hero__grid {
@@ -445,16 +542,27 @@ hr {
 .hero__text h1 { margin-bottom: var(--sp-5); }
 
 .hero__aside {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
+  background: var(--c-bg-alt);
   border-radius: var(--radius-lg);
-  padding: var(--sp-6);
-  box-shadow: var(--shadow-md);
+  padding: var(--sp-7) var(--sp-6);
 }
 
 .hero__aside h2 {
   font-size: var(--fs-lg);
-  margin-bottom: var(--sp-4);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-4);
+  position: relative;
+}
+
+.hero__aside h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 9rem;
+  height: 3px;
+  background-color: var(--c-mint);
 }
 
 /* --- 7. Karten und Raster ------------------------------------------------ */
@@ -480,25 +588,44 @@ hr {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
-  padding: var(--sp-5);
-  box-shadow: var(--shadow-sm);
+  padding: var(--sp-6);
+  box-shadow: none;
+  transition: border-color 0.2s ease;
 }
 
-.card h3 { font-size: var(--fs-lg); margin-bottom: var(--sp-3); }
+.card:hover { border-color: var(--c-mint); }
+
+.card h3 {
+  font-size: var(--fs-lg);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-3);
+  position: relative;
+}
+
+.card h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 4.5rem;
+  height: 3px;
+  background-color: var(--c-mint);
+}
 
 .card p:last-child { margin-bottom: 0; }
 
 .card__icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3rem;
+  height: 3rem;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--c-accent-light);
-  color: var(--c-accent-dark);
-  font-family: var(--font-serif);
-  font-size: var(--fs-lg);
-  margin-bottom: var(--sp-4);
+  background: var(--c-mint);
+  color: var(--c-heading);
+  font-family: var(--font-head);
+  font-size: var(--fs-base);
+  margin-bottom: var(--sp-5);
 }
 
 .card__icon svg {
@@ -601,11 +728,11 @@ hr {
 
 /* Hinweiskasten */
 .notice {
-  border-left: 3px solid var(--c-highlight);
+  border-left: 3px solid var(--c-mint);
   background: var(--c-bg-alt);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
   border-radius: 0 var(--radius) var(--radius) 0;
-  margin-block: var(--sp-5);
+  margin-block: var(--sp-6);
 }
 
 .notice p:last-child { margin-bottom: 0; }
@@ -801,12 +928,13 @@ input[type="tel"],
 select,
 textarea {
   width: 100%;
-  padding: 0.65rem 0.8rem;
+  padding: 0.85rem 1rem;
   font: inherit;
   font-size: var(--fs-sm);
-  color: var(--c-text);
+  font-weight: 300;
+  color: var(--c-heading);
   background: var(--c-surface);
-  border: 1px solid #cfc7ba;
+  border: 1px solid var(--c-border);
   border-radius: var(--radius);
 }
 
@@ -881,7 +1009,7 @@ textarea:focus {
   margin-top: var(--sp-8);
 }
 
-.site-footer a { color: #d9c3a8; }
+.site-footer a { color: var(--c-mint); }
 
 .footer__grid {
   display: grid;
