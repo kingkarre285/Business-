@@ -1,0 +1,4 @@
+# Der Kern laeuft mit reiner Standardbibliothek (Python 3.9+).
+# Optional:
+openpyxl>=3.1 ; python_version >= "3.9"   # nur fuer XLSX-Exporte
+PyYAML>=6.0                               # nur fuer config.yaml statt config.json

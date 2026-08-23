@@ -1,0 +1,100 @@
+{
+  "source": {
+    "type": "csv",
+    "path": "data/kalodata_export.csv",
+    "api": {
+      "cookie_env": "KALODATA_COOKIE",
+      "base_url": "https://www.kalodata.com",
+      "endpoint": "/api/product/list",
+      "period": "7d",
+      "pages": 3,
+      "page_size": 50,
+      "extra_params": {}
+    }
+  },
+  "filters": {
+    "price_min": 8.0,
+    "price_max": 150.0,
+    "revenue_min": 3000.0,
+    "revenue_max": null,
+    "units_min": 30,
+    "commission_min": 0.1,
+    "rating_min": 4.0,
+    "creators_max": 500,
+    "max_age_days": null,
+    "categories_include": [],
+    "categories_exclude": [],
+    "keywords_exclude": [
+      "gift card",
+      "gutschein",
+      "coupon"
+    ],
+    "require_fields": [
+      "name",
+      "revenue"
+    ]
+  },
+  "weights": {
+    "momentum": 3.0,
+    "opportunity": 2.0,
+    "traction": 1.5,
+    "competition": 2.0,
+    "efficiency": 1.0,
+    "freshness": 1.5
+  },
+  "targets": {
+    "growth": 1.0,
+    "payout_per_sale": 15.0,
+    "revenue": 250000.0,
+    "creators": 400,
+    "revenue_per_creator": 3000.0,
+    "max_age_days": 90
+  },
+  "scoring": {
+    "momentum_lookback_hours": 12
+  },
+  "alerts": {
+    "min_score": 70.0,
+    "top_n": 15,
+    "only_new_or_rising": true,
+    "rising_delta": 5.0,
+    "cooldown_hours": 24,
+    "max_per_run": 10
+  },
+  "notifiers": [
+    {
+      "type": "console",
+      "enabled": true
+    },
+    {
+      "type": "telegram",
+      "enabled": false,
+      "token_env": "TELEGRAM_BOT_TOKEN",
+      "chat_id_env": "TELEGRAM_CHAT_ID"
+    },
+    {
+      "type": "discord",
+      "enabled": false,
+      "webhook_env": "DISCORD_WEBHOOK_URL"
+    },
+    {
+      "type": "slack",
+      "enabled": false,
+      "webhook_env": "SLACK_WEBHOOK_URL"
+    },
+    {
+      "type": "webhook",
+      "enabled": false,
+      "url_env": "SNIPER_WEBHOOK_URL"
+    }
+  ],
+  "output": {
+    "state_file": "data/state.json",
+    "report_dir": "reports",
+    "write_html": true,
+    "write_csv": true,
+    "currency": "$",
+    "history_length": 40,
+    "prune_after_days": 120
+  }
+}

@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Echte Exporte und Verlauf bleiben lokal - nur Demo-Daten sind eingecheckt
+data/*.csv
+data/*.tsv
+data/*.xlsx
+data/*.json
+!data/demo_export.csv
+data/*.corrupt
+reports/
+config.json
+.env

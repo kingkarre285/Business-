@@ -1,0 +1,70 @@
+name: Product Sniper
+
+on:
+  schedule:
+    - cron: "0 6,18 * * *"   # 06:00 und 18:00 UTC
+  workflow_dispatch:
+    inputs:
+      min_score:
+        description: "Alarmschwelle (0-100)"
+        required: false
+        default: "70"
+
+permissions:
+  contents: write   # noetig, um den Verlauf (data/state.json) zurueckzuschreiben
+
+jobs:
+  snipe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Optionale Abhaengigkeiten
+        run: pip install --quiet openpyxl
+
+      - name: Config vorbereiten
+        run: |
+          test -f config.json || cp config.example.json config.json
+          python - <<'PY'
+          import json, os
+          cfg = json.load(open("config.json"))
+          # Im CI wird nur ueber Telegram alarmiert - Console-Output landet im Log
+          for n in cfg["notifiers"]:
+              n["enabled"] = n["type"] in ("console", "telegram")
+          if os.environ.get("KALODATA_COOKIE"):
+              cfg["source"]["type"] = "api"
+          json.dump(cfg, open("config.json", "w"), indent=2, ensure_ascii=False)
+          PY
+        env:
+          KALODATA_COOKIE: ${{ secrets.KALODATA_COOKIE }}
+
+      - name: Sniper laufen lassen
+        env:
+          KALODATA_COOKIE: ${{ secrets.KALODATA_COOKIE }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m kalodata_sniper run \
+            --min-score "${{ github.event.inputs.min_score || '70' }}"
+
+      - name: Reports als Artefakt sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sniper-reports
+          path: reports/
+          retention-days: 30
+
+      - name: Verlauf zurueckschreiben
+        run: |
+          if [ -n "$(git status --porcelain data/state.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/state.json
+            git commit -m "chore: Sniper-Verlauf aktualisiert"
+            git push
+          fi
