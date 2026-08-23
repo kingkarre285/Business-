@@ -45,7 +45,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_explain.add_argument("query", help="Teil des Produktnamens oder Produkt-ID")
     p_explain.add_argument("-i", "--input")
 
-    p_probe = sub.add_parser("probe-api", help="API-Antwort testen und Felder anzeigen")
+    p_probe = sub.add_parser(
+        "probe-api", help="Einen API-Aufruf machen und die gelieferten Felder pruefen")
     p_probe.add_argument("-o", "--output", default="data/api_probe.json")
 
     sub.add_parser("test-notify", help="Testnachricht an alle aktiven Kanaele")
@@ -147,12 +148,24 @@ def cmd_explain(args, config: Config) -> int:
 def cmd_probe(args, config: Config) -> int:
     from .sources.api_source import probe
     info = probe(config.get("source.api", {}), args.output)
-    print(f"{info['records']} Datensaetze empfangen, Rohantwort in {info['saved_to']}")
-    print("Gelieferte Felder:")
-    for field in info["fields"]:
-        print(f"  - {field}")
-    print("\nUnbekannte Feldnamen ggf. in COLUMN_ALIASES "
-          "(kalodata_sniper/sources/csv_source.py) ergaenzen.")
+    print(f"POST {info['url']}")
+    print(f"Request: {info['request']}")
+    print(f"{info['records']} Datensaetze empfangen (1 Request verbraucht), "
+          f"Rohantwort in {info['saved_to']}\n")
+
+    if info["mapped"]:
+        print("Erkannte Felder:")
+        for source_field, target in sorted(info["mapped"].items(), key=lambda kv: kv[1]):
+            print(f"  {source_field:<32} -> {target}")
+    missing = {"name", "revenue"} - set(info["mapped"].values())
+    if missing:
+        print(f"\nACHTUNG: kein Feld fuer {', '.join(sorted(missing))} erkannt - "
+              "ohne diese laeuft das Scoring nicht.")
+    if info["unmapped"]:
+        print("\nNicht zugeordnet (bei Bedarf in COLUMN_ALIASES ergaenzen, "
+              "kalodata_sniper/sources/csv_source.py):")
+        for field in info["unmapped"]:
+            print(f"  - {field}")
     return 0
 
 

@@ -3,13 +3,41 @@
     "type": "csv",
     "path": "data/kalodata_export.csv",
     "api": {
-      "cookie_env": "KALODATA_COOKIE",
-      "base_url": "https://www.kalodata.com",
-      "endpoint": "/api/product/list",
-      "period": "7d",
-      "pages": 3,
+      "base_url": "https://api.kalodata.com",
+      "api_key_env": "KALODATA_API_KEY",
+      "auth": {
+        "header": "Authorization",
+        "prefix": "Bearer "
+      },
+      "module": "product",
+      "endpoints": {
+        "rank": "/open/v1/product/rank",
+        "detail": "/open/v1/product/detail"
+      },
+      "method": "POST",
+      "request": {
+        "region": "US",
+        "language": "en",
+        "currency": "USD",
+        "date_range_days": 7,
+        "date_offset_days": 1,
+        "sort": "revenue",
+        "filters": {}
+      },
+      "param_names": {
+        "page": "page",
+        "page_size": "pageSize",
+        "start_date": "startDate",
+        "end_date": "endDate",
+        "sort": "sortBy"
+      },
+      "pages": 2,
       "page_size": 50,
-      "extra_params": {}
+      "max_requests_per_run": 10,
+      "cache_ttl_minutes": 360,
+      "cache_dir": "data/.cache",
+      "delay_seconds": 1.0,
+      "timeout_seconds": 30
     }
   },
   "filters": {

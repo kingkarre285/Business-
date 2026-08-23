@@ -39,24 +39,46 @@ in `kalodata_sniper/sources/csv_source.py` erkennt englische und deutsche Header
 `camelCase`-Felder sowie Varianten wie „Revenue last 7 days". Unbekannte Spalten
 werden ignoriert, nicht als Fehler behandelt.
 
-**2. Live-Abruf mit eigener Session (optional, vollautomatisch)**
-Kalodata hat keine öffentliche API. Der Client in `sources/api_source.py` spricht
-die interne Web-API mit **deinem eigenen** Session-Cookie an — also genau die
-Daten, die dir im Browser ohnehin angezeigt werden.
+**2. Offizielle Open API (vollautomatisch)**
+Kalodata Open Center → API-Key erzeugen. Die Open API folgt dem
+**Rank-plus-Detail-Modell** über sechs Module (Product, Creator, Shop, Video,
+Livestream, Category); der Sniper nutzt standardmäßig das Product-Ranking.
 
 ```bash
-export KALODATA_COOKIE='<cookie-header aus DevTools → Network → Request Headers>'
-python -m kalodata_sniper probe-api      # zeigt, welche Felder wirklich kommen
+export KALODATA_API_KEY='...'
+python -m kalodata_sniper probe-api      # ein Aufruf, zeigt Feld-Mapping
 ```
 
-Danach in der Config `source.type` auf `"api"` setzen. Interne APIs ändern sich
-ohne Ankündigung — deshalb sind Endpunkt, Methode und Parameter konfigurierbar,
-und `probe-api` zeigt dir die tatsächliche Antwort. Bricht der Abruf, funktioniert
-der CSV-Weg unverändert weiter.
+`probe-api` kostet genau einen Request und zeigt dir, welche Antwortfelder auf
+welches Produktfeld gemappt wurden — plus die nicht zugeordneten. Passt alles,
+in der Config `source.type` auf `"api"` setzen.
 
-> **Wichtig:** Der Cookie gehört in eine Umgebungsvariable bzw. ein GitHub-Secret,
-> nie ins Repo. Prüfe die Kalodata-Nutzungsbedingungen deines Tarifs, bevor du den
-> automatischen Abruf aktivierst; der Client fragt bewusst seitenweise mit Pause ab.
+Basis-URL, Auth-Header, Endpunktpfade und Parameternamen stehen komplett in
+`config.json`:
+
+```jsonc
+"api": {
+  "base_url": "https://api.kalodata.com",
+  "auth": { "header": "Authorization", "prefix": "Bearer " },
+  "endpoints": { "rank": "/open/v1/product/rank", "detail": "/open/v1/product/detail" },
+  "param_names": { "page_size": "pageSize", "start_date": "startDate" },
+  "max_requests_per_run": 10,      // hartes Budget
+  "cache_ttl_minutes": 360         // Filter tunen ohne neue Credits
+}
+```
+
+Weicht die Doku deines Tarifs davon ab (andere Pfade, `X-API-KEY` statt Bearer,
+andere Feldnamen), ist das eine **Config-Änderung, kein Patch**.
+
+> **Credits:** Die Open API rechnet nach Verbrauch ab. Deshalb zwei Schutzschichten:
+> ein hartes Requestbudget pro Lauf (`max_requests_per_run`) und ein Antwort-Cache
+> auf der Platte — beim Nachjustieren der Filter wird dieselbe Antwort
+> wiederverwendet statt neu bezahlt. Der API-Key gehört in eine Umgebungsvariable
+> bzw. ein GitHub-Secret, nie ins Repo.
+
+Fehler werden übersetzt statt durchgereicht: 401 → Header-Format prüfen,
+402 → Credits leer, 404 → Endpunktpfad falsch, 429 → `delay_seconds` erhöhen.
+Auch Fehlercodes im Body bei HTTP 200 werden erkannt.
 
 ## Wie der Score entsteht
 
@@ -140,7 +162,7 @@ bricht den Lauf nicht ab — die anderen senden trotzdem, der Fehler wird gemeld
 
 **GitHub Actions** (`.github/workflows/sniper.yml`) läuft zweimal täglich, sichert
 die Reports als Artefakt und schreibt den Verlauf zurück ins Repo. Nötige Secrets:
-`KALODATA_COOKIE` (nur für den API-Modus), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+`KALODATA_API_KEY` (nur für den API-Modus), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 
 **Cron auf einem Server:**
 
@@ -162,7 +184,7 @@ python -m kalodata_sniper watch --interval 3600
 | `watch --interval 3600` | Dauerlauf im festen Takt |
 | `explain "<name>"` | Score-Aufschlüsselung eines Produkts inkl. Filtergründen |
 | `state --top 10` | Verlauf inspizieren, `--reset` löscht ihn |
-| `probe-api` | API-Antwort testen und gelieferte Felder auflisten |
+| `probe-api` | Einen API-Aufruf machen und das Feld-Mapping prüfen |
 | `test-notify` | Testnachricht an alle aktiven Kanäle |
 | `demo` | Beispieldaten erzeugen und Lauf zeigen |
 | `init` | Standard-Config schreiben |
@@ -170,7 +192,7 @@ python -m kalodata_sniper watch --interval 3600
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v    # 42 Tests, keine externen Abhängigkeiten
+python -m unittest discover -s tests -v    # 52 Tests, keine externen Abhängigkeiten
 ```
 
 ## Aufbau
@@ -187,14 +209,15 @@ kalodata_sniper/
   report.py         HTML-, CSV- und JSON-Report
   sources/
     csv_source.py   Export-Parsing mit unscharfem Spalten-Mapping
-    api_source.py   optionaler Live-Abruf mit eigener Session
+    api_source.py   offizielle Open API: Budget, Cache, Feld-Mapping
 ```
 
 ## Grenzen, ehrlich gesagt
 
 * Der Score ist eine **Vorauswahl, keine Kaufentscheidung** — Versandzeiten,
   Lizenzthemen und Creator-Fit prüft er nicht.
-* Der API-Modus hängt an einer internen, undokumentierten Schnittstelle und kann
-  jederzeit brechen. Der CSV-Weg ist der verlässliche.
+* Endpunktpfade und Feldnamen der Open API sind aus der öffentlichen Struktur
+  abgeleitet (Rank + Detail, sechs Module). Prüfe sie einmalig mit `probe-api`
+  gegen die Docs deines Tarifs — Abweichungen sind reine Config-Werte.
 * Momentum braucht mindestens zwei Läufe im Abstand von `momentum_lookback_hours`.
   Der erste Lauf bewertet nur den Status quo.

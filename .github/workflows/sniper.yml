@@ -35,16 +35,16 @@ jobs:
           # Im CI wird nur ueber Telegram alarmiert - Console-Output landet im Log
           for n in cfg["notifiers"]:
               n["enabled"] = n["type"] in ("console", "telegram")
-          if os.environ.get("KALODATA_COOKIE"):
+          if os.environ.get("KALODATA_API_KEY"):
               cfg["source"]["type"] = "api"
           json.dump(cfg, open("config.json", "w"), indent=2, ensure_ascii=False)
           PY
         env:
-          KALODATA_COOKIE: ${{ secrets.KALODATA_COOKIE }}
+          KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
 
       - name: Sniper laufen lassen
         env:
-          KALODATA_COOKIE: ${{ secrets.KALODATA_COOKIE }}
+          KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |

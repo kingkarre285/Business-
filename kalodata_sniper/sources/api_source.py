@@ -1,36 +1,37 @@
-"""Optionaler Live-Abruf mit der eigenen Kalodata-Session.
+"""Client fuer die offizielle Kalodata Open API.
 
-Kalodata bietet keine oeffentliche API. Dieser Client spricht die interne
-Web-API mit *deinem eigenen* Session-Cookie an - also genau die Daten, die dir
-im Browser ohnehin angezeigt werden. Damit gilt:
+Die Open API folgt dem Rank-plus-Detail-Modell: ein Ranking-Endpunkt liefert die
+Liste (Products, Creators, Shops, Videos, Livestreams, Categories), ein
+Detail-Endpunkt die Tiefe zu einer einzelnen ID.
 
-* Das Cookie kommt aus einer Umgebungsvariable, nie aus dem Repo.
-* Endpunkt, Parameter und Feldnamen sind konfigurierbar, weil interne APIs sich
-  ohne Ankuendigung aendern - bricht der Abruf, bleibt der CSV-Weg.
-* Es wird bewusst langsam und seitenweise abgefragt (Rate-Limit), damit der
-  Zugriff dem normalen Nutzungsverhalten entspricht.
+Zwei Dinge praegen den Client:
 
-Pruefe die Kalodata-Nutzungsbedingungen deines Tarifs, bevor du das aktivierst.
+* **Abrechnung nach Verbrauch.** Jeder Aufruf kostet Credits. Deshalb gibt es ein
+  hartes Requestbudget pro Lauf und einen Antwort-Cache auf der Platte - beim
+  Tunen der Filter wird dieselbe Antwort wiederverwendet statt neu bezahlt.
+* **Konfigurierbare Namen.** Basis-URL, Auth-Header, Endpunktpfade und
+  Parameternamen stehen in der Config, nicht im Code. Weicht die Doku deines
+  Tarifs ab, ist das eine Config-Aenderung - kein Patch.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
 
 from ..models import Product
 from .csv_source import load_products
 
 DEFAULT_HEADERS = {
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.9,de;q=0.8",
-    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                   "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"),
+    "Accept": "application/json",
+    "User-Agent": "kalodata-sniper/0.1 (+https://github.com/kingkarre285/Business-)",
 }
 
 
@@ -38,70 +39,165 @@ class KalodataAPIError(RuntimeError):
     pass
 
 
+class BudgetExceeded(KalodataAPIError):
+    """Das Requestbudget des Laufs ist aufgebraucht - schuetzt vor Credit-Verbrauch."""
+
+
+class ResponseCache:
+    """Simpler Datei-Cache. Spart Credits beim Nachjustieren der Filter."""
+
+    def __init__(self, directory: str, ttl_minutes: float):
+        self.directory = directory
+        self.ttl = ttl_minutes * 60
+
+    def _path(self, key: str) -> str:
+        digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:20]
+        return os.path.join(self.directory, f"api_{digest}.json")
+
+    def get(self, key: str) -> Optional[Any]:
+        if self.ttl <= 0:
+            return None
+        path = self._path(key)
+        if not os.path.exists(path) or time.time() - os.path.getmtime(path) > self.ttl:
+            return None
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                return json.load(handle)
+        except (json.JSONDecodeError, OSError):
+            return None
+
+    def put(self, key: str, value: Any) -> None:
+        if self.ttl <= 0:
+            return
+        os.makedirs(self.directory, exist_ok=True)
+        try:
+            with open(self._path(key), "w", encoding="utf-8") as handle:
+                json.dump(value, handle)
+        except OSError:
+            pass  # Cache ist Komfort, kein Muss
+
+
 class KalodataClient:
     def __init__(self, config: Dict[str, Any]):
-        self.base_url = config.get("base_url", "https://www.kalodata.com").rstrip("/")
-        self.endpoint = config.get("endpoint", "/api/product/list")
-        self.period = config.get("period", "7d")
-        self.pages = int(config.get("pages", 3))
-        self.page_size = int(config.get("page_size", 50))
-        self.extra_params: Dict[str, Any] = config.get("extra_params") or {}
-        self.delay = float(config.get("delay_seconds", 2.0))
+        self.config = config
+        self.base_url = config.get("base_url", "https://api.kalodata.com").rstrip("/")
+        self.module = config.get("module", "product")
+        self.endpoints: Dict[str, str] = config.get("endpoints", {})
         self.method = config.get("method", "POST").upper()
-        self.cookie = config.get("cookie") or os.environ.get(
-            config.get("cookie_env", "KALODATA_COOKIE"), "")
-        if not self.cookie:
+        self.pages = int(config.get("pages", 2))
+        self.page_size = int(config.get("page_size", 50))
+        self.delay = float(config.get("delay_seconds", 1.0))
+        self.timeout = int(config.get("timeout_seconds", 30))
+        self.param_names: Dict[str, str] = config.get("param_names", {})
+        self.request_defaults: Dict[str, Any] = config.get("request", {})
+
+        self.max_requests = int(config.get("max_requests_per_run", 10))
+        self._requests_made = 0
+        self.cache = ResponseCache(config.get("cache_dir", "data/.cache"),
+                                   float(config.get("cache_ttl_minutes", 360)))
+
+        self.api_key = config.get("api_key") or os.environ.get(
+            config.get("api_key_env", "KALODATA_API_KEY"), "")
+        if not self.api_key:
             raise KalodataAPIError(
-                "Kein Session-Cookie gefunden. Setze die Umgebungsvariable "
-                f"{config.get('cookie_env', 'KALODATA_COOKIE')} "
-                "(Browser -> DevTools -> Network -> Request Headers -> cookie)."
+                "Kein API-Key gefunden. Key im Kalodata Open Center erzeugen und "
+                f"als Umgebungsvariable {config.get('api_key_env', 'KALODATA_API_KEY')} setzen."
             )
 
-    # --- HTTP --------------------------------------------------------------
-    def _request(self, payload: Dict[str, Any]) -> Any:
-        url = self.base_url + self.endpoint
-        headers = dict(DEFAULT_HEADERS)
-        headers["Cookie"] = self.cookie
-        headers["Referer"] = self.base_url + "/"
+    # --- Auth --------------------------------------------------------------
+    def _auth_headers(self) -> Dict[str, str]:
+        auth = self.config.get("auth", {})
+        header = auth.get("header", "Authorization")
+        prefix = auth.get("prefix", "Bearer ")
+        return {header: f"{prefix}{self.api_key}"}
 
+    # --- Parameter ---------------------------------------------------------
+    def param(self, logical: str) -> str:
+        """Uebersetzt einen logischen Namen in den Feldnamen der API."""
+        return self.param_names.get(logical, logical)
+
+    def build_payload(self, page: int, **overrides: Any) -> Dict[str, Any]:
+        request = dict(self.request_defaults)
+        days = int(request.pop("date_range_days", 7) or 7)
+        end = date.today() - timedelta(days=int(request.pop("date_offset_days", 1) or 0))
+        start = end - timedelta(days=days - 1)
+
+        payload: Dict[str, Any] = {
+            self.param("page"): page,
+            self.param("page_size"): self.page_size,
+            self.param("start_date"): start.isoformat(),
+            self.param("end_date"): end.isoformat(),
+        }
+        for key in ("region", "language", "currency", "sort", "sort_order", "category"):
+            if request.get(key) not in (None, "", []):
+                payload[self.param(key)] = request.pop(key)
+        # Filter und alles Uebrige unveraendert durchreichen
+        payload.update(request.pop("filters", {}) or {})
+        payload.update(request)
+        payload.update(overrides)
+        return payload
+
+    # --- HTTP --------------------------------------------------------------
+    def _endpoint_url(self, kind: str = "rank") -> str:
+        path = self.endpoints.get(kind)
+        if not path:
+            raise KalodataAPIError(
+                f"Kein '{kind}'-Endpunkt konfiguriert (source.api.endpoints.{kind}). "
+                "Pfad aus den Open-Center-Docs eintragen."
+            )
+        return self.base_url + path
+
+    def request(self, payload: Dict[str, Any], kind: str = "rank") -> Any:
+        url = self._endpoint_url(kind)
+        cache_key = f"{self.method} {url} {json.dumps(payload, sort_keys=True)}"
+        cached = self.cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        if self._requests_made >= self.max_requests:
+            raise BudgetExceeded(
+                f"Requestbudget erreicht ({self.max_requests} Aufrufe). "
+                "source.api.max_requests_per_run erhoehen, wenn das gewollt ist."
+            )
+
+        headers = {**DEFAULT_HEADERS, **self._auth_headers()}
         if self.method == "GET":
-            url = f"{url}?{urllib.parse.urlencode(payload, doseq=True)}"
-            request = urllib.request.Request(url, headers=headers, method="GET")
+            full_url = f"{url}?{urllib.parse.urlencode(_flatten_params(payload), doseq=True)}"
+            request = urllib.request.Request(full_url, headers=headers, method="GET")
         else:
             headers["Content-Type"] = "application/json"
             request = urllib.request.Request(
                 url, data=json.dumps(payload).encode("utf-8"),
-                headers=headers, method="POST")
+                headers=headers, method=self.method)
 
+        self._requests_made += 1
         try:
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 body = response.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as exc:
-            if exc.code in (401, 403):
-                raise KalodataAPIError(
-                    "Kalodata hat den Zugriff abgelehnt (Cookie abgelaufen oder Tarif "
-                    "deckt den Endpunkt nicht). Cookie neu kopieren oder auf CSV umstellen."
-                ) from exc
-            raise KalodataAPIError(f"HTTP {exc.code} von {url}") from exc
+            raise KalodataAPIError(_http_message(exc, url)) from exc
         except urllib.error.URLError as exc:
             raise KalodataAPIError(f"Netzwerkfehler bei {url}: {exc.reason}") from exc
 
         try:
-            return json.loads(body)
+            data = json.loads(body)
         except json.JSONDecodeError as exc:
-            snippet = body[:120].replace("\n", " ")
             raise KalodataAPIError(
-                "Antwort war kein JSON - meist die Login-Seite, d.h. das Cookie ist "
-                f"ungueltig. Anfang der Antwort: {snippet!r}"
-            ) from exc
+                f"Antwort von {url} war kein JSON. Anfang: {body[:150]!r}") from exc
+
+        _raise_for_api_error(data, url)
+        self.cache.put(cache_key, data)
+        return data
 
     # --- Abruf -------------------------------------------------------------
     def fetch_raw(self) -> List[Dict[str, Any]]:
         records: List[Dict[str, Any]] = []
         for page in range(1, self.pages + 1):
-            payload = {"page": page, "pageSize": self.page_size,
-                       "period": self.period, **self.extra_params}
-            batch = extract_records(self._request(payload))
+            try:
+                payload = self.request(self.build_payload(page), kind="rank")
+            except BudgetExceeded:
+                break  # was schon geholt wurde, wird trotzdem ausgewertet
+            batch = extract_records(payload)
             if not batch:
                 break
             records.extend(batch)
@@ -115,11 +211,51 @@ class KalodataClient:
         records = self.fetch_raw()
         if not records:
             return []
-        return load_products([flatten(r) for r in records])
+        return load_products([flatten(record) for record in records])
+
+    @property
+    def requests_made(self) -> int:
+        return self._requests_made
+
+
+def _http_message(exc: urllib.error.HTTPError, url: str) -> str:
+    detail = ""
+    try:
+        detail = exc.read().decode("utf-8", errors="replace")[:200]
+    except Exception:
+        pass
+    hints = {
+        401: "API-Key ungueltig oder nicht gesendet - Header-Format in source.api.auth pruefen.",
+        403: "Key gueltig, aber ohne Berechtigung fuer diesen Endpunkt (Tarif/Modul).",
+        402: "Credits aufgebraucht - im Open Center aufladen.",
+        404: "Endpunktpfad stimmt nicht - Pfad aus den Docs in source.api.endpoints eintragen.",
+        429: "Rate-Limit erreicht - source.api.delay_seconds erhoehen.",
+    }
+    hint = hints.get(exc.code, "")
+    return f"HTTP {exc.code} von {url}. {hint} {detail}".strip()
+
+
+def _raise_for_api_error(payload: Any, url: str) -> None:
+    """Viele APIs antworten mit HTTP 200 und einem Fehlercode im Body."""
+    if not isinstance(payload, dict):
+        return
+    code = payload.get("code", payload.get("status_code"))
+    if code in (None, 0, 200, "0", "200", "success", "OK"):
+        return
+    if extract_records(payload):
+        return  # Daten sind da, der Code meint etwas anderes
+    message = payload.get("message") or payload.get("msg") or payload.get("error") or ""
+    raise KalodataAPIError(f"Kalodata meldet Fehler {code} bei {url}: {message}")
+
+
+def _flatten_params(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Verschachtelte Werte fuer GET-Querystrings JSON-kodieren."""
+    return {k: (json.dumps(v) if isinstance(v, (dict, list)) else v)
+            for k, v in payload.items()}
 
 
 def extract_records(payload: Any) -> List[Dict[str, Any]]:
-    """Findet die Produktliste im JSON, ohne die genaue Struktur zu kennen."""
+    """Findet die Datensatzliste, ohne die exakte Huelle zu kennen."""
     if isinstance(payload, list):
         return [r for r in payload if isinstance(r, dict)]
     if not isinstance(payload, dict):
@@ -132,7 +268,6 @@ def extract_records(payload: Any) -> List[Dict[str, Any]]:
             nested = extract_records(value)
             if nested:
                 return nested
-    # Letzter Versuch: erste Liste aus Objekten irgendwo im Baum
     for value in payload.values():
         if isinstance(value, (dict, list)):
             nested = extract_records(value)
@@ -160,16 +295,28 @@ def fetch_products(config: Dict[str, Any]) -> List[Product]:
 
 
 def probe(config: Dict[str, Any], out_path: Optional[str] = None) -> Dict[str, Any]:
-    """Einmalabruf zum Debuggen: zeigt, welche Felder die API wirklich liefert."""
-    client = KalodataClient(config)
-    payload = {"page": 1, "pageSize": min(client.page_size, 10),
-               "period": client.period, **client.extra_params}
-    raw = client._request(payload)
+    """Ein einzelner Aufruf zum Abgleich mit den Docs - kostet genau einen Request."""
+    probe_config = dict(config)
+    probe_config["cache_ttl_minutes"] = 0      # bewusst frisch abfragen
+    probe_config["max_requests_per_run"] = 1
+    client = KalodataClient(probe_config)
+    client.page_size = min(client.page_size, 10)
+
+    payload = client.build_payload(1)
+    raw = client.request(payload, kind="rank")
     records = extract_records(raw)
+
     if out_path:
         os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as handle:
-            json.dump(raw, handle, indent=2, ensure_ascii=False)
-    return {"records": len(records),
-            "fields": sorted(flatten(records[0]).keys()) if records else [],
-            "saved_to": out_path}
+            json.dump({"request": payload, "response": raw}, handle,
+                      indent=2, ensure_ascii=False)
+
+    fields = sorted(flatten(records[0]).keys()) if records else []
+    mapped = {}
+    if records:
+        from .csv_source import map_headers
+        mapped = map_headers(fields)
+    return {"url": client._endpoint_url("rank"), "request": payload,
+            "records": len(records), "fields": fields, "mapped": mapped,
+            "unmapped": [f for f in fields if f not in mapped], "saved_to": out_path}

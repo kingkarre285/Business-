@@ -13,13 +13,43 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "type": "csv",                       # csv | api
         "path": "data/kalodata_export.csv",  # bei type=csv: Datei oder Ordner (neueste Datei)
         "api": {
-            "cookie_env": "KALODATA_COOKIE",
-            "base_url": "https://www.kalodata.com",
-            "endpoint": "/api/product/list",
-            "period": "7d",
-            "pages": 3,
+            # Werte aus dem Kalodata Open Center (Menue "API"). Alles hier ist
+            # Konfiguration, kein Code - weicht die Doku deines Tarifs ab,
+            # aenderst du nur diese Zeilen.
+            "base_url": "https://api.kalodata.com",
+            "api_key_env": "KALODATA_API_KEY",
+            "auth": {"header": "Authorization", "prefix": "Bearer "},
+            "module": "product",
+            "endpoints": {
+                "rank": "/open/v1/product/rank",
+                "detail": "/open/v1/product/detail",
+            },
+            "method": "POST",
+            "request": {
+                "region": "US",
+                "language": "en",
+                "currency": "USD",
+                "date_range_days": 7,
+                "date_offset_days": 1,   # gestern als Enddatum: heute ist unvollstaendig
+                "sort": "revenue",
+                "filters": {},
+            },
+            # Logischer Name -> Feldname der API
+            "param_names": {
+                "page": "page",
+                "page_size": "pageSize",
+                "start_date": "startDate",
+                "end_date": "endDate",
+                "sort": "sortBy",
+            },
+            "pages": 2,
             "page_size": 50,
-            "extra_params": {},
+            # Abrechnung nach Verbrauch: hartes Budget statt boeser Ueberraschung
+            "max_requests_per_run": 10,
+            "cache_ttl_minutes": 360,
+            "cache_dir": "data/.cache",
+            "delay_seconds": 1.0,
+            "timeout_seconds": 30,
         },
     },
 

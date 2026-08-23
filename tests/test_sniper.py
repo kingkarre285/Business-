@@ -15,7 +15,10 @@ from kalodata_sniper.config import Config
 from kalodata_sniper.models import Product
 from kalodata_sniper.scoring import (apply_filters, compute_momentum, run_scoring,
                                      score_product, select_alerts)
-from kalodata_sniper.sources.api_source import extract_records, flatten
+from kalodata_sniper.sources.api_source import (BudgetExceeded, KalodataAPIError,
+                                                 KalodataClient, ResponseCache,
+                                                 _raise_for_api_error, extract_records,
+                                                 flatten)
 from kalodata_sniper.sources.csv_source import load_from_text, map_headers
 from kalodata_sniper.state import State
 from kalodata_sniper.util import parse_date, parse_number, parse_percent
@@ -264,6 +267,76 @@ class TestApiHelpers(unittest.TestCase):
     def test_flatten_nested(self):
         flat = flatten({"product": {"name": "X"}, "tags": [1, 2, 3], "id": 7})
         self.assertEqual(flat, {"product name": "X", "tags": 3, "id": 7})
+
+
+class TestApiClient(unittest.TestCase):
+    def _client(self, **overrides):
+        config = {
+            "api_key": "testkey",
+            "endpoints": {"rank": "/open/v1/product/rank"},
+            "request": {"region": "US", "currency": "USD", "date_range_days": 7,
+                        "date_offset_days": 1, "filters": {"minPrice": 10}},
+            "param_names": {"page_size": "pageSize", "start_date": "startDate",
+                            "end_date": "endDate", "sort": "sortBy"},
+            "cache_dir": tempfile.mkdtemp(), "cache_ttl_minutes": 0,
+        }
+        config.update(overrides)
+        return KalodataClient(config)
+
+    def test_missing_key_is_explicit(self):
+        os.environ.pop("KALODATA_API_KEY", None)
+        with self.assertRaises(KalodataAPIError) as ctx:
+            KalodataClient({"endpoints": {"rank": "/x"}})
+        self.assertIn("API-Key", str(ctx.exception))
+
+    def test_auth_header_configurable(self):
+        self.assertEqual(self._client()._auth_headers(), {"Authorization": "Bearer testkey"})
+        custom = self._client(auth={"header": "X-API-KEY", "prefix": ""})
+        self.assertEqual(custom._auth_headers(), {"X-API-KEY": "testkey"})
+
+    def test_payload_uses_configured_param_names(self):
+        payload = self._client().build_payload(2)
+        self.assertEqual(payload["page"], 2)
+        self.assertIn("pageSize", payload)
+        self.assertIn("startDate", payload)
+        self.assertEqual(payload["region"], "US")
+        self.assertEqual(payload["minPrice"], 10)   # Filter durchgereicht
+        self.assertNotIn("date_range_days", payload)
+
+    def test_date_window_length(self):
+        payload = self._client().build_payload(1)
+        start = date.fromisoformat(payload["startDate"])
+        end = date.fromisoformat(payload["endDate"])
+        self.assertEqual((end - start).days, 6)           # 7 Tage inklusive
+        self.assertEqual(end, date.today() - timedelta(days=1))
+
+    def test_missing_endpoint_raises_with_hint(self):
+        client = self._client(endpoints={})
+        with self.assertRaises(KalodataAPIError) as ctx:
+            client._endpoint_url("rank")
+        self.assertIn("endpoints.rank", str(ctx.exception))
+
+    def test_budget_blocks_further_requests(self):
+        client = self._client(max_requests_per_run=0)
+        with self.assertRaises(BudgetExceeded):
+            client.request({"page": 1})
+
+    def test_cache_returns_without_spending_a_request(self):
+        cache = ResponseCache(tempfile.mkdtemp(), ttl_minutes=60)
+        cache.put("k", {"data": [{"productName": "A"}]})
+        self.assertEqual(cache.get("k"), {"data": [{"productName": "A"}]})
+        self.assertIsNone(ResponseCache(tempfile.mkdtemp(), 0).get("k"))
+
+    def test_body_level_error_code_raises(self):
+        with self.assertRaises(KalodataAPIError):
+            _raise_for_api_error({"code": 40001, "message": "invalid param"}, "u")
+
+    def test_success_codes_pass(self):
+        for payload in ({"code": 0, "data": []}, {"code": 200}, {"status_code": "0"}):
+            _raise_for_api_error(payload, "u")   # darf nicht werfen
+
+    def test_error_code_with_data_is_tolerated(self):
+        _raise_for_api_error({"code": 1, "data": [{"productName": "A"}]}, "u")
 
 
 class TestPipeline(unittest.TestCase):

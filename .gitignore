@@ -10,6 +10,7 @@ data/*.xlsx
 data/*.json
 !data/demo_export.csv
 data/*.corrupt
+data/.cache/
 reports/
 config.json
 .env
