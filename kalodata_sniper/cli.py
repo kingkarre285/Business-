@@ -35,6 +35,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--no-alerts", action="store_true", help="Keine Benachrichtigungen senden")
     p_run.add_argument("--min-score", type=float, help="Alarmschwelle ueberschreiben")
     p_run.add_argument("--top", type=int, help="Anzahl angezeigter Kandidaten")
+    p_run.add_argument("--region", help="Marktregion fuer den API-Abruf, z.B. DE, US, GB")
+    p_run.add_argument("--date-range", dest="date_range",
+                       help="Zeitraum: last7Day, 30d, 2026-08-01~2026-08-07 oder 2026-08")
+    p_run.add_argument("--currency", help="Waehrung der API-Werte, z.B. EUR, USD")
 
     p_watch = sub.add_parser("watch", help="Dauerlauf in festem Intervall")
     p_watch.add_argument("--interval", type=int, default=3600, help="Sekunden (Standard 3600)")
@@ -79,7 +83,21 @@ def cmd_init(args) -> int:
     return 0
 
 
+def apply_request_overrides(config: Config, args) -> None:
+    """CLI-Werte in den API-Request spiegeln (region/date_range/currency)."""
+    request = config.data["source"]["api"]["request"]
+    for key in ("region", "date_range", "currency"):
+        value = getattr(args, key, None)
+        if value:
+            request[key] = value
+    if getattr(args, "currency", None):
+        # Reportwaehrung mitziehen, damit die Ausgabe zum Abruf passt
+        symbols = {"EUR": "\u20ac", "USD": "$", "GBP": "\u00a3", "JPY": "\u00a5", "BRL": "R$"}
+        config.data["output"]["currency"] = symbols.get(args.currency, args.currency + " ")
+
+
 def cmd_run(args, config: Config) -> int:
+    apply_request_overrides(config, args)
     if getattr(args, "min_score", None) is not None:
         config.data["alerts"]["min_score"] = args.min_score
     if getattr(args, "top", None) is not None:

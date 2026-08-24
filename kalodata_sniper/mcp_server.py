@@ -59,6 +59,13 @@ def tool_definitions() -> List[Dict[str, Any]]:
                                 "description": "Nichts schreiben: kein Verlauf, keine Reports."},
                     "send_alerts": {"type": "boolean", "default": False,
                                     "description": "Konfigurierte Kanaele (Telegram etc.) benachrichtigen."},
+                    "region": {"type": "string",
+                               "description": "Marktregion fuer den API-Abruf: US BR MX ID JP MY "
+                                              "PH SG TH VN GB ES DE FR IT. Standard aus der Config."},
+                    "date_range": {"type": "string",
+                                   "description": "Zeitraum: lastDay, last7Day, last30Day, last60Day, "
+                                                  "last90Day, last180Day, last365Day, ein Bereich "
+                                                  "'yyyy-MM-dd~yyyy-MM-dd' oder ein Monat 'yyyy-MM'."},
                 },
             },
         },
@@ -119,6 +126,10 @@ def _load_config(config_path: Optional[str]) -> Config:
 def tool_sniper_scan(config: Config, args: Dict[str, Any]) -> str:
     if args.get("min_score") is not None:
         config.data["alerts"]["min_score"] = float(args["min_score"])
+    request = config.data["source"]["api"]["request"]
+    for key in ("region", "date_range"):
+        if args.get(key):
+            request[key] = args[key]
     result = pipeline.run(
         config,
         input_path=args.get("input"),

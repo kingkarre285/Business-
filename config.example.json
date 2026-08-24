@@ -16,9 +16,9 @@
       },
       "method": "POST",
       "request": {
-        "region": "US",
+        "region": "DE",
         "language": "en-US",
-        "currency": "USD",
+        "currency": "EUR",
         "date_range": "last7Day",
         "filters": {}
       },
@@ -118,7 +118,7 @@
     "report_dir": "reports",
     "write_html": true,
     "write_csv": true,
-    "currency": "$",
+    "currency": "€",
     "history_length": 40,
     "prune_after_days": 120
   }

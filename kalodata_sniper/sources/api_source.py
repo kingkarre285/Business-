@@ -315,9 +315,28 @@ def _http_message(exc: urllib.error.HTTPError, url: str) -> str:
 
 
 def _raise_for_api_error(payload: Any, url: str) -> None:
-    """Viele APIs antworten mit HTTP 200 und einem Fehlercode im Body."""
+    """Die API antwortet mit HTTP 200 und meldet Fehler im Body.
+
+    Huelle laut Doku: {success, data, message, debug, cached, code}. ``success``
+    ist das verlaessliche Signal - ``code`` ist ein String ohne dokumentierte
+    Erfolgskonstante.
+    """
     if not isinstance(payload, dict):
         return
+
+    if payload.get("success") is False:
+        # Die Mock-Vorschau der Doku liefert success=false trotz gefuellter Daten.
+        # Nur abbrechen, wenn wirklich nichts Verwertbares dabei ist.
+        if extract_records(payload):
+            return
+        message = payload.get("message") or "kein Grund genannt"
+        code = payload.get("code")
+        suffix = f" (code {code})" if code else ""
+        raise KalodataAPIError(f"Kalodata meldet Fehler bei {url}: {message}{suffix}")
+    if payload.get("success") is True:
+        return
+
+    # Aeltere/abweichende Huellen: numerischer Fehlercode ohne success-Flag
     code = payload.get("code", payload.get("status_code"))
     if code in (None, 0, 200, "0", "200", "success", "OK"):
         return
@@ -334,11 +353,16 @@ def _flatten_params(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def extract_records(payload: Any) -> List[Dict[str, Any]]:
-    """Findet die Datensatzliste, ohne die exakte Huelle zu kennen."""
+    """Findet die Datensaetze in der Antwort.
+
+    Listen-Endpunkte liefern ``data`` als Array, Detail-Endpunkte als einzelnes
+    Objekt - beides ergibt hier eine Liste von Datensaetzen.
+    """
     if isinstance(payload, list):
         return [r for r in payload if isinstance(r, dict)]
     if not isinstance(payload, dict):
         return []
+
     for key in ("data", "list", "items", "products", "records", "rows", "result", "content"):
         value = payload.get(key)
         if isinstance(value, list) and value and isinstance(value[0], dict):
@@ -347,6 +371,9 @@ def extract_records(payload: Any) -> List[Dict[str, Any]]:
             nested = extract_records(value)
             if nested:
                 return nested
+            if _looks_like_record(value):
+                return [value]   # Detail-Antwort: data ist der Datensatz selbst
+
     for value in payload.values():
         if isinstance(value, (dict, list)):
             nested = extract_records(value)
@@ -355,18 +382,37 @@ def extract_records(payload: Any) -> List[Dict[str, Any]]:
     return []
 
 
+def _looks_like_record(value: Dict[str, Any]) -> bool:
+    """Ein Datensatz ist ein Objekt mit skalaren Feldern, keine blosse Huelle."""
+    envelope_keys = {"success", "message", "debug", "cached", "code"}
+    keys = set(value.keys())
+    if not keys or keys <= envelope_keys:
+        return False
+    return any(not isinstance(v, (dict, list)) for v in value.values())
+
+
 def flatten(record: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
-    """Verschachteltes JSON zu flachen Spalten - das Header-Mapping erwartet flach."""
+    """Verschachteltes JSON zu flachen Spalten - das Header-Mapping erwartet flach.
+
+    Zahlenreihen wie ``revenue_trend`` bleiben als Liste erhalten: aus ihnen
+    berechnet das Scoring das Momentum schon beim ersten Lauf. Alle uebrigen
+    Listen werden zu ihrer Laenge verdichtet (z.B. Anzahl verknuepfter Creator).
+    """
     out: Dict[str, Any] = {}
     for key, value in record.items():
         name = f"{prefix}{key}"
         if isinstance(value, dict):
             out.update(flatten(value, prefix=f"{name} "))
         elif isinstance(value, list):
-            out[name] = len(value)
+            out[name] = value if _is_number_series(value) else len(value)
         else:
             out[name] = value
     return out
+
+
+def _is_number_series(value: List[Any]) -> bool:
+    return bool(value) and all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                               for v in value)
 
 
 def fetch_products(config: Dict[str, Any]) -> List[Product]:

@@ -10,7 +10,7 @@ from typing import List
 
 HEADERS = ["Product ID", "Product Name", "Category", "Shop Name", "Price", "Revenue",
            "Items Sold", "Commission Rate", "Revenue Growth", "Rating", "Creators",
-           "Videos", "Lives", "Launch Date", "Product Link"]
+           "Videos", "Lives", "Revenue Trend", "Launch Date", "Product Link"]
 
 SAMPLES = [
     # (Name, Kategorie, Preis, Umsatz, Stueck, Provision, Wachstum, Rating, Creator, Videos, Alter in Tagen)
@@ -51,11 +51,22 @@ def build_rows(seed: int = 7) -> List[dict]:
             "Rating": f"{rating:.1f}",
             "Creators": f"{creators:,}",
             "Videos": f"{videos:,}",
+            # Tagesreihe wie das API-Feld revenue_trend: daraus entsteht Momentum
+            # schon beim ersten Lauf, ohne eigenen Verlauf
+            "Revenue Trend": _trend(revenue, growth),
             "Lives": random.randint(0, 60),
             "Launch Date": (today - timedelta(days=age)).isoformat(),
             "Product Link": f"https://shop.tiktok.com/view/product/17{index:08d}",
         })
     return rows
+
+
+def _trend(revenue: float, growth: float, days: int = 6) -> str:
+    """Baut eine plausible Tagesreihe, die im Mittel das Wachstum abbildet."""
+    daily = revenue / days
+    start = daily / (1 + max(growth, -0.9) / 2)
+    step = (daily - start) * 2 / max(days - 1, 1)
+    return ";".join(f"{start + step * day:.0f}" for day in range(days))
 
 
 def write_sample(path: str = "data/demo_export.csv", seed: int = 7) -> str:

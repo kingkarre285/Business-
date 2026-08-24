@@ -85,17 +85,22 @@ def _fmt(label: str, value: float) -> str:
 # --- Momentum aus dem Verlauf ---------------------------------------------
 def compute_momentum(product: Product, state: Optional[State],
                      lookback_hours: float = 12.0) -> Optional[float]:
-    """Umsatzwachstum als Anteil.
+    """Umsatzwachstum als Anteil, aus der besten verfuegbaren Quelle.
 
-    Bevorzugt wird das Delta zu einem ausreichend alten eigenen Snapshot - das ist
-    der echte Breakout-Indikator. Gibt es den nicht (erster Lauf, oder derselbe
-    Export zweimal hintereinander), greift das Wachstumsfeld aus dem Export.
+    1. Delta zu einem ausreichend alten eigenen Snapshot - der echte
+       Breakout-Indikator, weil er zwei unabhaengige Messungen vergleicht.
+    2. Die Tagesreihe ``revenue_trend`` der API - liefert Momentum schon beim
+       ersten Lauf, ohne eigenen Verlauf.
+    3. Das Wachstumsfeld des Exports.
     """
     if state is not None and product.revenue is not None:
         snapshot = state.snapshot_before(product.key, lookback_hours)
         previous = (snapshot or {}).get("revenue")
         if previous and previous > 0:
             return (product.revenue - previous) / previous
+    trend = product.trend_momentum
+    if trend is not None:
+        return trend
     return product.revenue_growth
 
 

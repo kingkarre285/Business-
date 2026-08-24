@@ -36,8 +36,14 @@ Ausgabe: Top-Kandidaten im Terminal, `reports/latest.html` zum Durchklicken,
 **1. CSV/XLSX-Export (Standard, robust)**
 Kalodata → Products → Filter → Export. Die Spaltennamen sind egal: das Mapping
 in `kalodata_sniper/sources/csv_source.py` erkennt englische und deutsche Header,
-`camelCase`-Felder sowie Varianten wie „Revenue last 7 days". Unbekannte Spalten
-werden ignoriert, nicht als Fehler behandelt.
+`snake_case`- und `camelCase`-Felder sowie Varianten wie „Revenue last 7 days".
+Unbekannte Spalten werden ignoriert, nicht als Fehler behandelt.
+
+Das Mapping läuft in zwei Durchgängen — exakte Treffer zuerst, unscharfe nur für
+danach noch freie Felder. Ohne diese Reihenfolge würde `product_number` (Anzahl
+Produkte in einem Video) per Teiltreffer auf „product" das Namensfeld belegen,
+bevor `product_title` überhaupt drankommt. Mehrdeutige Felder bleiben lieber
+unzugeordnet, als falsch zugeordnet zu werden.
 
 **2. Offizielle Open API (vollautomatisch)**
 Kalodata Open Center → API-Key erzeugen. Der Vertrag laut Doku:
@@ -65,9 +71,9 @@ in der Config `source.type` auf `"api"` setzen.
   "auth": { "header": "secret-key", "prefix": "" },
   "endpoints": { "rank": "/openapi/v1/tiktok/product/list" },
   "request": {
-    "region": "US",           // US BR MX ID JP MY PH SG TH VN GB ES DE FR IT
+    "region": "DE",           // US BR MX ID JP MY PH SG TH VN GB ES DE FR IT
     "language": "en-US",      // zh-CN en-US id-ID th-TH vi-VN es-ES ja-JP pt-BR ko-KR fr-FR
-    "currency": "USD",        // CNY USD IDR VND THB MYR JPY PHP GBP SGD MXN EUR BRL
+    "currency": "EUR",        // CNY USD IDR VND THB MYR JPY PHP GBP SGD MXN EUR BRL
     "date_range": "last7Day"  // oder "2026-08-01~2026-08-07" bzw. "2026-08"
   },
   "max_requests_per_run": 10, // hartes Budget
@@ -77,6 +83,17 @@ in der Config `source.type` auf `"api"` setzen.
 
 `date_range` nimmt auch Kurzformen: `7d` → `last7Day`, `30d` → `last30Day`,
 Groß-/Kleinschreibung egal.
+
+**Voreingestellt ist der deutsche Markt** (`region: DE`, `currency: EUR`). Eine
+Einschränkung der API, die man kennen muss: **`de-DE` gibt es in der Sprachliste
+nicht** — deutsche Marktdaten kommen mit englischen Textfeldern (Produkttitel,
+Kategorien). Region und Währung sind davon unberührt.
+
+Pro Lauf umschaltbar, ohne die Config anzufassen:
+
+```bash
+python -m kalodata_sniper run --region GB --currency GBP --date-range last30Day
+```
 
 > **Credits:** Die Open API rechnet nach Verbrauch ab. Drei Schutzschichten:
 > Pflichtfelder werden **vor** dem Request gegen die erlaubten Werte geprüft (ein
@@ -134,11 +151,16 @@ Zwei Designentscheidungen, die den Unterschied machen:
 
 * **Fehlende Daten werden nicht als 0 bestraft.** Liefert ein Export keine
   Creator-Zahl, fliegt der Baustein aus der Gewichtung, statt den Score zu drücken.
-* **Momentum kommt aus dem eigenen Verlauf.** Verglichen wird gegen den jüngsten
-  Snapshot, der mindestens `scoring.momentum_lookback_hours` (Standard 12 h) alt
-  ist. Dadurch setzt ein zweiter Lauf mit derselben Exportdatei das Wachstum nicht
-  auf 0 — genau das ist der Unterschied zwischen „Liste sortieren" und „Breakout
-  erkennen".
+* **Momentum kommt aus drei Quellen, in dieser Reihenfolge:**
+  1. **Eigener Verlauf** — Vergleich gegen den jüngsten Snapshot, der mindestens
+     `scoring.momentum_lookback_hours` (Standard 12 h) alt ist. Zwei unabhängige
+     Messungen, der belastbarste Indikator. Dass der Snapshot alt genug sein muss,
+     verhindert, dass ein zweiter Lauf mit derselben Datei das Wachstum auf 0 setzt.
+  2. **Tagesreihe `revenue_trend` der API** — zweite Hälfte gegen erste, längen­normiert.
+     Damit gibt es Momentum schon beim **ersten** Lauf, ohne eigenen Verlauf.
+  3. **Wachstumsfeld des Exports.**
+
+  Das ist der Unterschied zwischen „Liste sortieren" und „Breakout erkennen".
 
 Score eines einzelnen Produkts aufschlüsseln:
 
@@ -216,7 +238,7 @@ python -m kalodata_sniper watch --interval 3600
 
 | Befehl | Zweck |
 |---|---|
-| `run` | Ein Durchlauf. `--dry-run` schreibt nichts, `--no-alerts` sendet nicht |
+| `run` | Ein Durchlauf. `--dry-run` schreibt nichts, `--no-alerts` sendet nicht, `--region`/`--currency`/`--date-range` überschreiben den Abruf |
 | `watch --interval 3600` | Dauerlauf im festen Takt |
 | `explain "<name>"` | Score-Aufschlüsselung eines Produkts inkl. Filtergründen |
 | `state --top 10` | Verlauf inspizieren, `--reset` löscht ihn |
@@ -229,7 +251,7 @@ python -m kalodata_sniper watch --interval 3600
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v    # 69 Tests, keine externen Abhängigkeiten
+python -m unittest discover -s tests -v    # 86 Tests, keine externen Abhängigkeiten
 ```
 
 ## Aufbau
@@ -258,5 +280,8 @@ kalodata_sniper/
   die Namen von `page`/`page_size` sind analog zum dokumentierten
   `video/detail`-Endpoint gesetzt, aber nicht gegen die Doku verifiziert. Ein
   `probe-api`-Aufruf klärt das; Abweichungen sind reine Config-Werte.
+* Die Feldnamen des Product-Moduls sind aus dem Video-Modul abgeleitet
+  (`sales_volumn`, `product_gpm`, `creator_number`, `revenue_trend`). Weicht das
+  Product-Modul ab, zeigt `probe-api` genau, was nicht zugeordnet wurde.
 * Momentum braucht mindestens zwei Läufe im Abstand von `momentum_lookback_hours`.
   Der erste Lauf bewertet nur den Status quo.

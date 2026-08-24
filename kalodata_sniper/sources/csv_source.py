@@ -11,6 +11,7 @@ import csv
 import io
 import json
 import os
+import re
 from typing import Any, Dict, Iterable, List, Optional
 
 from ..models import Product
@@ -19,26 +20,34 @@ from ..util import parse_date, parse_number, parse_percent, slug
 # Reihenfolge zaehlt: der erste Treffer im Header gewinnt.
 COLUMN_ALIASES: Dict[str, List[str]] = {
     "product_id": ["product id", "productid", "id", "item id", "produkt id", "sku"],
-    "name": ["product name", "product", "produkt", "produktname", "title", "titel", "name"],
-    "category": ["category", "kategorie", "product category", "l1 category", "main category"],
-    "shop": ["shop name", "shop", "seller", "store", "haendler", "verkaeufer", "shopname"],
-    "url": ["product link", "product url", "link", "url", "produktlink"],
-    "price": ["price", "avg price", "average price", "preis", "durchschnittspreis", "unit price"],
-    "revenue": ["revenue", "gmv", "sales", "umsatz", "revenue($)", "total revenue", "sales amount"],
-    "units_sold": ["items sold", "item sold", "units sold", "sales volume", "sold",
-                   "verkaufte artikel", "verkaeufe", "stueckzahl", "orders"],
+    "name": ["product title", "product name", "video title", "product", "produkt",
+             "produktname", "title", "titel", "name"],
+    "category": ["category name", "category", "kategorie", "product category",
+                 "l1 category", "main category"],
+    "shop": ["shop name", "seller name", "shop", "seller", "store", "haendler",
+             "verkaeufer", "shopname"],
+    "url": ["product link", "product url", "video url", "link", "url", "produktlink"],
+    "price": ["avg price", "average price", "price", "preis", "durchschnittspreis",
+              "unit price"],
+    "revenue": ["revenue", "gmv", "sales", "umsatz", "revenue($)", "total revenue",
+                "sales amount"],
+    # 'sales volumn' ist die Schreibweise der Kalodata-API (Tippfehler dort)
+    "units_sold": ["sales volumn", "sales volume", "items sold", "item sold", "units sold",
+                   "sold", "verkaufte artikel", "verkaeufe", "stueckzahl", "orders"],
     "commission_rate": ["commission rate", "commission", "provision", "provisionssatz",
                         "commission(%)", "comm rate"],
-    "revenue_growth": ["revenue growth", "growth", "growth rate", "wachstum", "umsatzwachstum",
-                       "revenue change", "trend"],
-    "rating": ["rating", "product rating", "bewertung", "sterne", "stars", "score"],
-    "creators": ["creators", "creator count", "influencers", "related creators", "affiliates",
-                 "creator", "anzahl creator"],
-    "videos": ["videos", "video count", "related videos", "video", "anzahl videos"],
-    "lives": ["lives", "live count", "live", "livestreams", "anzahl lives"],
-    "gpm": ["gpm", "gross per mille", "revenue per 1000 views"],
-    "launch_date": ["launch date", "listing date", "on shelf time", "created", "release date",
-                    "veroeffentlichungsdatum", "startdatum", "date"],
+    "revenue_growth": ["revenue growth", "growth rate", "growth", "wachstum",
+                       "umsatzwachstum", "revenue change"],
+    "revenue_series": ["revenue trend", "revenue series", "umsatzverlauf", "trend"],
+    "rating": ["product rating", "rating", "bewertung", "sterne", "stars"],
+    "creators": ["creator number", "creators", "creator count", "related creators",
+                 "influencer number", "influencers", "affiliates", "anzahl creator"],
+    "videos": ["video number", "videos", "video count", "related videos", "anzahl videos"],
+    "lives": ["live number", "lives", "live count", "livestreams", "anzahl lives"],
+    "gpm": ["product gpm", "video gpm", "gpm", "gross per mille", "revenue per 1000 views"],
+    "views": ["views", "view count", "aufrufe"],
+    "launch_date": ["launch date", "listing date", "on shelf time", "created",
+                    "release date", "veroeffentlichungsdatum", "startdatum"],
 }
 
 _ALIAS_INDEX = {
@@ -48,24 +57,37 @@ _ALIAS_INDEX = {
 }
 
 _PERCENT_FIELDS = {"commission_rate", "revenue_growth"}
-_NUMBER_FIELDS = {"price", "revenue", "units_sold", "rating", "creators", "videos", "lives", "gpm"}
+_NUMBER_FIELDS = {"price", "revenue", "units_sold", "rating", "creators", "videos",
+                  "lives", "gpm", "views"}
+_SERIES_FIELDS = {"revenue_series"}
 
 
 def map_headers(headers: Iterable[str]) -> Dict[str, str]:
-    """Ordnet Exportspalten den Produktfeldern zu: {header -> feldname}."""
+    """Ordnet Exportspalten den Produktfeldern zu: {header -> feldname}.
+
+    In zwei Durchgaengen, und das aus einem konkreten Grund: exakte Treffer
+    zuerst, unscharfe nur fuer danach noch freie Felder. Sonst schnappt sich
+    ``product_number`` (Anzahl Produkte im Video) per Teiltreffer auf 'product'
+    das Namensfeld, bevor ``product_title`` ueberhaupt drankommt.
+    """
+    headers = [h for h in headers if h is not None]
     mapping: Dict[str, str] = {}
     taken: set = set()
-    for header in headers:
-        if header is None:
+
+    for header in headers:                      # Durchgang 1: exakt
+        field = _ALIAS_INDEX.get(slug(header))
+        if field and field not in taken:
+            mapping[header] = field
+            taken.add(field)
+
+    for header in headers:                      # Durchgang 2: Teiltreffer
+        if header in mapping:
             continue
         key = slug(header)
-        field = _ALIAS_INDEX.get(key)
-        if field is None:
-            # Zweiter Versuch: Teilstring-Treffer ("revenue last 7 days" -> revenue)
-            candidates = [(len(alias), fld) for alias, fld in _ALIAS_INDEX.items()
-                          if len(alias) >= 4 and alias in key]
-            field = max(candidates)[1] if candidates else None
-        if field and field not in taken:
+        candidates = [(len(alias), fld) for alias, fld in _ALIAS_INDEX.items()
+                      if len(alias) >= 4 and alias in key and fld not in taken]
+        if candidates:
+            field = max(candidates)[1]
             mapping[header] = field
             taken.add(field)
     return mapping
@@ -77,7 +99,11 @@ def row_to_product(row: Dict[str, Any], mapping: Dict[str, str]) -> Optional[Pro
         raw = row.get(header)
         if raw is None or (isinstance(raw, str) and not raw.strip()):
             continue
-        if field in _PERCENT_FIELDS:
+        if field in _SERIES_FIELDS:
+            series = _as_series(raw)
+            if series:
+                values[field] = series
+        elif field in _PERCENT_FIELDS:
             values[field] = parse_percent(raw)
         elif field in _NUMBER_FIELDS:
             values[field] = parse_number(raw)
@@ -95,6 +121,18 @@ def row_to_product(row: Dict[str, Any], mapping: Dict[str, str]) -> Optional[Pro
         values["price"] = values["revenue"] / values["units_sold"]
 
     return Product(raw={k: v for k, v in row.items() if v not in (None, "")}, **values)
+
+
+def _as_series(raw: Any) -> Optional[List[float]]:
+    """Akzeptiert eine echte Liste (API) oder '50000,62000' (CSV-Export)."""
+    if isinstance(raw, (list, tuple)):
+        numbers = [parse_number(v) for v in raw]
+    elif isinstance(raw, str) and any(sep in raw for sep in (",", ";", "|")):
+        numbers = [parse_number(part) for part in re.split(r"[;,|]", raw)]
+    else:
+        return None
+    series = [n for n in numbers if n is not None]
+    return series if len(series) >= 2 else None
 
 
 def load_products(rows: Iterable[Dict[str, Any]], headers: Optional[List[str]] = None) -> List[Product]:

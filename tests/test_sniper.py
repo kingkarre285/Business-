@@ -22,7 +22,7 @@ from kalodata_sniper.sources.api_source import (BudgetExceeded, KalodataAPIError
                                                  _raise_for_api_error, extract_records,
                                                  flatten, normalise_date_range,
                                                  validate_common)
-from kalodata_sniper.sources.csv_source import load_from_text, map_headers
+from kalodata_sniper.sources.csv_source import load_from_text, load_products, map_headers
 from kalodata_sniper.state import State
 from kalodata_sniper.util import parse_date, parse_number, parse_percent
 
@@ -101,6 +101,104 @@ class TestCsvSource(unittest.TestCase):
         products = load_from_text("Produktname;Umsatz;Preis\nTest;1.234,50;9,99\n")
         self.assertEqual(products[0].name, "Test")
         self.assertAlmostEqual(products[0].revenue, 1234.50)
+
+
+class TestRealApiFieldNames(unittest.TestCase):
+    """Feldnamen aus der Kalodata-Doku - inklusive ihres Tippfehlers 'sales_volumn'."""
+
+    API_RECORD = {
+        "product_id": "123", "product_title": "LED Lampe", "product_number": 5,
+        "revenue": 2500.75, "sales_volumn": 45, "views": 150000, "product_gpm": 16.67,
+        "creator_number": 42, "video_number": 180, "commission_rate": 0.25,
+        "avg_price": 24.99, "category_name": "Home", "revenue_trend": [50000, 62000],
+        "belonged_creator_handle": "techreviewer",
+    }
+
+    def test_mapping_of_api_fields(self):
+        mapping = map_headers(self.API_RECORD.keys())
+        self.assertEqual(mapping["product_title"], "name")
+        self.assertEqual(mapping["sales_volumn"], "units_sold")
+        self.assertEqual(mapping["product_gpm"], "gpm")
+        self.assertEqual(mapping["creator_number"], "creators")
+        self.assertEqual(mapping["revenue_trend"], "revenue_series")
+
+    def test_ambiguous_fields_stay_unmapped(self):
+        """product_number ist die Anzahl Produkte im Video - nicht der Produktname."""
+        mapping = map_headers(self.API_RECORD.keys())
+        self.assertNotIn("product_number", mapping)
+        self.assertNotIn("belonged_creator_handle", mapping)
+
+    def test_exact_match_wins_over_partial(self):
+        mapping = map_headers(["product_number", "product_title"])
+        self.assertEqual(mapping["product_title"], "name")
+        self.assertNotIn("product_number", mapping)
+
+    def test_full_record_becomes_product(self):
+        product = load_products([flatten(self.API_RECORD)])[0]
+        self.assertEqual(product.name, "LED Lampe")
+        self.assertEqual(product.units_sold, 45)
+        self.assertEqual(product.creators, 42)
+        self.assertEqual(product.revenue_series, [50000.0, 62000.0])
+        self.assertAlmostEqual(product.trend_momentum, 0.24)
+
+
+class TestTrendMomentum(unittest.TestCase):
+    def test_second_half_against_first(self):
+        self.assertAlmostEqual(Product(name="x", revenue_series=[50000, 62000]).trend_momentum, 0.24)
+        self.assertAlmostEqual(
+            Product(name="x", revenue_series=[100, 100, 100, 200, 200, 200]).trend_momentum, 1.0)
+
+    def test_uneven_series_is_length_normalised(self):
+        # 3 Tage flach, dann 2 Tage doppelt - ohne Normierung waere das verzerrt
+        value = Product(name="x", revenue_series=[100, 100, 100, 200, 200]).trend_momentum
+        self.assertGreater(value, 0.5)
+
+    def test_too_short_or_zero_series(self):
+        self.assertIsNone(Product(name="x", revenue_series=[100]).trend_momentum)
+        self.assertIsNone(Product(name="x", revenue_series=[0, 0, 500]).trend_momentum)
+        self.assertIsNone(Product(name="x").trend_momentum)
+
+    def test_series_beats_growth_field_but_loses_to_history(self):
+        product = Product(name="x", product_id="p1", revenue=150_000,
+                          revenue_series=[100, 200], revenue_growth=9.9)
+        # ohne Verlauf gewinnt die Tagesreihe gegen das Exportfeld
+        self.assertAlmostEqual(compute_momentum(product, None), 1.0)
+
+        state = State(os.path.join(tempfile.mkdtemp(), "state.json"))
+        old = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+        state.data["products"]["p1"] = {
+            "first_seen": old, "last_seen": old,
+            "history": [{"ts": old, "revenue": 100_000, "score": 40}]}
+        # mit Verlauf gewinnt der Snapshot-Vergleich
+        self.assertAlmostEqual(compute_momentum(product, state), 0.5)
+
+    def test_series_from_csv_string(self):
+        products = load_from_text("Product Name,Revenue,Revenue Trend\nX,1000,\"50000,62000\"\n")
+        self.assertEqual(products[0].revenue_series, [50000.0, 62000.0])
+
+
+class TestGermanMarketDefaults(unittest.TestCase):
+    def test_region_and_currency(self):
+        config = Config()
+        self.assertEqual(config.get("source.api.request.region"), "DE")
+        self.assertEqual(config.get("source.api.request.currency"), "EUR")
+        self.assertEqual(config.get("output.currency"), "\u20ac")
+
+    def test_german_language_is_not_offered_by_the_api(self):
+        """Belegt bewusst die Einschraenkung: de-DE gibt es nicht, en-US ist der Fallback."""
+        from kalodata_sniper.sources.api_source import LANGUAGES
+        self.assertNotIn("de-DE", LANGUAGES)
+        self.assertEqual(Config().get("source.api.request.language"), "en-US")
+
+    def test_region_override_reaches_the_request(self):
+        import argparse
+        from kalodata_sniper.cli import apply_request_overrides
+        config = Config()
+        args = argparse.Namespace(region="GB", date_range="30d", currency="USD")
+        apply_request_overrides(config, args)
+        self.assertEqual(config.get("source.api.request.region"), "GB")
+        self.assertEqual(config.get("source.api.request.date_range"), "30d")
+        self.assertEqual(config.get("output.currency"), "$")
 
 
 class TestFilters(unittest.TestCase):
@@ -268,8 +366,35 @@ class TestApiHelpers(unittest.TestCase):
         self.assertEqual(extract_records({"code": 500, "msg": "error"}), [])
 
     def test_flatten_nested(self):
-        flat = flatten({"product": {"name": "X"}, "tags": [1, 2, 3], "id": 7})
+        flat = flatten({"product": {"name": "X"}, "tags": ["a", "b", "c"], "id": 7})
         self.assertEqual(flat, {"product name": "X", "tags": 3, "id": 7})
+
+    def test_flatten_keeps_number_series(self):
+        """revenue_trend darf nicht zur Laenge verdichtet werden - daraus kommt Momentum."""
+        flat = flatten({"revenue_trend": [50000, 62000], "creators": [{"id": 1}, {"id": 2}]})
+        self.assertEqual(flat["revenue_trend"], [50000, 62000])
+        self.assertEqual(flat["creators"], 2)
+
+    def test_detail_response_yields_single_record(self):
+        payload = {"success": True, "message": "", "cached": False, "code": "",
+                   "data": {"video_id": "74041", "revenue": 2500.75, "sales_volumn": 45}}
+        records = extract_records(payload)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["video_id"], "74041")
+
+    def test_envelope_only_is_not_a_record(self):
+        self.assertEqual(extract_records({"success": True, "data": {}, "message": "x"}), [])
+
+    def test_success_false_raises_with_message(self):
+        with self.assertRaises(KalodataAPIError) as ctx:
+            _raise_for_api_error({"success": False, "message": "invalid secret-key",
+                                  "code": "AUTH_401"}, "u")
+        self.assertIn("invalid secret-key", str(ctx.exception))
+
+    def test_success_false_with_data_is_tolerated(self):
+        """Die Mock-Vorschau der Doku liefert success=false trotz gefuellter Daten."""
+        _raise_for_api_error({"success": False, "message": "string", "code": "string",
+                              "data": {"video_id": "1", "revenue": 5}}, "u")
 
 
 class TestApiClient(unittest.TestCase):

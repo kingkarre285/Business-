@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field, asdict
 from datetime import date
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -33,7 +33,12 @@ class Product:
     videos: Optional[float] = None
     lives: Optional[float] = None
     gpm: Optional[float] = None                # Gross per mille (Umsatz je 1000 Views)
+    views: Optional[float] = None
     launch_date: Optional[date] = None
+
+    # Tagesreihe des Umsatzes im Zeitraum (API-Feld revenue_trend). Daraus
+    # entsteht Momentum bereits beim ersten Lauf, ohne eigenen Verlauf.
+    revenue_series: Optional[List[float]] = None
 
     raw: Dict[str, Any] = field(default_factory=dict)
 
@@ -45,6 +50,24 @@ class Product:
             return str(self.product_id)
         base = f"{self.name}|{self.shop or ''}".lower()
         return "h:" + hashlib.sha1(base.encode("utf-8")).hexdigest()[:16]
+
+    @property
+    def trend_momentum(self) -> Optional[float]:
+        """Wachstum innerhalb der Umsatzreihe: zweite Haelfte gegen erste.
+
+        Robuster als der Vergleich nur der letzten beiden Tage - einzelne
+        Ausreisser kippen das Ergebnis nicht.
+        """
+        series = [v for v in (self.revenue_series or []) if isinstance(v, (int, float))]
+        if len(series) < 2:
+            return None
+        middle = len(series) // 2
+        first, second = series[:middle], series[middle:]
+        base = sum(first)
+        if base <= 0:
+            return None
+        # Auf gleiche Laenge normieren, damit ungerade Reihen nicht verzerren
+        return (sum(second) / len(second)) / (base / len(first)) - 1
 
     @property
     def payout_per_sale(self) -> Optional[float]:

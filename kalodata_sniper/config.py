@@ -26,9 +26,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "method": "POST",
             # Die vier Pflichtfelder aller Endpunkte
             "request": {
-                "region": "US",          # US BR MX ID JP MY PH SG TH VN GB ES DE FR IT
+                "region": "DE",          # US BR MX ID JP MY PH SG TH VN GB ES DE FR IT
+                # Die API bietet kein de-DE - Textfelder kommen auf Englisch
                 "language": "en-US",     # zh-CN en-US id-ID th-TH vi-VN es-ES ja-JP pt-BR ko-KR fr-FR
-                "currency": "USD",       # CNY USD IDR VND THB MYR JPY PHP GBP SGD MXN EUR BRL
+                "currency": "EUR",       # CNY USD IDR VND THB MYR JPY PHP GBP SGD MXN EUR BRL
                 "date_range": "last7Day",  # oder "2026-08-01~2026-08-07" bzw. "2026-08"
                 "filters": {},
             },
@@ -119,7 +120,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "report_dir": "reports",
         "write_html": True,
         "write_csv": True,
-        "currency": "$",
+        "currency": "\u20ac",
         "history_length": 40,
         "prune_after_days": 120,
     },
