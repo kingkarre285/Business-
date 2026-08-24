@@ -13,34 +13,29 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "type": "csv",                       # csv | api
         "path": "data/kalodata_export.csv",  # bei type=csv: Datei oder Ordner (neueste Datei)
         "api": {
-            # Werte aus dem Kalodata Open Center (Menue "API"). Alles hier ist
-            # Konfiguration, kein Code - weicht die Doku deines Tarifs ab,
-            # aenderst du nur diese Zeilen.
-            "base_url": "https://api.kalodata.com",
+            # Werte aus dem Kalodata Open Center. Alle Endpunkte sind POST + JSON
+            # unter www.kalodata.com/openapi/v1/tiktok/... mit Secret-Key im Header.
+            "base_url": "https://www.kalodata.com",
             "api_key_env": "KALODATA_API_KEY",
-            "auth": {"header": "Authorization", "prefix": "Bearer "},
+            "auth": {"header": "secret-key", "prefix": ""},
             "module": "product",
             "endpoints": {
-                "rank": "/open/v1/product/rank",
-                "detail": "/open/v1/product/detail",
+                "rank": "/openapi/v1/tiktok/product/list",
+                "detail": "/openapi/v1/tiktok/product/detail",
             },
             "method": "POST",
+            # Die vier Pflichtfelder aller Endpunkte
             "request": {
-                "region": "US",
-                "language": "en",
-                "currency": "USD",
-                "date_range_days": 7,
-                "date_offset_days": 1,   # gestern als Enddatum: heute ist unvollstaendig
-                "sort": "revenue",
+                "region": "US",          # US BR MX ID JP MY PH SG TH VN GB ES DE FR IT
+                "language": "en-US",     # zh-CN en-US id-ID th-TH vi-VN es-ES ja-JP pt-BR ko-KR fr-FR
+                "currency": "USD",       # CNY USD IDR VND THB MYR JPY PHP GBP SGD MXN EUR BRL
+                "date_range": "last7Day",  # oder "2026-08-01~2026-08-07" bzw. "2026-08"
                 "filters": {},
             },
-            # Logischer Name -> Feldname der API
+            # Logischer Name -> Feldname der API (die Doku nutzt snake_case)
             "param_names": {
                 "page": "page",
-                "page_size": "pageSize",
-                "start_date": "startDate",
-                "end_date": "endDate",
-                "sort": "sortBy",
+                "page_size": "page_size",
             },
             "pages": 2,
             "page_size": 50,
@@ -48,7 +43,10 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "max_requests_per_run": 10,
             "cache_ttl_minutes": 360,
             "cache_dir": "data/.cache",
-            "delay_seconds": 1.0,
+            # Dokumentiertes Limit: 100 Requests / 10 Sekunden
+            "rate_limit_requests": 100,
+            "rate_limit_window_seconds": 10,
+            "delay_seconds": 0.2,
             "timeout_seconds": 30,
         },
     },

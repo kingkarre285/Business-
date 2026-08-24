@@ -3,40 +3,37 @@
     "type": "csv",
     "path": "data/kalodata_export.csv",
     "api": {
-      "base_url": "https://api.kalodata.com",
+      "base_url": "https://www.kalodata.com",
       "api_key_env": "KALODATA_API_KEY",
       "auth": {
-        "header": "Authorization",
-        "prefix": "Bearer "
+        "header": "secret-key",
+        "prefix": ""
       },
       "module": "product",
       "endpoints": {
-        "rank": "/open/v1/product/rank",
-        "detail": "/open/v1/product/detail"
+        "rank": "/openapi/v1/tiktok/product/list",
+        "detail": "/openapi/v1/tiktok/product/detail"
       },
       "method": "POST",
       "request": {
         "region": "US",
-        "language": "en",
+        "language": "en-US",
         "currency": "USD",
-        "date_range_days": 7,
-        "date_offset_days": 1,
-        "sort": "revenue",
+        "date_range": "last7Day",
         "filters": {}
       },
       "param_names": {
         "page": "page",
-        "page_size": "pageSize",
-        "start_date": "startDate",
-        "end_date": "endDate",
-        "sort": "sortBy"
+        "page_size": "page_size"
       },
       "pages": 2,
       "page_size": 50,
       "max_requests_per_run": 10,
       "cache_ttl_minutes": 360,
       "cache_dir": "data/.cache",
-      "delay_seconds": 1.0,
+      "rate_limit_requests": 100,
+      "rate_limit_window_seconds": 10,
+      "delay_seconds": 0.2,
       "timeout_seconds": 30
     }
   },

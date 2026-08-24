@@ -40,9 +40,15 @@ in `kalodata_sniper/sources/csv_source.py` erkennt englische und deutsche Header
 werden ignoriert, nicht als Fehler behandelt.
 
 **2. Offizielle Open API (vollautomatisch)**
-Kalodata Open Center → API-Key erzeugen. Die Open API folgt dem
-**Rank-plus-Detail-Modell** über sechs Module (Product, Creator, Shop, Video,
-Livestream, Category); der Sniper nutzt standardmäßig das Product-Ranking.
+Kalodata Open Center → API-Key erzeugen. Der Vertrag laut Doku:
+
+| | |
+|---|---|
+| Basis-URL | `https://www.kalodata.com/openapi/v1/tiktok/…` |
+| Methode | immer **POST + JSON** |
+| Auth | Secret-Key im Header |
+| Pflichtfelder | `region`, `language`, `currency`, `date_range` |
+| Rate-Limit | 100 Requests / 10 Sekunden |
 
 ```bash
 export KALODATA_API_KEY='...'
@@ -53,32 +59,62 @@ python -m kalodata_sniper probe-api      # ein Aufruf, zeigt Feld-Mapping
 welches Produktfeld gemappt wurden — plus die nicht zugeordneten. Passt alles,
 in der Config `source.type` auf `"api"` setzen.
 
-Basis-URL, Auth-Header, Endpunktpfade und Parameternamen stehen komplett in
-`config.json`:
-
 ```jsonc
 "api": {
-  "base_url": "https://api.kalodata.com",
-  "auth": { "header": "Authorization", "prefix": "Bearer " },
-  "endpoints": { "rank": "/open/v1/product/rank", "detail": "/open/v1/product/detail" },
-  "param_names": { "page_size": "pageSize", "start_date": "startDate" },
-  "max_requests_per_run": 10,      // hartes Budget
-  "cache_ttl_minutes": 360         // Filter tunen ohne neue Credits
+  "base_url": "https://www.kalodata.com",
+  "auth": { "header": "secret-key", "prefix": "" },
+  "endpoints": { "rank": "/openapi/v1/tiktok/product/list" },
+  "request": {
+    "region": "US",           // US BR MX ID JP MY PH SG TH VN GB ES DE FR IT
+    "language": "en-US",      // zh-CN en-US id-ID th-TH vi-VN es-ES ja-JP pt-BR ko-KR fr-FR
+    "currency": "USD",        // CNY USD IDR VND THB MYR JPY PHP GBP SGD MXN EUR BRL
+    "date_range": "last7Day"  // oder "2026-08-01~2026-08-07" bzw. "2026-08"
+  },
+  "max_requests_per_run": 10, // hartes Budget
+  "cache_ttl_minutes": 360    // Filter tunen ohne neue Credits
 }
 ```
 
-Weicht die Doku deines Tarifs davon ab (andere Pfade, `X-API-KEY` statt Bearer,
-andere Feldnamen), ist das eine **Config-Änderung, kein Patch**.
+`date_range` nimmt auch Kurzformen: `7d` → `last7Day`, `30d` → `last30Day`,
+Groß-/Kleinschreibung egal.
 
-> **Credits:** Die Open API rechnet nach Verbrauch ab. Deshalb zwei Schutzschichten:
-> ein hartes Requestbudget pro Lauf (`max_requests_per_run`) und ein Antwort-Cache
-> auf der Platte — beim Nachjustieren der Filter wird dieselbe Antwort
-> wiederverwendet statt neu bezahlt. Der API-Key gehört in eine Umgebungsvariable
-> bzw. ein GitHub-Secret, nie ins Repo.
+> **Credits:** Die Open API rechnet nach Verbrauch ab. Drei Schutzschichten:
+> Pflichtfelder werden **vor** dem Request gegen die erlaubten Werte geprüft (ein
+> Tippfehler in `region` kostet so keinen Credit), ein hartes Requestbudget pro
+> Lauf (`max_requests_per_run`) und ein Antwort-Cache auf der Platte — beim
+> Nachjustieren der Filter wird dieselbe Antwort wiederverwendet statt neu bezahlt.
+> Das Rate-Limit von 100/10 s hält der Client selbstständig ein.
+> Der API-Key gehört in eine Umgebungsvariable bzw. ein GitHub-Secret, nie ins Repo.
 
-Fehler werden übersetzt statt durchgereicht: 401 → Header-Format prüfen,
-402 → Credits leer, 404 → Endpunktpfad falsch, 429 → `delay_seconds` erhöhen.
+Fehler werden übersetzt statt durchgereicht: 400 → Pflichtfeld prüfen,
+401 → Header-Name falsch, 402 → Credits leer, 404 → Endpunktpfad, 429 → Rate-Limit.
 Auch Fehlercodes im Body bei HTTP 200 werden erkannt.
+
+## Aus Claude heraus bedienen (MCP)
+
+Der Sniper läuft auch als MCP-Server — dann fragst du in Claude einfach
+„zeig mir die Top-Produkte dieser Woche" statt einen Cronjob zu lesen.
+
+```bash
+claude mcp add kalodata-sniper -- python3 -m kalodata_sniper mcp
+```
+
+Oder die mitgelieferte `.mcp.json` verwenden (projektweit, wird von Claude Code
+automatisch gefunden). Verfügbare Werkzeuge:
+
+| Werkzeug | Zweck |
+|---|---|
+| `sniper_scan` | Lauf ausführen, Top-Kandidaten zurückgeben (`top`, `min_score`, `dry_run`) |
+| `sniper_explain` | Score eines Produkts aufschlüsseln, inkl. Filtergründen |
+| `sniper_watchlist` | Verlauf über mehrere Läufe (`sort: "trend"` zeigt die stärksten Anstiege) |
+| `sniper_config` | aktuelle Filter, Gewichte und Schwellen |
+| `sniper_probe_api` | API-Anbindung prüfen (kostet einen Request) |
+
+Der Server spricht JSON-RPC über stdio, ohne SDK-Abhängigkeit. Ein Detail, das
+in der Praxis über Funktionieren oder Nicht-Funktionieren entscheidet: **stdout
+gehört dem Protokoll**. Alles, was die Pipeline sonst ausgibt (inklusive
+Console-Notifier), wird nach stderr umgeleitet — eine einzige Zeile Text auf
+stdout würde die Verbindung zerlegen. Genau das prüft auch ein Test.
 
 ## Wie der Score entsteht
 
@@ -187,12 +223,13 @@ python -m kalodata_sniper watch --interval 3600
 | `probe-api` | Einen API-Aufruf machen und das Feld-Mapping prüfen |
 | `test-notify` | Testnachricht an alle aktiven Kanäle |
 | `demo` | Beispieldaten erzeugen und Lauf zeigen |
+| `mcp` | Als MCP-Server über stdio laufen |
 | `init` | Standard-Config schreiben |
 
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v    # 52 Tests, keine externen Abhängigkeiten
+python -m unittest discover -s tests -v    # 69 Tests, keine externen Abhängigkeiten
 ```
 
 ## Aufbau
@@ -205,6 +242,7 @@ kalodata_sniper/
   state.py          Verlaufsspeicher (atomar geschrieben, robust gegen Defekte)
   config.py         Defaults + Deep-Merge der eigenen Config
   models.py         Product / ScoredProduct
+  mcp_server.py     MCP-Server (JSON-RPC über stdio) fuer Claude & Co.
   notify.py         Telegram, Discord, Slack, Webhook, Console
   report.py         HTML-, CSV- und JSON-Report
   sources/
@@ -216,8 +254,9 @@ kalodata_sniper/
 
 * Der Score ist eine **Vorauswahl, keine Kaufentscheidung** — Versandzeiten,
   Lizenzthemen und Creator-Fit prüft er nicht.
-* Endpunktpfade und Feldnamen der Open API sind aus der öffentlichen Struktur
-  abgeleitet (Rank + Detail, sechs Module). Prüfe sie einmalig mit `probe-api`
-  gegen die Docs deines Tarifs — Abweichungen sind reine Config-Werte.
+* Der Pfad des Product-Listen-Endpoints (`/openapi/v1/tiktok/product/list`) und
+  die Namen von `page`/`page_size` sind analog zum dokumentierten
+  `video/detail`-Endpoint gesetzt, aber nicht gegen die Doku verifiziert. Ein
+  `probe-api`-Aufruf klärt das; Abweichungen sind reine Config-Werte.
 * Momentum braucht mindestens zwei Läufe im Abstand von `momentum_lookback_hours`.
   Der erste Lauf bewertet nur den Status quo.

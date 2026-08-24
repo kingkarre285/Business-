@@ -1,8 +1,13 @@
 """Client fuer die offizielle Kalodata Open API.
 
-Die Open API folgt dem Rank-plus-Detail-Modell: ein Ranking-Endpunkt liefert die
-Liste (Products, Creators, Shops, Videos, Livestreams, Categories), ein
-Detail-Endpunkt die Tiefe zu einer einzelnen ID.
+Vertrag laut Open Center: alle Endpunkte sind HTTP POST + JSON unter
+``https://www.kalodata.com/openapi/v1/tiktok/...``, authentifiziert per
+Secret-Key im Header. Gemeinsame Pflichtfelder aller Endpunkte sind
+``region``, ``language``, ``currency`` und ``date_range``; das Rate-Limit liegt
+bei 100 Requests pro 10 Sekunden.
+
+Die Open API folgt dem Listen-plus-Detail-Modell ueber sechs Module (Product,
+Creator, Shop, Video, Livestream, Category).
 
 Zwei Dinge praegen den Client:
 
@@ -19,15 +24,31 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+from collections import deque
+from typing import Any, Deque, Dict, List, Optional
 
 from ..models import Product
 from .csv_source import load_products
+
+# Aus der Open-API-Doku. Wird vor dem Request geprueft - ein Tippfehler soll
+# keinen Credit kosten.
+REGIONS = {"US", "BR", "MX", "ID", "JP", "MY", "PH", "SG", "TH", "VN",
+           "GB", "ES", "DE", "FR", "IT"}
+LANGUAGES = {"zh-CN", "en-US", "id-ID", "th-TH", "vi-VN", "es-ES", "ja-JP",
+             "pt-BR", "ko-KR", "fr-FR"}
+CURRENCIES = {"CNY", "USD", "IDR", "VND", "THB", "MYR", "JPY", "PHP", "GBP",
+              "SGD", "MXN", "EUR", "BRL"}
+NAMED_RANGES = {"lastDay", "last7Day", "last30Day", "last60Day", "last90Day",
+                "last180Day", "last365Day"}
+_RANGE_ALIASES = {r.lower(): r for r in NAMED_RANGES}
+_RANGE_ALIASES.update({"1d": "lastDay", "7d": "last7Day", "30d": "last30Day",
+                       "60d": "last60Day", "90d": "last90Day",
+                       "180d": "last180Day", "365d": "last365Day"})
 
 DEFAULT_HEADERS = {
     "Accept": "application/json",
@@ -37,6 +58,57 @@ DEFAULT_HEADERS = {
 
 class KalodataAPIError(RuntimeError):
     pass
+
+
+def normalise_date_range(value: Any) -> str:
+    """Akzeptiert 'last7Day', '7d', '2026-08-01~2026-08-07' oder '2026-08'.
+
+    Named Ranges werden case-insensitiv auf die Schreibweise der API gebracht.
+    """
+    if value in (None, ""):
+        return "last7Day"
+    text = str(value).strip()
+    if text.lower() in _RANGE_ALIASES:
+        return _RANGE_ALIASES[text.lower()]
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}~\d{4}-\d{2}-\d{2}", text):
+        return text
+    if re.fullmatch(r"\d{4}-\d{2}", text):
+        return text
+    raise KalodataAPIError(
+        f"date_range '{text}' ist ungueltig. Erlaubt: {', '.join(sorted(NAMED_RANGES))}, "
+        "ein Bereich 'yyyy-MM-dd~yyyy-MM-dd' oder ein Monat 'yyyy-MM'."
+    )
+
+
+def validate_common(payload: Dict[str, Any]) -> None:
+    """Prueft die Pflichtfelder, bevor ein Request Credits kostet."""
+    checks = (("region", REGIONS), ("language", LANGUAGES), ("currency", CURRENCIES))
+    for field, allowed in checks:
+        value = payload.get(field)
+        if value is None:
+            raise KalodataAPIError(f"Pflichtfeld '{field}' fehlt (source.api.request.{field}).")
+        if value not in allowed:
+            raise KalodataAPIError(
+                f"{field}='{value}' wird nicht unterstuetzt. Erlaubt: {', '.join(sorted(allowed))}."
+            )
+
+
+class RateLimiter:
+    """Haelt das dokumentierte Limit von 100 Requests je 10 Sekunden ein."""
+
+    def __init__(self, max_requests: int = 100, window_seconds: float = 10.0):
+        self.max_requests = max_requests
+        self.window = window_seconds
+        self._stamps: Deque[float] = deque()
+
+    def acquire(self) -> None:
+        now = time.monotonic()
+        while self._stamps and now - self._stamps[0] > self.window:
+            self._stamps.popleft()
+        if len(self._stamps) >= self.max_requests:
+            time.sleep(max(0.0, self.window - (now - self._stamps[0])) + 0.01)
+            return self.acquire()
+        self._stamps.append(now)
 
 
 class BudgetExceeded(KalodataAPIError):
@@ -80,13 +152,15 @@ class ResponseCache:
 class KalodataClient:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.base_url = config.get("base_url", "https://api.kalodata.com").rstrip("/")
+        self.base_url = config.get("base_url", "https://www.kalodata.com").rstrip("/")
         self.module = config.get("module", "product")
         self.endpoints: Dict[str, str] = config.get("endpoints", {})
         self.method = config.get("method", "POST").upper()
         self.pages = int(config.get("pages", 2))
         self.page_size = int(config.get("page_size", 50))
-        self.delay = float(config.get("delay_seconds", 1.0))
+        self.delay = float(config.get("delay_seconds", 0.2))
+        self.limiter = RateLimiter(int(config.get("rate_limit_requests", 100)),
+                                   float(config.get("rate_limit_window_seconds", 10.0)))
         self.timeout = int(config.get("timeout_seconds", 30))
         self.param_names: Dict[str, str] = config.get("param_names", {})
         self.request_defaults: Dict[str, Any] = config.get("request", {})
@@ -107,8 +181,8 @@ class KalodataClient:
     # --- Auth --------------------------------------------------------------
     def _auth_headers(self) -> Dict[str, str]:
         auth = self.config.get("auth", {})
-        header = auth.get("header", "Authorization")
-        prefix = auth.get("prefix", "Bearer ")
+        header = auth.get("header", "secret-key")
+        prefix = auth.get("prefix", "")
         return {header: f"{prefix}{self.api_key}"}
 
     # --- Parameter ---------------------------------------------------------
@@ -118,17 +192,19 @@ class KalodataClient:
 
     def build_payload(self, page: int, **overrides: Any) -> Dict[str, Any]:
         request = dict(self.request_defaults)
-        days = int(request.pop("date_range_days", 7) or 7)
-        end = date.today() - timedelta(days=int(request.pop("date_offset_days", 1) or 0))
-        start = end - timedelta(days=days - 1)
 
+        # Die vier Pflichtfelder aller Endpunkte
         payload: Dict[str, Any] = {
-            self.param("page"): page,
-            self.param("page_size"): self.page_size,
-            self.param("start_date"): start.isoformat(),
-            self.param("end_date"): end.isoformat(),
+            "region": request.pop("region", "US"),
+            "language": request.pop("language", "en-US"),
+            "currency": request.pop("currency", "USD"),
+            "date_range": normalise_date_range(request.pop("date_range", None)),
         }
-        for key in ("region", "language", "currency", "sort", "sort_order", "category"):
+        validate_common(payload)
+
+        payload[self.param("page")] = page
+        payload[self.param("page_size")] = self.page_size
+        for key in ("sort", "sort_order", "category", "need_extra"):
             if request.get(key) not in (None, "", []):
                 payload[self.param(key)] = request.pop(key)
         # Filter und alles Uebrige unveraendert durchreichen
@@ -170,6 +246,7 @@ class KalodataClient:
                 url, data=json.dumps(payload).encode("utf-8"),
                 headers=headers, method=self.method)
 
+        self.limiter.acquire()
         self._requests_made += 1
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
@@ -225,11 +302,13 @@ def _http_message(exc: urllib.error.HTTPError, url: str) -> str:
     except Exception:
         pass
     hints = {
-        401: "API-Key ungueltig oder nicht gesendet - Header-Format in source.api.auth pruefen.",
+        400: "Parameter abgelehnt - region/language/currency/date_range gegen die Doku pruefen.",
+        401: "Secret-Key ungueltig oder unter falschem Header-Namen gesendet "
+             "(source.api.auth.header).",
         403: "Key gueltig, aber ohne Berechtigung fuer diesen Endpunkt (Tarif/Modul).",
         402: "Credits aufgebraucht - im Open Center aufladen.",
         404: "Endpunktpfad stimmt nicht - Pfad aus den Docs in source.api.endpoints eintragen.",
-        429: "Rate-Limit erreicht - source.api.delay_seconds erhoehen.",
+        429: "Rate-Limit (100 Requests/10s) erreicht - source.api.delay_seconds erhoehen.",
     }
     hint = hints.get(exc.code, "")
     return f"HTTP {exc.code} von {url}. {hint} {detail}".strip()

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import sys
 import tempfile
+import time
 import unittest
 from datetime import date, datetime, timedelta, timezone
 
@@ -16,9 +18,10 @@ from kalodata_sniper.models import Product
 from kalodata_sniper.scoring import (apply_filters, compute_momentum, run_scoring,
                                      score_product, select_alerts)
 from kalodata_sniper.sources.api_source import (BudgetExceeded, KalodataAPIError,
-                                                 KalodataClient, ResponseCache,
+                                                 KalodataClient, RateLimiter, ResponseCache,
                                                  _raise_for_api_error, extract_records,
-                                                 flatten)
+                                                 flatten, normalise_date_range,
+                                                 validate_common)
 from kalodata_sniper.sources.csv_source import load_from_text, map_headers
 from kalodata_sniper.state import State
 from kalodata_sniper.util import parse_date, parse_number, parse_percent
@@ -274,10 +277,9 @@ class TestApiClient(unittest.TestCase):
         config = {
             "api_key": "testkey",
             "endpoints": {"rank": "/open/v1/product/rank"},
-            "request": {"region": "US", "currency": "USD", "date_range_days": 7,
-                        "date_offset_days": 1, "filters": {"minPrice": 10}},
-            "param_names": {"page_size": "pageSize", "start_date": "startDate",
-                            "end_date": "endDate", "sort": "sortBy"},
+            "request": {"region": "US", "language": "en-US", "currency": "USD",
+                        "date_range": "last7Day", "filters": {"min_price": 10}},
+            "param_names": {"page": "page", "page_size": "page_size"},
             "cache_dir": tempfile.mkdtemp(), "cache_ttl_minutes": 0,
         }
         config.update(overrides)
@@ -290,25 +292,50 @@ class TestApiClient(unittest.TestCase):
         self.assertIn("API-Key", str(ctx.exception))
 
     def test_auth_header_configurable(self):
-        self.assertEqual(self._client()._auth_headers(), {"Authorization": "Bearer testkey"})
-        custom = self._client(auth={"header": "X-API-KEY", "prefix": ""})
-        self.assertEqual(custom._auth_headers(), {"X-API-KEY": "testkey"})
+        self.assertEqual(self._client()._auth_headers(), {"secret-key": "testkey"})
+        custom = self._client(auth={"header": "Authorization", "prefix": "Bearer "})
+        self.assertEqual(custom._auth_headers(), {"Authorization": "Bearer testkey"})
 
-    def test_payload_uses_configured_param_names(self):
+    def test_payload_carries_mandatory_fields(self):
         payload = self._client().build_payload(2)
+        for field in ("region", "language", "currency", "date_range"):
+            self.assertIn(field, payload)
         self.assertEqual(payload["page"], 2)
-        self.assertIn("pageSize", payload)
-        self.assertIn("startDate", payload)
-        self.assertEqual(payload["region"], "US")
-        self.assertEqual(payload["minPrice"], 10)   # Filter durchgereicht
-        self.assertNotIn("date_range_days", payload)
+        self.assertEqual(payload["page_size"], 50)
+        self.assertEqual(payload["min_price"], 10)    # Filter durchgereicht
+        self.assertEqual(payload["date_range"], "last7Day")
 
-    def test_date_window_length(self):
-        payload = self._client().build_payload(1)
-        start = date.fromisoformat(payload["startDate"])
-        end = date.fromisoformat(payload["endDate"])
-        self.assertEqual((end - start).days, 6)           # 7 Tage inklusive
-        self.assertEqual(end, date.today() - timedelta(days=1))
+    def test_default_base_url(self):
+        self.assertEqual(self._client().base_url, "https://www.kalodata.com")
+
+    def test_endpoint_url_from_config(self):
+        client = self._client(endpoints={"rank": "/openapi/v1/tiktok/product/list"})
+        self.assertEqual(client._endpoint_url("rank"),
+                         "https://www.kalodata.com/openapi/v1/tiktok/product/list")
+
+    def test_date_range_normalisation(self):
+        self.assertEqual(normalise_date_range("7d"), "last7Day")
+        self.assertEqual(normalise_date_range("LAST30DAY"), "last30Day")
+        self.assertEqual(normalise_date_range("2026-08-01~2026-08-07"), "2026-08-01~2026-08-07")
+        self.assertEqual(normalise_date_range("2026-08"), "2026-08")
+        self.assertEqual(normalise_date_range(None), "last7Day")
+        with self.assertRaises(KalodataAPIError):
+            normalise_date_range("letzte Woche")
+
+    def test_invalid_common_fields_are_caught_before_spending_a_request(self):
+        for bad in ({"region": "XX", "language": "en-US", "currency": "USD"},
+                    {"region": "US", "language": "de-DE", "currency": "USD"},
+                    {"region": "US", "language": "en-US", "currency": "XYZ"}):
+            with self.assertRaises(KalodataAPIError):
+                validate_common(bad)
+        validate_common({"region": "DE", "language": "fr-FR", "currency": "EUR"})
+
+    def test_rate_limiter_allows_burst_then_throttles(self):
+        limiter = RateLimiter(max_requests=3, window_seconds=10)
+        started = time.monotonic()
+        for _ in range(3):
+            limiter.acquire()
+        self.assertLess(time.monotonic() - started, 0.5)   # Burst laeuft ungebremst
 
     def test_missing_endpoint_raises_with_hint(self):
         client = self._client(endpoints={})
@@ -376,6 +403,113 @@ class TestPipeline(unittest.TestCase):
                          "notifiers": []})
         pipeline.run(config, input_path=csv_path, dry_run=True, send_alerts=False, quiet=True)
         self.assertFalse(os.path.exists(os.path.join(workdir, "state.json")))
+
+
+class TestMcpServer(unittest.TestCase):
+    def setUp(self):
+        from kalodata_sniper.mcp_server import MCPServer
+        from kalodata_sniper.demo import write_sample
+
+        self.workdir = tempfile.mkdtemp()
+        self.csv = write_sample(os.path.join(self.workdir, "export.csv"))
+        config_path = os.path.join(self.workdir, "config.json")
+        Config({"output": {"state_file": os.path.join(self.workdir, "state.json"),
+                           "report_dir": os.path.join(self.workdir, "reports")},
+                "notifiers": [{"type": "console", "enabled": True}]}).dump(config_path)
+        self.server = MCPServer(config_path)
+
+    def call(self, name, arguments=None, message_id=1):
+        return self.server.handle({"jsonrpc": "2.0", "id": message_id, "method": "tools/call",
+                                   "params": {"name": name, "arguments": arguments or {}}})
+
+    def test_initialize_echoes_supported_protocol(self):
+        response = self.server.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                                       "params": {"protocolVersion": "2024-11-05"}})
+        self.assertEqual(response["result"]["protocolVersion"], "2024-11-05")
+        self.assertEqual(response["result"]["serverInfo"]["name"], "kalodata-sniper")
+        self.assertIn("tools", response["result"]["capabilities"])
+
+    def test_initialize_falls_back_for_unknown_protocol(self):
+        from kalodata_sniper.mcp_server import PROTOCOL_VERSION
+        response = self.server.handle({"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                                       "params": {"protocolVersion": "1999-01-01"}})
+        self.assertEqual(response["result"]["protocolVersion"], PROTOCOL_VERSION)
+
+    def test_notifications_get_no_response(self):
+        self.assertIsNone(self.server.handle(
+            {"jsonrpc": "2.0", "method": "notifications/initialized"}))
+        self.assertTrue(self.server.initialized)
+
+    def test_tools_list_schemas_are_valid(self):
+        tools = self.server.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})["result"]["tools"]
+        self.assertEqual(len(tools), 5)
+        for tool in tools:
+            self.assertTrue(tool["name"] and tool["description"])
+            self.assertEqual(tool["inputSchema"]["type"], "object")
+            for prop in tool["inputSchema"].get("properties", {}).values():
+                self.assertIn("type", prop)
+
+    def test_unknown_method_and_tool(self):
+        response = self.server.handle({"jsonrpc": "2.0", "id": 1, "method": "gibts/nicht"})
+        self.assertEqual(response["error"]["code"], -32601)
+        # Unbekannter Werkzeugname ist laut MCP-Spec ein Protokollfehler (-32602),
+        # nicht ein Ergebnis mit isError - das bleibt echten Laufzeitfehlern vorbehalten.
+        self.assertEqual(self.call("sniper_unsinn")["error"]["code"], -32602)
+
+    def test_scan_returns_candidates(self):
+        result = self.call("sniper_scan", {"input": self.csv, "top": 3, "dry_run": True})["result"]
+        self.assertFalse(result["isError"])
+        text = result["content"][0]["text"]
+        self.assertIn("Kandidaten", text)
+        self.assertIn("Score", text)
+
+    def test_explain_requires_query(self):
+        result = self.call("sniper_explain", {"input": self.csv})["result"]
+        self.assertTrue(result["isError"])
+
+    def test_explain_reports_filter_reason(self):
+        result = self.call("sniper_explain",
+                           {"query": "Gift Card", "input": self.csv})["result"]
+        self.assertIn("AUSGEFILTERT", result["content"][0]["text"])
+
+    def test_watchlist_without_history_is_helpful(self):
+        text = self.call("sniper_watchlist")["result"]["content"][0]["text"]
+        self.assertIn("Noch kein Verlauf", text)
+
+    def test_watchlist_after_scan(self):
+        self.call("sniper_scan", {"input": self.csv})
+        text = self.call("sniper_watchlist", {"top": 5})["result"]["content"][0]["text"]
+        self.assertIn("beobachtete Produkte", text)
+
+    def test_config_tool_returns_json(self):
+        payload = json.loads(self.call("sniper_config")["result"]["content"][0]["text"])
+        self.assertIn("filters", payload)
+        self.assertIn("weights", payload)
+
+    def test_stdout_carries_only_protocol(self):
+        """Console-Notifier aktiv: seine Ausgabe darf das Protokoll nicht zerlegen."""
+        import io
+        requests = "\n".join(json.dumps(m) for m in [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "sniper_scan",
+                        "arguments": {"input": self.csv, "send_alerts": True}}},
+        ])
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.server.serve(stdin=io.StringIO(requests), stdout=stdout)
+        lines = [l for l in stdout.getvalue().split("\n") if l.strip()]
+        self.assertEqual(len(lines), 2)              # Notification bleibt unbeantwortet
+        for line in lines:
+            json.loads(line)                          # jede Zeile ist valides JSON-RPC
+
+    def test_malformed_json_gets_parse_error(self):
+        import io
+        stdout = io.StringIO()
+        self.server.serve(stdin=io.StringIO("{kaputt\n"), stdout=stdout)
+        self.assertEqual(json.loads(stdout.getvalue())["error"]["code"], -32700)
 
 
 class TestConfig(unittest.TestCase):

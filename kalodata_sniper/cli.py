@@ -50,6 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_probe.add_argument("-o", "--output", default="data/api_probe.json")
 
     sub.add_parser("test-notify", help="Testnachricht an alle aktiven Kanaele")
+    sub.add_parser("mcp", help="Als MCP-Server ueber stdio laufen (fuer Claude & Co.)")
     sub.add_parser("demo", help="Beispieldaten erzeugen und einen Lauf zeigen")
 
     p_state = sub.add_parser("state", help="Verlaufsspeicher inspizieren")
@@ -230,6 +231,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         if args.command == "init":
             return cmd_init(args)
+        if args.command == "mcp":
+            # Config wird pro Aufruf frisch geladen - hier nur der Pfad
+            from .mcp_server import main as serve_mcp
+            return serve_mcp(args.config)
         config = Config.load(args.config)
         handlers = {
             "run": lambda: cmd_run(args, config),
