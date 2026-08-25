@@ -31,6 +31,34 @@ python -m kalodata_sniper run
 Ausgabe: Top-Kandidaten im Terminal, `reports/latest.html` zum Durchklicken,
 `reports/sniper_<datum>.csv` zur Weiterverarbeitung.
 
+## Wie die Treffer aussehen
+
+Vier Wege, je nach Situation:
+
+| Kanal | Wofür |
+|---|---|
+| Terminal | beim Arbeiten am Rechner |
+| `reports/latest.html` | Rangliste mit Score-Balken und Umsatzverlauf je Produkt |
+| Telegram / Discord | Push aufs Handy, sobald ein Treffer die Schwelle reißt |
+| `reports/sniper_<datum>.csv` | Weiterverarbeitung in Tabellen |
+
+Der HTML-Report ist die eigentliche Ansicht: Ablesewerte des Laufs oben, darunter
+die Rangliste — Score als Balken, Provision je Verkauf, Wettbewerbsdichte, und
+rechts eine Sparkline des Umsatzverlaufs. Auf dem Handy stapeln sich die Zeilen.
+
+Zwei Details, die nicht Geschmack sind:
+
+* **Richtung steht nie nur in der Farbe.** Jede Sparkline trägt Pfeil und
+  vorzeichenbehaftete Prozentzahl (`▲ +110 %`). Ohne das wäre der Verlauf für
+  rot-grün-schwache Leser eine Ratesache.
+* **Steigend/fallend sind Grün und Violett**, nicht Grün und Rot. Die
+  Farbprüfung (`dataviz`-Validator) hat Grün↔Orange bei ΔE 2.3 unter Protanopie
+  durchfallen lassen — praktisch ununterscheidbar. Violett kommt auf ΔE 8.6.
+
+`render_fragment()` liefert dieselbe Seite ohne äußere Dokument-Tags — für
+Umgebungen, die den Rahmen selbst setzen (etwa ein veröffentlichtes Artifact,
+das man als Link teilen kann).
+
 ## Datenquellen
 
 **1. CSV/XLSX-Export (Standard, robust)**
@@ -281,7 +309,7 @@ python -m kalodata_sniper watch --interval 3600
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v    # 98 Tests, keine externen Abhängigkeiten
+python -m unittest discover -s tests -v    # 104 Tests, keine externen Abhängigkeiten
 ```
 
 ## Aufbau

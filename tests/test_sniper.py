@@ -6,6 +6,7 @@ import contextlib
 import json
 import os
 import sys
+import re
 import tempfile
 import time
 import unittest
@@ -528,6 +529,61 @@ class TestPipeline(unittest.TestCase):
                          "notifiers": []})
         pipeline.run(config, input_path=csv_path, dry_run=True, send_alerts=False, quiet=True)
         self.assertFalse(os.path.exists(os.path.join(workdir, "state.json")))
+
+
+class TestReportRendering(unittest.TestCase):
+    def setUp(self):
+        from kalodata_sniper.demo import write_sample
+        from kalodata_sniper.pipeline import run
+        workdir = tempfile.mkdtemp()
+        csv_path = write_sample(os.path.join(workdir, "e.csv"))
+        config = Config({"output": {"state_file": os.path.join(workdir, "s.json"),
+                                    "report_dir": os.path.join(workdir, "r")},
+                         "notifiers": []})
+        self.result = run(config, input_path=csv_path, send_alerts=False,
+                          dry_run=True, quiet=True)
+        self.items = self.result.hits[:5]
+
+    def test_colors_only_come_from_tokens(self):
+        """Ein Farbwert ausserhalb der Token-Bloecke bricht genau ein Theme."""
+        from kalodata_sniper.report import render_html
+        page = render_html(self.items)
+        without_tokens = re.sub(
+            r':root[^{]*\{[^}]*\}|@media[^{]*\{\s*:root[^{]*\{[^}]*\}\s*\}',
+            "", page, flags=re.S)
+        self.assertEqual(re.findall(r"#[0-9a-fA-F]{6}\b", without_tokens), [])
+
+    def test_both_themes_are_defined(self):
+        from kalodata_sniper.report import render_html
+        page = render_html(self.items)
+        self.assertIn("prefers-color-scheme: dark", page)
+        self.assertIn('[data-theme="dark"]', page)
+        self.assertIn(':root:not([data-theme="light"])', page)
+
+    def test_sparkline_needs_two_points(self):
+        from kalodata_sniper.report import _sparkline
+        self.assertNotIn("<polyline", _sparkline(None, True))
+        self.assertNotIn("<polyline", _sparkline([100], True))
+        self.assertIn("<polyline", _sparkline([100, 200, 150], True))
+
+    def test_momentum_is_not_encoded_by_colour_alone(self):
+        """Pfeil und Vorzeichen muessen die Richtung auch ohne Farbe tragen."""
+        from kalodata_sniper.report import render_html
+        page = render_html(self.items)
+        self.assertTrue("\u25b2" in page or "\u25bc" in page)
+
+    def test_fragment_has_no_document_tags(self):
+        from kalodata_sniper.report import render_fragment
+        fragment = render_fragment(self.items)
+        for tag in ("<!doctype", "<html", "<head>", "<body>"):
+            self.assertNotIn(tag, fragment.lower())
+        self.assertIn("<title>", fragment)
+        self.assertIn("<style>", fragment)
+        self.assertIn('class="item"', fragment)
+
+    def test_empty_result_explains_itself(self):
+        from kalodata_sniper.report import render_html
+        self.assertIn("calibrate", render_html([]))
 
 
 class TestCalibration(unittest.TestCase):
