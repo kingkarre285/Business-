@@ -3,12 +3,13 @@ __pycache__/
 .venv/
 venv/
 
-# Echte Exporte und Verlauf bleiben lokal - nur Demo-Daten sind eingecheckt
+# Exporte, Verlauf und Cache bleiben lokal. Die Demo-Datei wird von
+# 'python -m kalodata_sniper demo' erzeugt und traegt Datumsangaben relativ
+# zu heute - eingecheckt wuerde sie bei jedem Lauf im Diff rauschen.
 data/*.csv
 data/*.tsv
 data/*.xlsx
 data/*.json
-!data/demo_export.csv
 data/*.corrupt
 data/.cache/
 reports/

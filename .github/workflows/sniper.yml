@@ -57,7 +57,22 @@ jobs:
           json.dump(cfg, open("config.json", "w"), indent=2, ensure_ascii=False)
           PY
 
+      - name: Datenquelle pruefen
+        id: source
+        env:
+          KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
+        run: |
+          # Ohne API-Key und ohne abgelegten Export gibt es nichts zu tun.
+          # Lieber sauber ueberspringen als zweimal taeglich rot laufen.
+          if [ -n "$KALODATA_API_KEY" ] || ls data/*.csv data/*.xlsx >/dev/null 2>&1; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Keine Datenquelle: weder KALODATA_API_KEY gesetzt noch ein Export unter data/. Lauf uebersprungen."
+          fi
+
       - name: Sniper laufen lassen
+        if: steps.source.outputs.ready == 'true'
         env:
           KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -70,17 +85,21 @@ jobs:
             --min-score "${{ github.event.inputs.min_score || '70' }}"
 
       - name: Seite vorbereiten
+        if: steps.source.outputs.ready == 'true'
         run: |
           mkdir -p _site
           cp reports/latest.html _site/index.html
           cp reports/*.csv _site/ 2>/dev/null || true
 
       - uses: actions/configure-pages@v5
+        if: steps.source.outputs.ready == 'true'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.source.outputs.ready == 'true'
         with:
           path: _site
       - id: deploy
         uses: actions/deploy-pages@v4
+        if: steps.source.outputs.ready == 'true'
 
       - name: Reports als Artefakt sichern
         if: always()

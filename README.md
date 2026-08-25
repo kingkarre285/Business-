@@ -21,6 +21,10 @@ python -m kalodata_sniper demo          # Beispieldaten erzeugen und Lauf zeigen
 python -m kalodata_sniper init          # config.json anlegen
 ```
 
+`demo` erzeugt `data/demo_export.csv` frisch — die Datei ist bewusst nicht
+eingecheckt, weil ihre Datumsangaben relativ zu heute stehen und sie sonst bei
+jedem Lauf im Diff auftauchen würde.
+
 Dann in Kalodata unter **Products** die Filter setzen, exportieren und die Datei
 nach `data/` legen:
 
@@ -302,7 +306,8 @@ jeder Lauf dieselben zehn Produkte.
 die Reports als Artefakt und schreibt den Verlauf zurück ins Repo. Nötige Secrets:
 `KALODATA_API_KEY` (nur für den API-Modus), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
 Die Action veröffentlicht den Report zusätzlich auf GitHub Pages und schreibt den
-Verlauf zurück ins Repo.
+Verlauf zurück ins Repo. Fehlen API-Key **und** Export unter `data/`, überspringt
+sie den Lauf mit einem Hinweis, statt zweimal täglich rot zu werden.
 
 **Cron auf einem Server:**
 
