@@ -124,6 +124,7 @@ automatisch gefunden). Verfügbare Werkzeuge:
 | `sniper_scan` | Lauf ausführen, Top-Kandidaten zurückgeben (`top`, `min_score`, `dry_run`) |
 | `sniper_explain` | Score eines Produkts aufschlüsseln, inkl. Filtergründen |
 | `sniper_watchlist` | Verlauf über mehrere Läufe (`sort: "trend"` zeigt die stärksten Anstiege) |
+| `sniper_calibrate` | Filtervorschlag aus den Daten (`apply: true` schreibt ihn) |
 | `sniper_config` | aktuelle Filter, Gewichte und Schwellen |
 | `sniper_probe_api` | API-Anbindung prüfen (kostet einen Request) |
 
@@ -199,8 +200,36 @@ Alles in `config.json` (Vorlage: `config.example.json`). Die wichtigsten Stellsc
 }
 ```
 
-Zu wenige Treffer? `revenue_min` senken oder `creators_max` erhöhen.
-Zu viele? `min_score` hoch, `commission_min` hoch.
+### Filter kalibrieren statt raten
+
+Die Standardwerte sind eine Annahme. Was im deutschen Markt normal ist, steht in
+den Daten:
+
+```bash
+python -m kalodata_sniper calibrate            # Vorschlag ansehen
+python -m kalodata_sniper calibrate --apply    # übernehmen
+```
+
+```
+Filter                 aktuell     vorgeschlagen
+------------------------------------------------
+revenue_min              €3.0K            €94.0K *
+commission_min           10.0%             15.0% *
+creators_max               500               298 *
+
+Kandidaten aktuell:       12 von 15
+Kandidaten nach Vorschlag: 4 von 15
+```
+
+Nicht jeder Filter wird für sich gesetzt — sechs Filter multiplizieren sich, und
+einzeln plausible Perzentilwerte ergeben kombiniert oft fast nichts. Stattdessen
+wird die gemeinsame *Strenge* so eingeregelt, dass etwa ein Viertel der Produkte
+durchkommt (`--target` verschiebt die Quote). Dabei wiegt zu streng schwerer als
+zu locker: ein Filtersatz ohne Treffer ist wertlos, ein etwas zu weiter nur
+unschärfer.
+
+Von Hand: zu wenige Treffer → `revenue_min` senken oder `creators_max` erhöhen.
+Zu viele → `min_score` und `commission_min` hoch.
 
 ## Alarme
 
@@ -241,6 +270,7 @@ python -m kalodata_sniper watch --interval 3600
 | `run` | Ein Durchlauf. `--dry-run` schreibt nichts, `--no-alerts` sendet nicht, `--region`/`--currency`/`--date-range` überschreiben den Abruf |
 | `watch --interval 3600` | Dauerlauf im festen Takt |
 | `explain "<name>"` | Score-Aufschlüsselung eines Produkts inkl. Filtergründen |
+| `calibrate` | Filterwerte aus echten Daten ableiten, `--apply` übernimmt sie |
 | `state --top 10` | Verlauf inspizieren, `--reset` löscht ihn |
 | `probe-api` | Einen API-Aufruf machen und das Feld-Mapping prüfen |
 | `test-notify` | Testnachricht an alle aktiven Kanäle |
@@ -251,7 +281,7 @@ python -m kalodata_sniper watch --interval 3600
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v    # 86 Tests, keine externen Abhängigkeiten
+python -m unittest discover -s tests -v    # 98 Tests, keine externen Abhängigkeiten
 ```
 
 ## Aufbau
@@ -264,6 +294,7 @@ kalodata_sniper/
   state.py          Verlaufsspeicher (atomar geschrieben, robust gegen Defekte)
   config.py         Defaults + Deep-Merge der eigenen Config
   models.py         Product / ScoredProduct
+  calibrate.py      Filterschwellen aus echten Daten ableiten
   mcp_server.py     MCP-Server (JSON-RPC über stdio) fuer Claude & Co.
   notify.py         Telegram, Discord, Slack, Webhook, Console
   report.py         HTML-, CSV- und JSON-Report

@@ -49,6 +49,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_explain.add_argument("query", help="Teil des Produktnamens oder Produkt-ID")
     p_explain.add_argument("-i", "--input")
 
+    p_cal = sub.add_parser(
+        "calibrate", help="Filterwerte aus echten Daten ableiten statt raten")
+    p_cal.add_argument("-i", "--input", help="Exportdatei oder -ordner")
+    p_cal.add_argument("--apply", action="store_true",
+                       help="Vorschlag in die Config schreiben")
+    p_cal.add_argument("--target", type=float, default=0.25,
+                       help="Angestrebter Anteil durchkommender Produkte (Standard 0.25)")
+
     p_probe = sub.add_parser(
         "probe-api", help="Einen API-Aufruf machen und die gelieferten Felder pruefen")
     p_probe.add_argument("-o", "--output", default="data/api_probe.json")
@@ -164,6 +172,24 @@ def cmd_explain(args, config: Config) -> int:
     return 0
 
 
+def cmd_calibrate(args, config: Config) -> int:
+    from . import calibrate
+
+    products, source = pipeline.load_input(config, args.input)
+    if not products:
+        print(f"Keine Produkte in {source}.", file=sys.stderr)
+        return 1
+    report = calibrate.build_report(products, config, target_ratio=args.target)
+    print(f"Quelle: {source}")
+    print(calibrate.render(report))
+
+    if args.apply:
+        path = config.path or "config.json"
+        calibrate.apply_to_config(config, report["suggested"], path)
+        print(f"\nUebernommen in {path}.")
+    return 0
+
+
 def cmd_probe(args, config: Config) -> int:
     from .sources.api_source import probe
     info = probe(config.get("source.api", {}), args.output)
@@ -258,6 +284,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "run": lambda: cmd_run(args, config),
             "watch": lambda: cmd_watch(args, config),
             "explain": lambda: cmd_explain(args, config),
+            "calibrate": lambda: cmd_calibrate(args, config),
             "probe-api": lambda: cmd_probe(args, config),
             "test-notify": lambda: cmd_test_notify(config),
             "state": lambda: cmd_state(args, config),

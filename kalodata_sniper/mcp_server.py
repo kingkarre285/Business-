@@ -108,6 +108,26 @@ def tool_definitions() -> List[Dict[str, Any]]:
             "inputSchema": {"type": "object", "properties": {}},
         },
         {
+            "name": "sniper_calibrate",
+            "description": (
+                "Filterwerte aus den tatsaechlichen Daten ableiten statt raten: "
+                "schlaegt Schwellen vor, bei denen etwa ein Viertel der Produkte "
+                "durchkommt. Zeigt aktuell gegen vorgeschlagen; schreibt nur mit "
+                "apply=true in die Config."
+            ),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "input": {"type": "string", "description": "Optionale Exportdatei."},
+                    "target": {"type": "number", "minimum": 0.05, "maximum": 0.9,
+                               "default": 0.25,
+                               "description": "Angestrebter Anteil durchkommender Produkte."},
+                    "apply": {"type": "boolean", "default": False,
+                              "description": "Vorschlag in die Config uebernehmen."},
+                },
+            },
+        },
+        {
             "name": "sniper_probe_api",
             "description": (
                 "Die Anbindung an die Kalodata Open API pruefen: ein einzelner Aufruf, "
@@ -280,6 +300,22 @@ def tool_sniper_config(config: Config, args: Dict[str, Any]) -> str:
     return json.dumps(view, indent=2, ensure_ascii=False)
 
 
+def tool_sniper_calibrate(config: Config, args: Dict[str, Any]) -> str:
+    from . import calibrate
+
+    products, source = pipeline.load_input(config, args.get("input"))
+    if not products:
+        return f"Keine Produkte in {source}."
+    report = calibrate.build_report(products, config,
+                                    target_ratio=float(args.get("target", 0.25)))
+    text = f"Quelle: {source}\n" + calibrate.render(report)
+    if args.get("apply"):
+        path = config.path or "config.json"
+        calibrate.apply_to_config(config, report["suggested"], path)
+        text += f"\n\nUebernommen in {path}."
+    return text
+
+
 def tool_sniper_probe_api(config: Config, args: Dict[str, Any]) -> str:
     from .sources.api_source import probe
     info = probe(config.get("source.api", {}), "data/api_probe.json")
@@ -302,6 +338,7 @@ TOOLS: Dict[str, Callable[[Config, Dict[str, Any]], str]] = {
     "sniper_explain": tool_sniper_explain,
     "sniper_watchlist": tool_sniper_watchlist,
     "sniper_config": tool_sniper_config,
+    "sniper_calibrate": tool_sniper_calibrate,
     "sniper_probe_api": tool_sniper_probe_api,
 }
 

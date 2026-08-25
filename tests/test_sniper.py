@@ -530,6 +530,81 @@ class TestPipeline(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(workdir, "state.json")))
 
 
+class TestCalibration(unittest.TestCase):
+    def setUp(self):
+        from kalodata_sniper.demo import write_sample
+        from kalodata_sniper.sources.csv_source import load_from_file
+        self.workdir = tempfile.mkdtemp()
+        self.products = load_from_file(write_sample(os.path.join(self.workdir, "e.csv")))
+
+    def test_percentile_interpolates(self):
+        from kalodata_sniper.calibrate import percentile
+        self.assertEqual(percentile([1, 2, 3, 4], 0.0), 1)
+        self.assertEqual(percentile([1, 2, 3, 4], 1.0), 4)
+        self.assertAlmostEqual(percentile([1, 2, 3, 4], 0.5), 2.5)
+        self.assertEqual(percentile([7], 0.5), 7)
+        self.assertIsNone(percentile([], 0.5))
+
+    def test_zero_strictness_lets_everything_through(self):
+        """Belegt die Richtung der Grenzen: locker heisst Minimum bzw. Maximum."""
+        from kalodata_sniper.calibrate import count_passing, suggest_at
+        loose = suggest_at(self.products, 0.0)
+        # Nur der Provisions-Mindestwert von 5% greift noch (Gutschein mit 2%)
+        self.assertGreaterEqual(count_passing(self.products, loose), len(self.products) - 1)
+
+    def test_strictness_is_monotonic(self):
+        from kalodata_sniper.calibrate import count_passing, suggest_at
+        counts = [count_passing(self.products, suggest_at(self.products, s / 4))
+                  for s in range(5)]
+        self.assertEqual(counts, sorted(counts, reverse=True))
+
+    def test_revenue_min_is_a_lower_bound(self):
+        """revenue_min liegt im oberen Perzentilbereich, ist aber eine Untergrenze."""
+        from kalodata_sniper.calibrate import suggest_at
+        strict = suggest_at(self.products, 1.0)["revenue_min"]
+        loose = suggest_at(self.products, 0.0)["revenue_min"]
+        self.assertGreater(strict, loose)
+        revenues = [p.revenue for p in self.products if p.revenue]
+        self.assertLessEqual(loose, min(revenues))
+
+    def test_suggestion_hits_target_ratio(self):
+        from kalodata_sniper.calibrate import count_passing, suggest_filters
+        for target in (0.2, 0.4, 0.6):
+            suggested = suggest_filters(self.products, target)
+            passing = count_passing(self.products, suggested)
+            expected = len(self.products) * target
+            self.assertGreaterEqual(passing, expected * 0.5,
+                                    f"zu streng bei Ziel {target}: {passing}")
+
+    def test_never_suggests_zero_hits(self):
+        from kalodata_sniper.calibrate import count_passing, suggest_filters
+        self.assertGreater(count_passing(self.products, suggest_filters(self.products)), 0)
+
+    def test_commission_floor(self):
+        from kalodata_sniper.calibrate import suggest_at
+        self.assertGreaterEqual(suggest_at(self.products, 0.0)["commission_min"], 0.05)
+
+    def test_missing_columns_are_left_alone(self):
+        from kalodata_sniper.calibrate import suggest_filters
+        sparse = [Product(name=f"P{i}", revenue=1000 * i) for i in range(1, 10)]
+        suggested = suggest_filters(sparse)
+        self.assertIn("revenue_min", suggested)
+        for key in ("price_min", "commission_min", "creators_max", "rating_min"):
+            self.assertNotIn(key, suggested)
+
+    def test_apply_writes_config(self):
+        from kalodata_sniper.calibrate import apply_to_config, suggest_filters
+        path = os.path.join(self.workdir, "config.json")
+        config = Config()
+        apply_to_config(config, suggest_filters(self.products), path)
+        self.assertEqual(Config.load(path).filters["revenue_min"],
+                         config.filters["revenue_min"])
+
+    def test_empty_input(self):
+        from kalodata_sniper.calibrate import suggest_filters
+        self.assertEqual(suggest_filters([]), {})
+
+
 class TestMcpServer(unittest.TestCase):
     def setUp(self):
         from kalodata_sniper.mcp_server import MCPServer
@@ -567,7 +642,7 @@ class TestMcpServer(unittest.TestCase):
 
     def test_tools_list_schemas_are_valid(self):
         tools = self.server.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})["result"]["tools"]
-        self.assertEqual(len(tools), 5)
+        self.assertEqual(len(tools), 6)
         for tool in tools:
             self.assertTrue(tool["name"] and tool["description"])
             self.assertEqual(tool["inputSchema"]["type"], "object")
@@ -605,6 +680,14 @@ class TestMcpServer(unittest.TestCase):
         self.call("sniper_scan", {"input": self.csv})
         text = self.call("sniper_watchlist", {"top": 5})["result"]["content"][0]["text"]
         self.assertIn("beobachtete Produkte", text)
+
+    def test_calibrate_tool_does_not_write_without_apply(self):
+        before = json.loads(self.call("sniper_config")["result"]["content"][0]["text"])
+        result = self.call("sniper_calibrate", {"input": self.csv})["result"]
+        self.assertFalse(result["isError"])
+        self.assertIn("vorgeschlagen", result["content"][0]["text"])
+        after = json.loads(self.call("sniper_config")["result"]["content"][0]["text"])
+        self.assertEqual(before["filters"], after["filters"])
 
     def test_config_tool_returns_json(self):
         payload = json.loads(self.call("sniper_config")["result"]["content"][0]["text"])
