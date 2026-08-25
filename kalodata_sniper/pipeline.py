@@ -24,6 +24,7 @@ class RunResult:
     scored: List[ScoredProduct] = field(default_factory=list)
     hits: List[ScoredProduct] = field(default_factory=list)
     alerts: List[ScoredProduct] = field(default_factory=list)
+    alerts_sent: bool = False        # ob wirklich verschickt wurde
     reports: Dict[str, str] = field(default_factory=dict)
     errors: List[str] = field(default_factory=list)
     source: str = ""
@@ -84,9 +85,11 @@ def run(config: Config, *, input_path: Optional[str] = None, dry_run: bool = Fal
         notifiers = notify.build_notifiers(config.enabled_notifiers())
         if notifiers:
             errors = notify.dispatch(notifiers, result.alerts,
-                                     config.get("output.currency", "$"))
+                                     config.get("output.currency", "$"),
+                                     report_url(config))
             result.errors.extend(errors)
             if not errors:
+                result.alerts_sent = True
                 for item in result.alerts:
                     state.mark_alerted(item.product.key)
 
@@ -106,6 +109,11 @@ def run(config: Config, *, input_path: Optional[str] = None, dry_run: bool = Fal
     return result
 
 
+def report_url(config: Config) -> Optional[str]:
+    """Oeffentliche Adresse des Reports - Config oder Umgebungsvariable."""
+    return config.get("output.report_url") or os.environ.get("SNIPER_REPORT_URL") or None
+
+
 def write_reports(result: RunResult, config: Config) -> Dict[str, str]:
     directory = config.get("output.report_dir", "reports")
     stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
@@ -121,6 +129,10 @@ def write_reports(result: RunResult, config: Config) -> Dict[str, str]:
         # Stabiler Pfad fuer Bookmarks / CI-Artefakte
         written["html_latest"] = report.write_html(
             items, os.path.join(directory, "latest.html"),
+            currency=config.get("output.currency", "$"), stats=result.stats)
+    if config.get("output.write_fragment", True):
+        written["fragment"] = report.write_fragment(
+            items, os.path.join(directory, "artifact.html"),
             currency=config.get("output.currency", "$"), stats=result.stats)
     return written
 
@@ -141,9 +153,13 @@ def summary(result: RunResult, config: Config) -> str:
         lines.append("Kein Produkt hat die Filter passiert - Filter lockern "
                      "(filters.revenue_min / commission_min / creators_max).")
     if result.alerts:
-        lines.append(f"\n{len(result.alerts)} Alarm(e) versendet.")
+        status = "versendet" if result.alerts_sent else "ausgeloest, nicht versendet"
+        lines.append(f"\n{len(result.alerts)} Alarm(e) {status}.")
     for path in result.reports.values():
         lines.append(f"Report: {path}")
+    url = report_url(config)
+    if url:
+        lines.append(f"Oeffentlich: {url}")
     for error in result.errors:
         lines.append(f"FEHLER {error}")
     return "\n".join(lines)

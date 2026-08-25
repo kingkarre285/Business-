@@ -48,11 +48,15 @@ def format_product_line(item: ScoredProduct, index: int = 0, currency: str = "$"
     return "\n".join(parts)
 
 
-def format_digest(items: List[ScoredProduct], currency: str = "$", title: str = "Kalodata Sniper") -> str:
+def format_digest(items: List[ScoredProduct], currency: str = "$",
+                  title: str = "Kalodata Sniper", report_url: Optional[str] = None) -> str:
     if not items:
         return f"{title}: keine neuen Treffer."
     lines = [f"{title}: {len(items)} Treffer", ""]
     lines += [format_product_line(item, i, currency) for i, item in enumerate(items, 1)]
+    if report_url:
+        # Der Push zeigt die Spitze, die Seite den ganzen Lauf
+        lines += ["", f"Vollstaendiger Report: {report_url}"]
     return "\n".join(lines)
 
 
@@ -63,26 +67,27 @@ class Notifier:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
 
-    def send(self, items: List[ScoredProduct], currency: str = "$") -> None:
+    def send(self, items: List[ScoredProduct], currency: str = "$",
+             report_url: Optional[str] = None) -> None:
         raise NotImplementedError
 
 
 class ConsoleNotifier(Notifier):
     type = "console"
 
-    def send(self, items, currency="$"):
-        print(format_digest(items, currency))
+    def send(self, items, currency="$", report_url=None):
+        print(format_digest(items, currency, report_url=report_url))
 
 
 class TelegramNotifier(Notifier):
     type = "telegram"
 
-    def send(self, items, currency="$"):
+    def send(self, items, currency="$", report_url=None):
         token = self.config.get("token") or _env(self.config.get("token_env", "TELEGRAM_BOT_TOKEN"))
         chat_id = self.config.get("chat_id") or _env(self.config.get("chat_id_env", "TELEGRAM_CHAT_ID"))
         if not token or not chat_id:
             raise RuntimeError("Telegram: Token oder Chat-ID fehlt (Env-Variablen setzen).")
-        text = format_digest(items, currency)
+        text = format_digest(items, currency, report_url=report_url)
         # Telegram deckelt bei 4096 Zeichen - lieber stueckeln als abschneiden
         for chunk in _chunks(text, 3900):
             _post_json(f"https://api.telegram.org/bot{token}/sendMessage",
@@ -92,22 +97,22 @@ class TelegramNotifier(Notifier):
 class DiscordNotifier(Notifier):
     type = "discord"
 
-    def send(self, items, currency="$"):
+    def send(self, items, currency="$", report_url=None):
         url = self.config.get("webhook") or _env(self.config.get("webhook_env", "DISCORD_WEBHOOK_URL"))
         if not url:
             raise RuntimeError("Discord: Webhook-URL fehlt.")
-        for chunk in _chunks(format_digest(items, currency), 1900):
+        for chunk in _chunks(format_digest(items, currency, report_url=report_url), 1900):
             _post_json(url, {"content": chunk})
 
 
 class SlackNotifier(Notifier):
     type = "slack"
 
-    def send(self, items, currency="$"):
+    def send(self, items, currency="$", report_url=None):
         url = self.config.get("webhook") or _env(self.config.get("webhook_env", "SLACK_WEBHOOK_URL"))
         if not url:
             raise RuntimeError("Slack: Webhook-URL fehlt.")
-        _post_json(url, {"text": format_digest(items, currency)})
+        _post_json(url, {"text": format_digest(items, currency, report_url=report_url)})
 
 
 class WebhookNotifier(Notifier):
@@ -115,11 +120,12 @@ class WebhookNotifier(Notifier):
 
     type = "webhook"
 
-    def send(self, items, currency="$"):
+    def send(self, items, currency="$", report_url=None):
         url = self.config.get("url") or _env(self.config.get("url_env", "SNIPER_WEBHOOK_URL"))
         if not url:
             raise RuntimeError("Webhook: URL fehlt.")
-        _post_json(url, {"count": len(items), "products": [i.to_dict() for i in items]})
+        _post_json(url, {"count": len(items), "report_url": report_url,
+                         "products": [i.to_dict() for i in items]})
 
 
 REGISTRY = {n.type: n for n in (ConsoleNotifier, TelegramNotifier, DiscordNotifier,
@@ -137,12 +143,12 @@ def build_notifiers(configs: List[Dict[str, Any]]) -> List[Notifier]:
 
 
 def dispatch(notifiers: List[Notifier], items: List[ScoredProduct],
-             currency: str = "$") -> List[str]:
+             currency: str = "$", report_url: Optional[str] = None) -> List[str]:
     """Verschickt an alle Kanaele. Ein kaputter Kanal stoppt die anderen nicht."""
     errors = []
     for notifier in notifiers:
         try:
-            notifier.send(items, currency)
+            notifier.send(items, currency, report_url)
         except (urllib.error.URLError, RuntimeError, OSError, ValueError) as exc:
             errors.append(f"{notifier.type}: {exc}")
     return errors

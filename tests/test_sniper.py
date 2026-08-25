@@ -518,6 +518,30 @@ class TestPipeline(unittest.TestCase):
         with open(result.reports["html"], encoding="utf-8") as handle:
             self.assertIn("Kalodata Product Sniper", handle.read())
 
+    def test_alerts_are_not_reported_as_sent_when_suppressed(self):
+        from kalodata_sniper import pipeline
+        from kalodata_sniper.demo import write_sample
+
+        workdir = tempfile.mkdtemp()
+        csv_path = write_sample(os.path.join(workdir, "export.csv"))
+        config = Config({"output": {"state_file": os.path.join(workdir, "state.json"),
+                                    "report_dir": os.path.join(workdir, "reports")},
+                         "notifiers": []})
+        result = pipeline.run(config, input_path=csv_path, send_alerts=False, quiet=True)
+        self.assertTrue(result.alerts)          # ausgewaehlt
+        self.assertFalse(result.alerts_sent)    # aber nicht verschickt
+        self.assertIn("nicht versendet", pipeline.summary(result, config))
+
+    def test_report_url_from_environment(self):
+        from kalodata_sniper.pipeline import report_url
+        os.environ["SNIPER_REPORT_URL"] = "https://beispiel.de/latest.html"
+        try:
+            self.assertEqual(report_url(Config()), "https://beispiel.de/latest.html")
+            self.assertEqual(report_url(Config({"output": {"report_url": "https://a.de"}})),
+                             "https://a.de")
+        finally:
+            del os.environ["SNIPER_REPORT_URL"]
+
     def test_dry_run_writes_nothing(self):
         from kalodata_sniper import pipeline
         from kalodata_sniper.demo import write_sample

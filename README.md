@@ -31,20 +31,47 @@ python -m kalodata_sniper run
 Ausgabe: Top-Kandidaten im Terminal, `reports/latest.html` zum Durchklicken,
 `reports/sniper_<datum>.csv` zur Weiterverarbeitung.
 
-## Wie die Treffer aussehen
+## Wie die Treffer bei dir ankommen
 
-Vier Wege, je nach Situation:
+Zwei Kanäle, beide automatisch:
 
-| Kanal | Wofür |
-|---|---|
-| Terminal | beim Arbeiten am Rechner |
-| `reports/latest.html` | Rangliste mit Score-Balken und Umsatzverlauf je Produkt |
-| Telegram / Discord | Push aufs Handy, sobald ein Treffer die Schwelle reißt |
-| `reports/sniper_<datum>.csv` | Weiterverarbeitung in Tabellen |
+**Telegram** — der Push. Sobald ein Treffer die Schwelle reißt, kommt die Spitze
+aufs Handy, mit Link zur vollen Ansicht.
 
-Der HTML-Report ist die eigentliche Ansicht: Ablesewerte des Laufs oben, darunter
-die Rangliste — Score als Balken, Provision je Verkauf, Wettbewerbsdichte, und
-rechts eine Sparkline des Umsatzverlaufs. Auf dem Handy stapeln sich die Zeilen.
+```bash
+export TELEGRAM_BOT_TOKEN=...   # von @BotFather: /newbot
+export TELEGRAM_CHAT_ID=...     # eigene ID: dem Bot schreiben, dann
+                                # https://api.telegram.org/bot<TOKEN>/getUpdates
+python -m kalodata_sniper test-notify
+```
+
+Telegram ist standardmäßig aktiv; ohne gesetzte Variablen meldet der Lauf das,
+statt still zu scheitern.
+
+**Die Seite** — die Rangliste zum Durchsehen. Feste Adresse, aktualisiert sich
+bei jedem Lauf selbst, weil die GitHub Action sie nach GitHub Pages schiebt:
+
+```
+https://<dein-name>.github.io/<repo>/
+```
+
+Einmalig einschalten: Repo → Settings → Pages → Source auf **GitHub Actions**.
+Die Adresse landet automatisch in jedem Telegram-Push (`SNIPER_REPORT_URL`).
+
+Lokal liegen dieselben Dateien in `reports/`: `latest.html` (Ansicht),
+`artifact.html` (dieselbe Seite ohne äußere Dokument-Tags, zum Einbetten oder
+Veröffentlichen), `sniper_<datum>.csv` (Tabelle).
+
+> Was **nicht** geht: eine als Claude-Artifact veröffentlichte Seite kann sich
+> nicht selbst nachladen — eine veröffentlichte Seite hat keinen Zugang zu deinem
+> Rechner oder zum Cronjob. Sie zeigt den Stand des Laufs, aus dem sie erzeugt
+> wurde. Für „aktualisiert sich von allein" ist GitHub Pages der Weg.
+
+### Was in der Ansicht steckt
+
+Ablesewerte des Laufs oben, darunter die Rangliste — Score als Balken, Provision
+je Verkauf, Wettbewerbsdichte, und rechts eine Sparkline des Umsatzverlaufs. Auf
+dem Handy stapeln sich die Zeilen.
 
 Zwei Details, die nicht Geschmack sind:
 
@@ -54,10 +81,6 @@ Zwei Details, die nicht Geschmack sind:
 * **Steigend/fallend sind Grün und Violett**, nicht Grün und Rot. Die
   Farbprüfung (`dataviz`-Validator) hat Grün↔Orange bei ΔE 2.3 unter Protanopie
   durchfallen lassen — praktisch ununterscheidbar. Violett kommt auf ΔE 8.6.
-
-`render_fragment()` liefert dieselbe Seite ohne äußere Dokument-Tags — für
-Umgebungen, die den Rahmen selbst setzen (etwa ein veröffentlichtes Artifact,
-das man als Link teilen kann).
 
 ## Datenquellen
 
@@ -261,23 +284,25 @@ Zu viele → `min_score` und `commission_min` hoch.
 
 ## Alarme
 
-Unterstützt: `console`, `telegram`, `discord`, `slack`, `webhook` (Roh-JSON für
-n8n/Make/Zapier). Zugangsdaten kommen ausschließlich aus Umgebungsvariablen.
+Unterstützt: `console`, `telegram` (an), `discord`, `slack`, `webhook` (Roh-JSON
+für n8n/Make/Zapier). Zugangsdaten kommen ausschließlich aus Umgebungsvariablen,
+nie aus der Config-Datei.
 
-```bash
-export TELEGRAM_BOT_TOKEN=...   # von @BotFather
-export TELEGRAM_CHAT_ID=...     # eigene Chat-ID
-python -m kalodata_sniper test-notify
-```
+Jede Nachricht enthält den Link zur vollen Ansicht, sobald `output.report_url`
+oder `SNIPER_REPORT_URL` gesetzt ist. Ein defekter Kanal bricht den Lauf nicht ab
+— die anderen senden trotzdem, der Fehler wird gemeldet.
 
-In der Config beim gewünschten Kanal `"enabled": true` setzen. Ein defekter Kanal
-bricht den Lauf nicht ab — die anderen senden trotzdem, der Fehler wird gemeldet.
+Nur was neu ist oder deutlich gestiegen ist, löst aus (`only_new_or_rising`),
+und derselbe Treffer nicht öfter als alle `cooldown_hours`. Sonst schickt dir
+jeder Lauf dieselben zehn Produkte.
 
 ## Automatisierung
 
 **GitHub Actions** (`.github/workflows/sniper.yml`) läuft zweimal täglich, sichert
 die Reports als Artefakt und schreibt den Verlauf zurück ins Repo. Nötige Secrets:
 `KALODATA_API_KEY` (nur für den API-Modus), `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+Die Action veröffentlicht den Report zusätzlich auf GitHub Pages und schreibt den
+Verlauf zurück ins Repo.
 
 **Cron auf einem Server:**
 
@@ -309,7 +334,7 @@ python -m kalodata_sniper watch --interval 3600
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v    # 104 Tests, keine externen Abhängigkeiten
+python -m unittest discover -s tests -v    # 106 Tests, keine externen Abhängigkeiten
 ```
 
 ## Aufbau

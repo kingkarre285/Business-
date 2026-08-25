@@ -9,13 +9,26 @@ on:
         description: "Alarmschwelle (0-100)"
         required: false
         default: "70"
+      region:
+        description: "Marktregion (DE, US, GB, ...)"
+        required: false
+        default: "DE"
 
 permissions:
-  contents: write   # noetig, um den Verlauf (data/state.json) zurueckzuschreiben
+  contents: write   # Verlauf (data/state.json) zurueckschreiben
+  pages: write      # Report auf GitHub Pages veroeffentlichen
+  id-token: write
+
+concurrency:
+  group: sniper
+  cancel-in-progress: false
 
 jobs:
   snipe:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,29 +40,47 @@ jobs:
         run: pip install --quiet openpyxl
 
       - name: Config vorbereiten
+        env:
+          KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
+          REGION: ${{ github.event.inputs.region || 'DE' }}
         run: |
           test -f config.json || cp config.example.json config.json
           python - <<'PY'
           import json, os
           cfg = json.load(open("config.json"))
-          # Im CI wird nur ueber Telegram alarmiert - Console-Output landet im Log
+          # Im CI alarmiert Telegram; die Konsole landet ohnehin im Lauf-Log
           for n in cfg["notifiers"]:
               n["enabled"] = n["type"] in ("console", "telegram")
           if os.environ.get("KALODATA_API_KEY"):
               cfg["source"]["type"] = "api"
+          cfg["source"]["api"]["request"]["region"] = os.environ["REGION"]
           json.dump(cfg, open("config.json", "w"), indent=2, ensure_ascii=False)
           PY
-        env:
-          KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
 
       - name: Sniper laufen lassen
         env:
           KALODATA_API_KEY: ${{ secrets.KALODATA_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Diese Adresse steht in jedem Telegram-Push - der Push zeigt die
+          # Spitze, die Seite den ganzen Lauf
+          SNIPER_REPORT_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
         run: |
           python -m kalodata_sniper run \
             --min-score "${{ github.event.inputs.min_score || '70' }}"
+
+      - name: Seite vorbereiten
+        run: |
+          mkdir -p _site
+          cp reports/latest.html _site/index.html
+          cp reports/*.csv _site/ 2>/dev/null || true
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
 
       - name: Reports als Artefakt sichern
         if: always()

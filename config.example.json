@@ -93,7 +93,7 @@
     },
     {
       "type": "telegram",
-      "enabled": false,
+      "enabled": true,
       "token_env": "TELEGRAM_BOT_TOKEN",
       "chat_id_env": "TELEGRAM_CHAT_ID"
     },
@@ -118,6 +118,8 @@
     "report_dir": "reports",
     "write_html": true,
     "write_csv": true,
+    "write_fragment": true,
+    "report_url": null,
     "currency": "€",
     "history_length": 40,
     "prune_after_days": 120

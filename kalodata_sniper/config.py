@@ -108,7 +108,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 
     "notifiers": [
         {"type": "console", "enabled": True},
-        {"type": "telegram", "enabled": False,
+        {"type": "telegram", "enabled": True,
          "token_env": "TELEGRAM_BOT_TOKEN", "chat_id_env": "TELEGRAM_CHAT_ID"},
         {"type": "discord", "enabled": False, "webhook_env": "DISCORD_WEBHOOK_URL"},
         {"type": "slack", "enabled": False, "webhook_env": "SLACK_WEBHOOK_URL"},
@@ -120,6 +120,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "report_dir": "reports",
         "write_html": True,
         "write_csv": True,
+        # Zusaetzlich eine Fassung ohne aeussere Dokument-Tags, zum Veroeffentlichen
+        "write_fragment": True,
+        # Oeffentliche Adresse des Reports. Landet in jeder Benachrichtigung,
+        # damit der Push zur vollen Ansicht fuehrt. Env: SNIPER_REPORT_URL
+        "report_url": None,
         "currency": "\u20ac",
         "history_length": 40,
         "prune_after_days": 120,

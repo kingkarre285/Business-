@@ -173,7 +173,8 @@ def tool_sniper_scan(config: Config, args: Dict[str, Any]) -> str:
         lines += [_describe(item, index, currency)
                   for index, item in enumerate(result.hits[:top], 1)]
     if result.alerts:
-        lines.append(f"\n{len(result.alerts)} Alarm(e) ausgeloest.")
+        status = "versendet" if result.alerts_sent else "ausgeloest, nicht versendet"
+        lines.append(f"\n{len(result.alerts)} Alarm(e) {status}.")
     for path in result.reports.values():
         lines.append(f"Report: {path}")
     for error in result.errors:
