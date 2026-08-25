@@ -311,11 +311,23 @@ class MCPServer:
     def __init__(self, config_path: Optional[str] = None):
         self.config_path = config_path
         self.initialized = False
+        self.config_note: Optional[str] = None
 
     def config(self) -> Config:
         # Bei jedem Aufruf frisch laden: so wirken Config-Aenderungen sofort,
         # ohne den Server neu zu starten.
-        return _load_config(self.config_path)
+        try:
+            config = _load_config(self.config_path)
+            self.config_note = None
+            return config
+        except FileNotFoundError:
+            # Eine fehlende Config darf nicht jeden Aufruf toeten - mit den
+            # Standardwerten weiterarbeiten und einmal darauf hinweisen.
+            self.config_note = (
+                f"Hinweis: {self.config_path} existiert nicht, es gelten die Standardwerte. "
+                "Mit 'python -m kalodata_sniper init' anlegen."
+            )
+            return Config()
 
     def handle(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         method = message.get("method")
@@ -373,7 +385,10 @@ class MCPServer:
         # stdout gehoert dem Protokoll - alles andere nach stderr umleiten
         try:
             with contextlib.redirect_stdout(sys.stderr):
-                text = handler(self.config(), arguments)
+                config = self.config()
+                text = handler(config, arguments)
+            if self.config_note:
+                text = f"{self.config_note}\n\n{text}"
             is_error = False
         except Exception as exc:
             text = f"{type(exc).__name__}: {exc}"

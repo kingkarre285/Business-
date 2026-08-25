@@ -630,6 +630,18 @@ class TestMcpServer(unittest.TestCase):
         for line in lines:
             json.loads(line)                          # jede Zeile ist valides JSON-RPC
 
+    def test_missing_config_falls_back_to_defaults(self):
+        """Eine fehlende Config darf nicht jeden Werkzeugaufruf toeten."""
+        from kalodata_sniper.mcp_server import MCPServer
+        server = MCPServer(os.path.join(self.workdir, "gibtsnicht.json"))
+        response = server.handle({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                  "params": {"name": "sniper_config", "arguments": {}}})
+        result = response["result"]
+        self.assertFalse(result["isError"])
+        text = result["content"][0]["text"]
+        self.assertIn("Standardwerte", text)
+        self.assertIn("filters", text)
+
     def test_malformed_json_gets_parse_error(self):
         import io
         stdout = io.StringIO()

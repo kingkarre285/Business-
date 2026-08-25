@@ -2,7 +2,7 @@
   "mcpServers": {
     "kalodata-sniper": {
       "command": "python3",
-      "args": ["-m", "kalodata_sniper", "--config", "config.json", "mcp"],
+      "args": ["-m", "kalodata_sniper", "mcp"],
       "env": {
         "KALODATA_API_KEY": "${KALODATA_API_KEY}"
       }
