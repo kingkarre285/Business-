@@ -2,10 +2,13 @@
    Praxis für tiefenpsychologisch fundierte Psychotherapie
    Stylesheet – keine externen Ressourcen (DSGVO-konform ohne Cookie-Banner)
 
-   Gestaltung angelehnt an loew-psychotherapie.de:
-   kühles Blaugrau, Mint als einzige Akzentfarbe, sehr viel Weißraum,
-   Roboto für Überschriften, Nunito Light für den Fließtext,
-   Pill-Buttons in Dunkelblau, kurze Mint-Linie unter jeder Überschrift.
+   Aufbau angelehnt an loew-psychotherapie.de: sehr viel Weißraum,
+   Roboto für Überschriften, Nunito Light für den Fließtext, Pill-Buttons,
+   kurze Akzentlinie unter jeder Überschrift.
+
+   Die Farbwelt ist dagegen warm gehalten: gebrochenes Weiß und Beige als
+   Flächen, dunkles Warmbraun für Überschriften und Schaltflächen, ein
+   sandfarbener Akzent für Linien und das Wortzeichen.
    ========================================================================== */
 
 @import url("fonts.css");
@@ -13,29 +16,28 @@
 /* --- 1. Design-Tokens ---------------------------------------------------- */
 
 :root {
-  /* Farben: kühl, klar, zurückhaltend */
-  --c-bg:            #ffffff;
-  --c-bg-alt:        #eff0f4;   /* Blaugrau 10 % auf Weiß */
-  --c-bg-deep:       #2e3047;   /* Dunkles Blau-Anthrazit */
+  /* Farben: warm, gedeckt, ruhig.
+     Die Kontraste sind durchgerechnet; die Werte in Klammern gelten
+     gegenüber dem hellen Grund und erfüllen mindestens AA (4,5:1). */
+  --c-bg:            #fdfbf7;   /* gebrochenes Weiß mit warmem Stich */
+  --c-bg-alt:        #f2ece1;   /* Beige für den Wechsel der Abschnitte */
+  --c-bg-deep:       #3d352c;   /* dunkles Warmbraun: Fußzeile, Bildband */
   --c-surface:       #ffffff;
-  --c-border:        #e3e5ec;
+  --c-border:        #e8ded0;
 
-  /* Fließtext: das Blaugrau der Vorlage (#707793) ergibt auf Weiß nur 4,6:1.
-     Eine Spur dunkler wirkt optisch identisch, liest sich aber deutlich
-     leichter – bei einer Praxis-Website ist das die richtige Abwägung. */
-  --c-text:          #5f6685;
-  --c-heading:       #2e3047;   /* Überschriften */
-  --c-text-muted:    #7a819c;
-  --c-text-invert:   #eef0f5;
+  --c-text:          #645b4e;   /* Fließtext (6,5:1) */
+  --c-heading:       #3d352c;   /* Überschriften (11,7:1) */
+  --c-text-muted:    #75695a;   /* kleine Labels (5,2:1) */
+  --c-text-invert:   #eee6da;
 
-  --c-accent:        #2e3047;
-  --c-accent-dark:   #1f2133;
-  --c-accent-light:  #eaf4f4;
-  --c-mint:          #c7e5e5;   /* Akzent: Trennlinien, Logo, Details */
-  --c-mint-dark:     #3f7f7f;   /* Nur für Text – helles Mint hat auf Weiß zu wenig Kontrast */
-  --c-highlight:     var(--c-mint-dark);
+  --c-accent:        #3d352c;   /* Schaltflächen */
+  --c-accent-dark:   #2b251e;
+  --c-accent-light:  #f5ede0;
+  --c-akzent:        #ddc4a1;   /* Sand: nur für Linien und Flächen, nicht für Text */
+  --c-akzent-dunkel: #8a5535;   /* Terrakotta für Text und Verweise (5,9:1) */
+  --c-highlight:     var(--c-akzent-dunkel);
 
-  --c-focus:         #2e3047;
+  --c-focus:         #8a5535;
 
   /* Typografie */
   --font-head: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
@@ -66,8 +68,8 @@
   --radius-lg: 6px;
   --radius-pill: 50px;
 
-  --shadow-sm: 0 1px 2px rgba(46, 48, 71, 0.05);
-  --shadow-md: 0 6px 28px rgba(46, 48, 71, 0.07);
+  --shadow-sm: 0 1px 2px rgba(61, 53, 44, 0.06);
+  --shadow-md: 0 6px 28px rgba(61, 53, 44, 0.08);
 
   --maxw:        72rem;
   --maxw-text:   40rem;
@@ -151,7 +153,7 @@ h4 { font-size: var(--fs-lg); letter-spacing: 0.03em; }
   h2 { font-size: var(--fs-2xl); }
 }
 
-/* Kurze Mint-Linie unter Überschriften – das prägendste Element der Referenz.
+/* Kurze Akzentlinie unter Überschriften – das prägendste Element der Vorlage.
    Sie erscheint automatisch bei jeder Überschrift in .section__head und .prose. */
 .section__head h1,
 .section__head h2,
@@ -172,7 +174,7 @@ h4 { font-size: var(--fs-lg); letter-spacing: 0.03em; }
   width: 13.5rem;
   max-width: 60%;
   height: 3px;
-  background-color: var(--c-mint);
+  background-color: var(--c-akzent);
 }
 
 /* In zentrierten Bereichen mittig ausrichten */
@@ -203,7 +205,7 @@ a:hover { color: var(--c-accent-dark); }
 /* Auf den dunklen Flächen braucht der Fokusrahmen eine helle Farbe */
 .section--deep :focus-visible,
 .site-footer :focus-visible {
-  outline-color: var(--c-mint);
+  outline-color: var(--c-akzent);
 }
 
 ul, ol { margin: 0 0 var(--sp-4); padding-left: 1.35em; }
@@ -242,7 +244,7 @@ hr {
 .section--deep h2,
 .section--deep h3 { color: #ffffff; }
 
-.section--deep a { color: var(--c-mint); }
+.section--deep a { color: var(--c-akzent); }
 
 .section__head {
   max-width: var(--maxw-text);
@@ -294,7 +296,7 @@ hr {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(255, 255, 255, 0.96);
+  background-color: rgba(253, 251, 247, 0.96);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--c-border);
 }
@@ -320,7 +322,7 @@ hr {
   line-height: 1.25;
 }
 
-/* Mint-Kreis mit Wortzeichen – gleiche Idee wie das Logo der Referenz.
+/* Sandfarbener Kreis mit Wortzeichen – gleiche Idee wie das Logo der Vorlage.
    ANPASSEN: Im HTML den Text in .brand__mark durch Ihr Kürzel ersetzen
    (ein bis vier Zeichen, gern mit Punkt, z. B. „r.“ oder „mb.“). */
 .brand__mark {
@@ -328,7 +330,7 @@ hr {
   width: 3.75rem;
   height: 3.75rem;
   border-radius: 50%;
-  background-color: var(--c-mint);
+  background-color: var(--c-akzent);
   display: grid;
   place-items: center;
   font-family: var(--font-sans);
@@ -435,12 +437,12 @@ hr {
   border-bottom: 2px solid transparent;
 }
 
-.nav__link:hover { color: var(--c-mint-dark); }
+.nav__link:hover { color: var(--c-akzent-dunkel); }
 
 .nav__link[aria-current="page"] {
   color: var(--c-heading);
   font-weight: 500;
-  border-bottom-color: var(--c-mint);
+  border-bottom-color: var(--c-akzent);
 }
 
 @media (max-width: 66rem) {
@@ -507,7 +509,7 @@ hr {
 }
 
 .btn--primary:hover {
-  background-color: var(--c-mint);
+  background-color: var(--c-akzent);
   color: var(--c-heading);
 }
 
@@ -527,7 +529,7 @@ hr {
   color: var(--c-heading);
 }
 
-.btn--light:hover { background-color: var(--c-mint); color: var(--c-heading); }
+.btn--light:hover { background-color: var(--c-akzent); color: var(--c-heading); }
 
 .btn-row {
   display: flex;
@@ -651,7 +653,7 @@ hr {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(46, 48, 71, 0.74);
+  background: rgba(61, 53, 44, 0.74);
 }
 
 /* Der Inhalt liegt über Bild und Abdunkelung */
@@ -663,7 +665,7 @@ hr {
 .bildband .quote { color: #fff; }
 
 /* Auf dem Bild braucht die Quellenangabe vollen Kontrast */
-.bildband .quote footer { opacity: 1; color: #e8eaf0; }
+.bildband .quote footer { opacity: 1; color: #ece3d6; }
 
 /* Bild-Text-Abschnitt, im Wechsel links und rechts */
 .medien {
@@ -712,7 +714,7 @@ hr {
   bottom: 0;
   width: 9rem;
   height: 3px;
-  background-color: var(--c-mint);
+  background-color: var(--c-akzent);
 }
 
 /* --- 7. Karten und Raster ------------------------------------------------ */
@@ -743,7 +745,7 @@ hr {
   transition: border-color 0.2s ease;
 }
 
-.card:hover { border-color: var(--c-mint); }
+.card:hover { border-color: var(--c-akzent); }
 
 .card h3 {
   font-size: var(--fs-lg);
@@ -760,7 +762,7 @@ hr {
   bottom: 0;
   width: 4.5rem;
   height: 3px;
-  background-color: var(--c-mint);
+  background-color: var(--c-akzent);
 }
 
 .card p:last-child { margin-bottom: 0; }
@@ -771,7 +773,7 @@ hr {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--c-mint);
+  background: var(--c-akzent);
   color: var(--c-heading);
   font-family: var(--font-head);
   font-size: var(--fs-base);
@@ -789,7 +791,7 @@ hr {
   background: var(--c-bg-alt);
   border-radius: var(--radius-lg);
   padding: var(--sp-7);
-  border-left: 4px solid var(--c-mint);
+  border-left: 4px solid var(--c-akzent);
 }
 
 .angebot--gross > div { max-width: 46rem; }
@@ -809,7 +811,7 @@ hr {
   bottom: 0;
   width: 9rem;
   height: 3px;
-  background-color: var(--c-mint);
+  background-color: var(--c-akzent);
 }
 
 @media (max-width: 40rem) {
@@ -911,7 +913,7 @@ hr {
 
 /* Hinweiskasten */
 .notice {
-  border-left: 3px solid var(--c-mint);
+  border-left: 3px solid var(--c-akzent);
   background: var(--c-bg-alt);
   padding: var(--sp-5) var(--sp-6);
   border-radius: 0 var(--radius) var(--radius) 0;
@@ -921,8 +923,8 @@ hr {
 .notice p:last-child { margin-bottom: 0; }
 
 .notice--urgent {
-  border-left-color: #a4442f;
-  background: #fbf0ec;
+  border-left-color: #a8452c;
+  background: #faeee8;
 }
 
 /* Profil / Über mich */
@@ -1149,7 +1151,7 @@ textarea:focus {
   width: 1.1rem;
   height: 1.1rem;
   flex-shrink: 0;
-  accent-color: var(--c-accent);
+  accent-color: var(--c-akzent-dunkel);
 }
 
 .form__consent label {
@@ -1180,8 +1182,8 @@ textarea:focus {
 }
 
 .form-message--error {
-  background: #fbf0ec;
-  border-left-color: #a4442f;
+  background: #faeee8;
+  border-left-color: #a8452c;
 }
 
 .form-message p:last-child { margin-bottom: 0; }
@@ -1197,7 +1199,7 @@ textarea:focus {
   margin-top: var(--sp-8);
 }
 
-.site-footer a { color: var(--c-mint); }
+.site-footer a { color: var(--c-akzent); }
 
 .footer__grid {
   display: grid;
