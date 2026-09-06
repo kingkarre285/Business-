@@ -4,7 +4,7 @@ Tönt ein Schwarzweißbild in die warmen Farben der Website ein.
 
 Reines Schwarzweiß wirkt auf dem beigen Grund wie ein aufgesetzter weißer
 Kasten. Dieses Skript bildet die Graustufen stattdessen auf die Palette ab:
-Schwarz wird zum dunklen Warmbraun, Weiß zum gebrochenen Weiß des Seitengrunds.
+Schwarz wird zum dunklen Warmbraun, Weiß zum beigen Seitengrund.
 Das Bild fügt sich dadurch nahtlos ein.
 
 Aufruf im Projektordner:
@@ -28,7 +28,7 @@ except ImportError:
 
 # Die Endpunkte entsprechen --c-accent-dark und --c-bg aus style.css
 DUNKEL = (43, 37, 30)      # #2b251e
-HELL = (253, 251, 247)     # #fdfbf7
+HELL = (244, 235, 221)     # #f4ebdd
 
 
 def toenen(pfad: str) -> None:

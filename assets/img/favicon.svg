@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Psychotherapiepraxis Jessica Holm">
-  <rect width="64" height="64" fill="#fdfbf7"/>
-  <circle cx="32" cy="32" r="28" fill="#ddc4a1"/>
+  <rect width="64" height="64" fill="#f4ebdd"/>
+  <circle cx="32" cy="32" r="28" fill="#c9a878"/>
   <text x="32" y="43" text-anchor="middle" font-family="Nunito, Segoe UI, Helvetica, Arial, sans-serif"
         font-size="28" font-style="italic" font-weight="400" fill="#ffffff">jh.</text>
 </svg>

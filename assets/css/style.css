@@ -6,9 +6,9 @@
    Roboto für Überschriften, Nunito Light für den Fließtext, Pill-Buttons,
    kurze Akzentlinie unter jeder Überschrift.
 
-   Die Farbwelt ist dagegen warm gehalten: gebrochenes Weiß und Beige als
-   Flächen, dunkles Warmbraun für Überschriften und Schaltflächen, ein
-   sandfarbener Akzent für Linien und das Wortzeichen.
+   Die Farbwelt ist dagegen warm gehalten: die Grundfarbe der Seite ist ein
+   Beige, kein Weiß. Dazu dunkles Warmbraun für Überschriften und
+   Schaltflächen und ein sandfarbener Akzent für Linien und das Wortzeichen.
    ========================================================================== */
 
 @import url("fonts.css");
@@ -16,25 +16,27 @@
 /* --- 1. Design-Tokens ---------------------------------------------------- */
 
 :root {
-  /* Farben: warm, gedeckt, ruhig.
-     Die Kontraste sind durchgerechnet; die Werte in Klammern gelten
-     gegenüber dem hellen Grund und erfüllen mindestens AA (4,5:1). */
-  --c-bg:            #fdfbf7;   /* gebrochenes Weiß mit warmem Stich */
-  --c-bg-alt:        #f2ece1;   /* Beige für den Wechsel der Abschnitte */
+  /* Farben: warm und gedeckt. Grundton ist ein echtes Beige, kein Weiß.
+     Vier Flächenebenen geben der Seite Tiefe – von der hellen Karte über den
+     Grundton und die etwas sattere Wechselfläche bis zum dunklen Warmbraun.
+     Alle Textkontraste sind durchgerechnet und erfüllen mindestens AA (4,5:1);
+     die Werte in Klammern gelten gegenüber dem Grundton. */
+  --c-bg:            #f4ebdd;   /* Grundton: warmes Beige */
+  --c-bg-alt:        #ebdfcb;   /* etwas satter, für den Wechsel der Abschnitte */
   --c-bg-deep:       #3d352c;   /* dunkles Warmbraun: Fußzeile, Bildband */
-  --c-surface:       #ffffff;
-  --c-border:        #e8ded0;
+  --c-surface:       #fdfaf4;   /* Karten und Eingabefelder, cremiges Hell */
+  --c-border:        #e0d2bb;
 
-  --c-text:          #645b4e;   /* Fließtext (6,5:1) */
-  --c-heading:       #3d352c;   /* Überschriften (11,7:1) */
-  --c-text-muted:    #75695a;   /* kleine Labels (5,2:1) */
+  --c-text:          #645b4e;   /* Fließtext (5,7:1) */
+  --c-heading:       #3d352c;   /* Überschriften (10,2:1) */
+  --c-text-muted:    #6e6253;   /* kleine Labels (5,0:1) */
   --c-text-invert:   #eee6da;
 
   --c-accent:        #3d352c;   /* Schaltflächen */
   --c-accent-dark:   #2b251e;
-  --c-accent-light:  #f5ede0;
-  --c-akzent:        #ddc4a1;   /* Sand: nur für Linien und Flächen, nicht für Text */
-  --c-akzent-dunkel: #8a5535;   /* Terrakotta für Text und Verweise (5,9:1) */
+  --c-accent-light:  #f0e3cd;
+  --c-akzent:        #c9a878;   /* Sand für Linien und Flächen – nie für Text */
+  --c-akzent-dunkel: #8a5535;   /* Terrakotta für Text und Verweise (5,2:1) */
   --c-highlight:     var(--c-akzent-dunkel);
 
   --c-focus:         #8a5535;
@@ -296,7 +298,7 @@ hr {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(253, 251, 247, 0.96);
+  background-color: rgba(244, 235, 221, 0.96);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--c-border);
 }
@@ -741,7 +743,7 @@ hr {
   border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   padding: var(--sp-6);
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.2s ease;
 }
 

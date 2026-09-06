@@ -77,12 +77,23 @@ viel Weißraum, eine kurze Akzentlinie unter jeder Überschrift, Schaltflächen
 als Pillen in Versalien. Schriften sind Roboto (Überschriften, kräftig) und
 Nunito Light (Fließtext) – wie bei der Vorlage.
 
-**Die Farbwelt ist dagegen warm**, nicht kühl wie dort: gebrochenes Weiß
-(`#fdfbf7`) und Beige (`#f2ece1`) als Flächen, dunkles Warmbraun (`#3d352c`)
-für Überschriften und Schaltflächen, ein sandfarbener Ton (`#ddc4a1`) für
-Linien und das Wortzeichen sowie Terrakotta (`#8a5535`) für hervorgehobenen
-Text. Die schwarzweißen Bilder halten dagegen und verhindern, dass es zu
-weich wird.
+**Die Farbwelt ist dagegen warm**, nicht kühl wie dort – und die Grundfarbe
+der Seite ist ein **Beige, kein Weiß**. Vier Flächenebenen geben Tiefe:
+
+| Ebene | Farbe | Wo |
+|---|---|---|
+| Karten | `#fdfaf4` | Karten, Eingabefelder – heller als der Grund |
+| Grundton | `#f4ebdd` | die Seite selbst |
+| Wechselfläche | `#ebdfcb` | jeder zweite Abschnitt |
+| Dunkel | `#3d352c` | Fußzeile, Bildband, Schaltflächen |
+
+Dazu Sand (`#c9a878`) für Linien und das Wortzeichen sowie Terrakotta
+(`#8a5535`) für hervorgehobenen Text.
+
+Die Schwarzweißbilder sind in dieselbe Palette getönt – reines Weiß im Bild
+würde auf dem beigen Grund als heller Kasten auffallen. Dafür gibt es
+`werkzeuge/bilder-toenen.py`; die Zielfarben stehen oben im Skript und
+müssen mitgeändert werden, wenn Sie die Palette anpassen.
 
 Die Schriften liegen **lokal** unter `assets/fonts/` und werden nicht von
 Google geladen. Beide Lizenzen erlauben das ausdrücklich (Nunito: SIL Open
@@ -91,7 +102,7 @@ wieder über die Google-Fonts-URL ein – genau das ist in Deutschland bereits
 abgemahnt worden.
 
 Alle Textfarben sind auf Kontrast geprüft und erfüllen mindestens die
-WCAG-Stufe AA: Fließtext 6,5:1, kleine Labels 5,2:1, Überschriften 11,7:1.
+WCAG-Stufe AA: Fließtext 5,7:1, kleine Labels 5,0:1, Überschriften 10,2:1.
 Bei einer Praxis-Website, die auch erschöpfte oder ältere Menschen erreichen
 soll, ist Lesbarkeit wichtiger als die letzte Nuance. Der sandfarbene Akzent
 ist deshalb ausschließlich für Linien und Flächen gedacht, nie für Text.
