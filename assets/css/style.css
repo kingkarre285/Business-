@@ -774,6 +774,39 @@ hr {
   display: block;
 }
 
+/* Hervorgehobenes Angebot – trägt auf der Startseite das meiste Gewicht */
+.angebot--gross {
+  background: var(--c-bg-alt);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-7);
+  border-left: 4px solid var(--c-mint);
+}
+
+.angebot--gross > div { max-width: 46rem; }
+
+.angebot--gross h3 {
+  font-size: var(--fs-2xl);
+  letter-spacing: 0;
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-4);
+  position: relative;
+}
+
+.angebot--gross h3::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 9rem;
+  height: 3px;
+  background-color: var(--c-mint);
+}
+
+@media (max-width: 40rem) {
+  .angebot--gross { padding: var(--sp-6) var(--sp-5); }
+  .angebot--gross h3 { font-size: var(--fs-xl); }
+}
+
 /* Aufzählung mit Häkchen */
 .checklist {
   list-style: none;

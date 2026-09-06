@@ -14,17 +14,18 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Startseite: Anliegen, Arbeitsweise, Ablauf, Krisenhinweise |
+| `index.html` | Startseite: Angebotsübersicht, Arbeitsweise, Krisenhinweise |
+| `psychotherapie.html` | Hauptseite: Verfahren, Anlässe, Formen, Ablauf, Kosten, FAQ |
+| `coaching.html` | Coaching und Beratung ohne Krankheitsbezug |
+| `adhs-diagnostik.html` | ADHS-Abklärung für Erwachsene |
 | `ueber-mich.html` | Person, Werdegang, Qualifikationen |
-| `leistungen.html` | Therapieverfahren, weitere Angebote, FAQ |
-| `ablauf-kosten.html` | Weg in die Therapie, Kassen, Honorare, Ausfallregelung |
 | `kontakt.php` | Kontaktdaten, Anfahrt und Formular (verschickt die Anfrage per E-Mail) |
 | `impressum.html` | Pflichtangaben – **muss ausgefüllt werden** |
 | `datenschutz.html` | Datenschutzerklärung – **muss geprüft werden** |
 | `404.html` | Fehlerseite |
 | `.htaccess` | HTTPS-Umleitung, Sicherheits-Header, Caching |
 | `robots.txt`, `sitemap.xml` | Für Suchmaschinen |
-| `werkzeuge/` | Hilfsskript zum Aufbereiten eigener Fotos |
+| `werkzeuge/` | Hilfsskripte für Fotos und Navigation |
 | `assets/css/style.css` | Gesamtes Design |
 | `assets/css/fonts.css` | Einbindung der Schriften |
 | `assets/fonts/` | Nunito und Roboto als lokale Dateien |
@@ -32,7 +33,44 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `assets/img/favicon.svg` | Symbol im Browser-Tab |
 | `assets/img/*.jpg` / `*.webp` | Bilder – derzeit Platzhalter, siehe Abschnitt 2 |
 
-## 1a. Gestaltung
+## 1a. Aufbau und Gewichtung
+
+Die Angebote sind bewusst gestaffelt: **Psychotherapie** steht im Mittelpunkt –
+eigener Menüpunkt an zweiter Stelle, auf der Startseite als breiter,
+hervorgehobener Block. Die Möglichkeit, als **Selbstzahlerin oder Selbstzahler**
+zu kommen, ist dabei durchgehend mitgedacht und nicht als Randnotiz behandelt.
+Darunter folgen **Coaching** und **ADHS-Diagnostik** als gleichwertige, kleinere
+Karten.
+
+### Eine Seite hinzufügen (etwa das Flugangst-Seminar)
+
+Auf der Startseite ist der Platz dafür schon vorbereitet: In `index.html`
+steht im Abschnitt „Angebote" ein auskommentierter Block mit dem Kommentar
+`PLATZ FÜR DAS FLUGANGST-SEMINAR`. Kommentarzeichen entfernen, Text einsetzen –
+fertig.
+
+Für eine eigene Unterseite:
+
+1. `coaching.html` kopieren und umbenennen, dann den Inhalt zwischen
+   `<main id="inhalt">` und `</main>` ersetzen.
+2. In `werkzeuge/navigation-aktualisieren.py` die Liste `NAVIGATION` ergänzen
+   und die Datei zu `SEITEN` hinzufügen.
+3. Im Projektordner ausführen:
+
+   ```
+   python3 werkzeuge/navigation-aktualisieren.py
+   ```
+
+   Damit erscheint der neue Menüpunkt auf **allen** Seiten – Sie müssen nicht
+   jede Datei einzeln anfassen.
+4. Die Seite in `sitemap.xml` eintragen (dort steht bereits ein vorbereiteter
+   Block als Kommentar).
+
+Führt der Link auf eine fremde Website statt auf eine eigene Unterseite,
+genügt es, in `index.html` die Adresse einzutragen und
+`target="_blank" rel="noopener"` zu ergänzen.
+
+## 1b. Gestaltung
 
 Das Design ist an **loew-psychotherapie.de** angelehnt: kühles Blaugrau statt
 warmer Töne, Mint als einzige Akzentfarbe, sehr viel Weißraum, eine kurze
@@ -78,11 +116,13 @@ E-Mail, Kammer, Aufsichtsbehörde, Werdegang und Anfahrt stammen von
 holm-psychotherapie.de. Offen sind noch:
 
 - [ ] **Sprechzeiten und Telefonzeit.** Stehen als `[Bitte hier Ihre Zeiten
-      eintragen]` in `kontakt.php` und `ablauf-kosten.html`. Auf der alten
-      Website waren keine Zeiten angegeben.
-- [ ] **Honorare** in der Tabelle in `ablauf-kosten.html` (`[xxx] €`) –
-      für Selbstzahler, Coaching und die ADHS-Diagnostik.
-- [ ] **Wartezeit** in `leistungen.html` – und diese Angabe regelmäßig aktualisieren.
+      eintragen]` in `kontakt.php`. Auf der alten Website waren keine Zeiten
+      angegeben.
+- [ ] **Honorare** (`[xxx] €`) in den Tabellen auf `psychotherapie.html`,
+      `coaching.html` und `adhs-diagnostik.html`.
+- [ ] **Wartezeit** in `psychotherapie.html` – und diese Angabe regelmäßig aktualisieren.
+- [ ] **Umfang der ADHS-Diagnostik** in `adhs-diagnostik.html`: Anzahl der
+      Termine und Zeitraum (`[x] Termine`, `[x] Wochen`).
 - [ ] **Berufshaftpflichtversicherung** im Impressum (Versicherer und Geltungsbereich).
 - [ ] **Bildnachweise** im Impressum, sobald die endgültigen Fotos feststehen.
 - [ ] **Anschrift der KV Hessen** im Impressum gegenprüfen.
@@ -101,7 +141,7 @@ gleich bleiben, dann muss am HTML nichts geändert werden.
 |---|---|---|
 | `baum-kopf.jpg` | Startseite, neben der Hauptüberschrift | quadratisch, ab 900 × 900 px |
 | `hero-meer.jpg` | Zitatband auf der Startseite | quer, ab 1800 × 1000 px |
-| `raum.jpg` | „Wohin Sie kommen", Ablauf-Seite | quer, ab 1400 × 950 px |
+| `raum.jpg` | „Wohin Sie kommen", Kontaktseite | quer, ab 1400 × 950 px |
 | `portraet.jpg` | Über-mich-Seite | hoch, ab 800 × 1000 px |
 
 Zu jeder `.jpg` gehört eine gleichnamige `.webp`. Moderne Browser laden die

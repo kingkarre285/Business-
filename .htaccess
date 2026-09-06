@@ -38,6 +38,17 @@ AddDefaultCharset UTF-8
   # RewriteRule ^(.*)$ https://holm-psychotherapie.de/$1 [R=301,L]
 </IfModule>
 
+# --- Weiterleitungen der bisherigen Adressen ---------------------------------
+# Die alte Website hatte andere Adressen. Diese Regeln leiten Besucher und
+# Suchmaschinen dauerhaft auf die neuen Seiten um, damit weder Lesezeichen
+# noch die bisherigen Google-Platzierungen verloren gehen.
+Redirect 301 /ablauf/ /psychotherapie.html
+Redirect 301 /adhs-diagnostik/ /adhs-diagnostik.html
+Redirect 301 /coaching-und-beratung/ /coaching.html
+Redirect 301 /kontakt/ /kontakt.php
+Redirect 301 /uber-mich/ /ueber-mich.html
+Redirect 301 /impressum-and-datenschutzerklarung-/ /impressum.html
+
 # --- Sicherheits-Header ------------------------------------------------------
 <IfModule mod_headers.c>
   # Verhindert das Einbetten der Seite in fremde Frames (Clickjacking)

@@ -170,12 +170,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <nav class="nav" id="hauptnavigation" aria-label="Hauptnavigation">
       <ul class="nav__list">
         <li><a class="nav__link" href="index.html">Startseite</a></li>
+        <li><a class="nav__link" href="psychotherapie.html">Psychotherapie</a></li>
+        <li><a class="nav__link" href="coaching.html">Coaching</a></li>
+        <li><a class="nav__link" href="adhs-diagnostik.html">ADHS-Diagnostik</a></li>
         <li><a class="nav__link" href="ueber-mich.html">Über mich</a></li>
-        <li><a class="nav__link" href="leistungen.html">Leistungen</a></li>
-        <li><a class="nav__link" href="ablauf-kosten.html">Ablauf &amp; Kosten</a></li>
         <li><a class="nav__link" href="kontakt.php" aria-current="page">Kontakt</a></li>
       </ul>
-      <a class="btn btn--primary" href="#formular">Termin anfragen</a>
+      <a class="btn btn--primary" href="kontakt.php">Termin anfragen</a>
     </nav>
   </div>
 </header>
@@ -367,6 +368,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </section>
 
+  <!-- ============ Die Praxis ============ -->
+  <section class="section section--alt">
+    <div class="container">
+      <div class="medien medien--gedreht">
+        <div class="medien__bild">
+          <!-- Platzhalterbild. Eine eigene Aufnahme des Behandlungsraums wirkt
+               deutlich vertrauensbildender – Ratsuchende möchten sehen, wohin
+               sie kommen. -->
+          <picture>
+            <source srcset="assets/img/raum.webp" type="image/webp">
+            <img src="assets/img/raum.jpg" width="1200" height="800" loading="lazy"
+                 alt="Heller Raum mit großen Fenstern und Pflanzen">
+          </picture>
+        </div>
+        <div>
+          <h2>Wohin Sie kommen</h2>
+          <p>
+            Die Praxis liegt in der Praxisgemeinschaft für Psychotherapie im
+            Frankfurter Nordend, unweit des Oeder Wegs. Die Haltestelle
+            Grüneburgweg ist wenige Minuten entfernt.
+          </p>
+          <p>
+            Es gibt kein Wartezimmer im üblichen Sinne und keinen Publikumsverkehr.
+            Ich hole Sie zum vereinbarten Termin persönlich ab – Sie begegnen also
+            in aller Regel niemandem außer mir.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ Notfall ============ -->
   <section class="section section--tight" id="notfall">
     <div class="container container--narrow">
@@ -413,9 +445,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div>
         <p class="footer__title">Seiten</p>
         <ul class="footer__list">
+          <li><a href="psychotherapie.html">Psychotherapie</a></li>
+          <li><a href="coaching.html">Coaching</a></li>
+          <li><a href="adhs-diagnostik.html">ADHS-Diagnostik</a></li>
           <li><a href="ueber-mich.html">Über mich</a></li>
-          <li><a href="leistungen.html">Leistungen</a></li>
-          <li><a href="ablauf-kosten.html">Ablauf &amp; Kosten</a></li>
           <li><a href="kontakt.php">Kontakt</a></li>
           <li><a href="impressum.html">Impressum</a></li>
           <li><a href="datenschutz.html">Datenschutz</a></li>
