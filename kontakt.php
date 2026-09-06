@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a class="brand" href="index.html">
       <span class="brand__mark" aria-hidden="true">jh.</span>
       <span class="brand__text">
-        <span class="brand__name">Psychotherapiepraxis Jessica Holm</span>
+        <span class="brand__name">Jessica Holm</span>
         <span class="brand__sub">Tiefenpsychologisch fundierte Psychotherapie</span>
       </span>
     </a>

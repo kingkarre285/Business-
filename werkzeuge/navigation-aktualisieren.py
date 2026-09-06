@@ -45,6 +45,11 @@ NAVIGATION = [
 PRAXIS = 'Psychotherapiepraxis Jessica Holm'
 UNTERTITEL = 'Tiefenpsychologisch fundierte Psychotherapie'
 
+# Im Kopfbereich steht die Kurzform: der volle Praxisname zusammen mit sechs
+# Menüpunkten sprengt sonst die Zeile. Vollständig erscheint er in der
+# Fußzeile, im Seitentitel und im Impressum.
+MARKE = 'Jessica Holm'
+
 
 def kopf(aktuell: str, praefix: str = '') -> str:
     punkte = []
@@ -60,7 +65,7 @@ def kopf(aktuell: str, praefix: str = '') -> str:
     <a class="brand" href="{praefix}index.html">
       <span class="brand__mark" aria-hidden="true">jh.</span>
       <span class="brand__text">
-        <span class="brand__name">{PRAXIS}</span>
+        <span class="brand__name">{MARKE}</span>
         <span class="brand__sub">{UNTERTITEL}</span>
       </span>
     </a>
