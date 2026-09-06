@@ -321,7 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <dd><a href="tel:+491716581464">0171 6581464</a></dd>
 
               <dt>Telefonzeit</dt>
-              <dd>[Telefonzeit eintragen]</dd>
+              <dd><span class="platzhalter">Dienstag und Donnerstag<br>12:00–13:00 Uhr</span></dd>
 
               <dt>E-Mail</dt>
               <dd><a href="mailto:kontakt@holm-psychotherapie.de">kontakt@holm-psychotherapie.de</a></dd>
@@ -331,8 +331,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <h3 style="font-size: 1.0625rem;">Sprechzeiten</h3>
             <dl class="data-list text-sm">
-              <dt>Zeiten</dt>
-              <dd>[Bitte hier Ihre Zeiten eintragen]</dd>
+              <dt>Mo – Do</dt>
+              <dd><span class="platzhalter">09:00 – 18:00 Uhr</span></dd>
+              <dt>Freitag</dt>
+              <dd><span class="platzhalter">09:00 – 13:00 Uhr</span></dd>
             </dl>
             <p class="text-sm text-muted" style="margin-top: 1rem; margin-bottom: 0;">
               Termine ausschließlich nach Vereinbarung.

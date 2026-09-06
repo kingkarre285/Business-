@@ -1009,6 +1009,11 @@ thead th {
 
 tbody tr:last-child td { border-bottom: none; }
 
+/* Kurze Angaben wie „50 Minuten“ oder „110 €“ sollen nicht umbrechen.
+   Wird die Tabelle dadurch zu breit, lässt sie sich seitlich scrollen. */
+.table-wrap th:not(:first-child),
+.table-wrap td:not(:first-child) { white-space: nowrap; }
+
 /* FAQ */
 .faq details {
   border: 1px solid var(--c-border);
@@ -1227,6 +1232,20 @@ textarea:focus {
 }
 
 /* --- 10. Hilfsklassen ---------------------------------------------------- */
+
+/* Vorläufige Angaben (Honorare, Zeiten, Wartezeiten).
+   Sie sehen im Normalfall aus wie gewöhnlicher Text.
+
+   ZUM PRÜFEN VOR DEM LIVEGANG: Die folgende Regel einkommentieren, dann
+   werden alle noch nicht bestätigten Angaben gelb hervorgehoben. Nach der
+   Kontrolle wieder auskommentieren.
+
+.platzhalter {
+  background-color: #fff3bf;
+  box-shadow: 0 0 0 2px #f0c419;
+  border-radius: 2px;
+}
+*/
 
 .text-muted { color: var(--c-text-muted); }
 .text-sm    { font-size: var(--fs-sm); }

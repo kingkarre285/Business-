@@ -25,7 +25,7 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `404.html` | Fehlerseite |
 | `.htaccess` | HTTPS-Umleitung, Sicherheits-Header, Caching |
 | `robots.txt`, `sitemap.xml` | Für Suchmaschinen |
-| `werkzeuge/` | Hilfsskripte für Fotos und Navigation |
+| `werkzeuge/` | Hilfsskripte für Fotos, Navigation und Platzhalter |
 | `assets/css/style.css` | Gesamtes Design |
 | `assets/css/fonts.css` | Einbindung der Schriften |
 | `assets/fonts/` | Nunito und Roboto als lokale Dateien |
@@ -109,22 +109,69 @@ Alle Farben stehen gesammelt im Block `:root` ganz oben in `style.css`.
 - [ ] **Absenderpostfach anlegen** und die Werte in `kontakt.php` prüfen (Abschnitt 4).
 - [ ] **SSL-Zertifikat bei IONOS aktivieren** (im Paket enthalten, ein Klick).
 
-### Inhalte anpassen
+### Vorläufige Angaben ersetzen
 
-Die echten Praxisdaten sind bereits eingesetzt – Name, Anschrift, Telefon,
-E-Mail, Kammer, Aufsichtsbehörde, Werdegang und Anfahrt stammen von
-holm-psychotherapie.de. Offen sind noch:
+Die echten Praxisdaten sind eingesetzt – Name, Anschrift, Telefon, E-Mail,
+Kammer, Aufsichtsbehörde, Werdegang und Anfahrt.
 
-- [ ] **Sprechzeiten und Telefonzeit.** Stehen als `[Bitte hier Ihre Zeiten
-      eintragen]` in `kontakt.php`. Auf der alten Website waren keine Zeiten
-      angegeben.
-- [ ] **Honorare** (`[xxx] €`) in den Tabellen auf `psychotherapie.html`,
-      `coaching.html` und `adhs-diagnostik.html`.
-- [ ] **Wartezeit** in `psychotherapie.html` – und diese Angabe regelmäßig aktualisieren.
-- [ ] **Umfang der ADHS-Diagnostik** in `adhs-diagnostik.html`: Anzahl der
-      Termine und Zeitraum (`[x] Termine`, `[x] Wochen`).
-- [ ] **Berufshaftpflichtversicherung** im Impressum (Versicherer und Geltungsbereich).
-- [ ] **Bildnachweise** im Impressum, sobald die endgültigen Fotos feststehen.
+Honorare, Sprechzeiten und Wartezeiten enthalten dagegen **Beispielwerte**,
+damit die Seite vollständig aussieht. Diese Werte sind plausibel, aber
+erfunden – sie müssen vor dem Livegang ersetzt werden.
+
+**Alle betroffenen Stellen auflisten:**
+
+```
+python3 werkzeuge/platzhalter-pruefen.py
+```
+
+Das Skript nennt Datei und Zeilennummer und unterscheidet zwischen
+eingesetzten Beispielwerten (`·`) und noch gar nicht ausgefüllten Stellen (`!`).
+
+**Im Browser sichtbar machen:** In `assets/css/style.css` steht am Anfang von
+Abschnitt 10 eine auskommentierte Regel. Aktivieren Sie sie, werden alle
+vorläufigen Angaben gelb hervorgehoben – praktisch für einen letzten Rundgang
+durch die Seiten. Danach wieder auskommentieren.
+
+Jede vorläufige Angabe steht im HTML in einem
+`<span class="platzhalter">…</span>`. Wenn Sie den Wert ersetzen, entfernen Sie
+bitte auch dieses `span` – dann wird die Prüfliste kürzer.
+
+**Diese Beispielwerte stecken drin:**
+
+| Wo | Angabe | Eingesetzt |
+|---|---|---|
+| `psychotherapie.html` | Wartezeit Therapieplatz / Sprechstunde | 6 bzw. 2 Wochen |
+| `psychotherapie.html` | Erstgespräch, Einzelsitzung | je 110 € |
+| `psychotherapie.html` | Ausfallhonorar | 80 € |
+| `coaching.html` | Erstgespräch, Sitzung | je 150 € |
+| `coaching.html` | Doppelsitzung 100 Min | 280 € |
+| `coaching.html` | Ausfallhonorar | 110 € |
+| `coaching.html` | Umsatzsteuerhinweis | „inklusive“ |
+| `adhs-diagnostik.html` | Vorgespräch | 110 € |
+| `adhs-diagnostik.html` | Gesamtpaket, Umfang | 690 €, 3–4 Termine über 4 Wochen |
+| `kontakt.php` | Telefonzeit | Di und Do, 12–13 Uhr |
+| `kontakt.php` | Sprechzeiten | Mo–Do 9–18, Fr 9–13 Uhr |
+| `datenschutz.html` | Logfile-Speicherdauer | 7 Tage |
+| `datenschutz.html` | Löschfrist unbeantworteter Anfragen | sechs Monate |
+| `datenschutz.html` | Serverstandort, Stand | Deutschland, September 2026 |
+| `impressum.html` | Berufshaftpflichtversicherung | noch offen |
+| `impressum.html` | Bildnachweise | noch offen |
+
+Zwei Hinweise zu den Beträgen:
+
+**Die 110 € orientieren sich an der GOP.** Die Ziffer 870 für eine Einzelsitzung
+von 50 Minuten ergibt beim 2,3-fachen Satz rund 100 €. Für Selbstzahler sind
+Sie in der Preisgestaltung frei.
+
+**Coaching ist umsatzsteuerpflichtig**, anders als eine Heilbehandlung nach
+§ 4 Nr. 14 UStG. Unter der Honorartabelle steht derzeit „inklusive der
+gesetzlichen Umsatzsteuer“. Bitte prüfen Sie, ob das für Sie zutrifft oder ob
+die Kleinunternehmerregelung nach § 19 UStG greift – im zweiten Fall muss der
+Satz weg und stattdessen ein entsprechender Hinweis stehen. Falls Sie
+umsatzsteuerpflichtig sind, gehört zusätzlich die USt-IdNr. ins Impressum.
+
+Weitere offene Punkte:
+
 - [ ] **Anschrift der KV Hessen** im Impressum gegenprüfen.
 - [ ] **Sitzungsfrequenz prüfen:** Die alte Website nennt ein- bis zweimal
       wöchentlich und 24–100 Sitzungen. Die neuen Texte nennen die Regelwerte
