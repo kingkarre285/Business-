@@ -24,12 +24,13 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `404.html` | Fehlerseite |
 | `.htaccess` | HTTPS-Umleitung, Sicherheits-Header, Caching |
 | `robots.txt`, `sitemap.xml` | Für Suchmaschinen |
+| `werkzeuge/` | Hilfsskript zum Aufbereiten eigener Fotos |
 | `assets/css/style.css` | Gesamtes Design |
 | `assets/css/fonts.css` | Einbindung der Schriften |
 | `assets/fonts/` | Nunito und Roboto als lokale Dateien |
 | `assets/js/main.js` | Mobiles Menü (die Seite funktioniert auch ohne JavaScript) |
 | `assets/img/favicon.svg` | Symbol im Browser-Tab |
-| `assets/img/*.jpg` / `*.webp` | Bilder, übernommen von der bisherigen Website |
+| `assets/img/*.jpg` / `*.webp` | Bilder – derzeit Platzhalter, siehe Abschnitt 2 |
 
 ## 1a. Gestaltung
 
@@ -83,36 +84,37 @@ holm-psychotherapie.de. Offen sind noch:
       für Selbstzahler, Coaching und die ADHS-Diagnostik.
 - [ ] **Wartezeit** in `leistungen.html` – und diese Angabe regelmäßig aktualisieren.
 - [ ] **Berufshaftpflichtversicherung** im Impressum (Versicherer und Geltungsbereich).
-- [ ] **Bildnachweise** im Impressum – siehe Hinweis unten.
+- [ ] **Bildnachweise** im Impressum, sobald die endgültigen Fotos feststehen.
 - [ ] **Anschrift der KV Hessen** im Impressum gegenprüfen.
 - [ ] **Sitzungsfrequenz prüfen:** Die alte Website nennt ein- bis zweimal
       wöchentlich und 24–100 Sitzungen. Die neuen Texte nennen die Regelwerte
       der Psychotherapie-Richtlinie. Bitte einmal durchlesen, ob das zu Ihrer
       Arbeitsweise passt.
 
-### Zu den Bildern
+### Bilder austauschen
 
-Vier Motive wurden von der bisherigen Website übernommen, verkleinert und
-zusätzlich als WebP gespeichert (moderne Browser laden dann die kleinere Datei):
+Die vier Bilder sind **Platzhalter** von der alten Website. Zum Austauschen
+einfach die Dateien in `assets/img/` überschreiben – die Dateinamen müssen
+gleich bleiben, dann muss am HTML nichts geändert werden.
 
-| Datei | Verwendung |
-|---|---|
-| `baum-kopf` | Startseite, neben der Hauptüberschrift |
-| `hero-meer` | Zitatband auf der Startseite |
-| `raum` | Abschnitt „Wohin Sie kommen" auf der Ablauf-Seite |
-| `portraet` | Über-mich-Seite |
+| Datei | Wo sie erscheint | Empfohlene Größe |
+|---|---|---|
+| `baum-kopf.jpg` | Startseite, neben der Hauptüberschrift | quadratisch, ab 900 × 900 px |
+| `hero-meer.jpg` | Zitatband auf der Startseite | quer, ab 1800 × 1000 px |
+| `raum.jpg` | „Wohin Sie kommen", Ablauf-Seite | quer, ab 1400 × 950 px |
+| `portraet.jpg` | Über-mich-Seite | hoch, ab 800 × 1000 px |
 
-Zwei Dinge dazu:
+Zu jeder `.jpg` gehört eine gleichnamige `.webp`. Moderne Browser laden die
+WebP-Fassung, weil sie kleiner ist. Wenn Sie nur die JPEG austauschen, zeigen
+diese Browser weiterhin das alte Bild – löschen Sie in dem Fall die zugehörige
+`.webp`, dann greifen alle auf die JPEG zurück.
 
-**Lizenzen prüfen.** Bitte stellen Sie sicher, dass die Nutzungsrechte an den
-Bildern auch die neue Website abdecken. Bei Stockfotos ist die Lizenz manchmal
-an ein bestimmtes Projekt gebunden. Die geforderten Nennungen gehören in den
-Abschnitt „Bildnachweise" im Impressum.
+Am einfachsten: Schicken Sie mir die neuen Fotos, dann schneide ich sie zu,
+verkleinere sie und lege beide Formate an. Alternativ erledigt das Skript
+`werkzeuge/bilder-aufbereiten.py` die Umrechnung.
 
-**Auflösung des Porträts.** Das Foto liegt auf der alten Website nur in
-356 × 399 px vor. Auf modernen Bildschirmen wirkt es dadurch etwas weich.
-Falls die Originaldatei der Fotografin noch existiert, lohnt sich der Austausch
-gegen eine Fassung mit mindestens 800 × 1000 px.
+Die Bildbeschreibungen für Screenreader (`alt`-Texte) beschreiben die
+jetzigen Motive und müssen beim Austausch mit angepasst werden.
 
 ## 3. Auf IONOS hochladen
 
