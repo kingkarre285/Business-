@@ -1,0 +1,48 @@
+# Konfiguration des eToro-Trading-Bots
+#
+# mode:
+#   paper – simuliertes Geld, echte Marktpreise (Standard, kein eToro-Konto nötig)
+#   demo  – eToro-Demokonto über die API (virtuelles Geld bei eToro)
+#   live  – ECHTES GELD. Zusätzlich muss ETORO_ALLOW_LIVE=yes gesetzt sein.
+mode: paper
+
+# Startkapital für den Papier-Modus (USD)
+paper_start_balance: 10000
+
+risk:
+  risk_per_trade_pct: 1.0      # max. Verlust pro Trade bis zum Stop-Loss, in % des Kapitals
+  max_position_pct: 15.0       # max. Positionsgröße in % des Kapitals
+  max_open_positions: 6
+  max_daily_loss_pct: 3.0      # Tagesverlust-Stopp: keine neuen Trades mehr an diesem Tag
+  min_order_usd: 50            # eToro-Mindestbetrag (je nach Instrument ggf. höher)
+  leverage: 1                  # bewusst ohne Hebel
+
+strategy:
+  fast_sma: 20
+  slow_sma: 50
+  trend_sma: 200
+  rsi_period: 14
+  rsi_max_entry: 70            # nicht kaufen, wenn überkauft
+  atr_period: 14
+  stop_atr_mult: 2.0           # Stop-Loss = Einstieg - 2 x ATR
+  take_profit_atr_mult: 4.0    # Take-Profit = Einstieg + 4 x ATR
+
+# Watchlist: Indizes, Rohstoffe, Unternehmen.
+#   symbol:      eToro-Suchbegriff / Ticker
+#   yahoo:       Ticker für historische Kursdaten (Yahoo Finance)
+#   instrument_id: eToro-ID; leer lassen -> wird per API-Suche ermittelt
+#                  (prüfen mit: python -m etoro_bot find "<Name>")
+watchlist:
+  # Indizes
+  - {symbol: SPX500, yahoo: "^GSPC", instrument_id: null}
+  - {symbol: NSDQ100, yahoo: "^NDX", instrument_id: null}
+  - {symbol: GER40, yahoo: "^GDAXI", instrument_id: null}
+  # Rohstoffe
+  - {symbol: GOLD, yahoo: "GC=F", instrument_id: null}
+  - {symbol: OIL, yahoo: "CL=F", instrument_id: null}
+  - {symbol: SILVER, yahoo: "SI=F", instrument_id: null}
+  # Unternehmen
+  - {symbol: AAPL, yahoo: "AAPL", instrument_id: null}
+  - {symbol: MSFT, yahoo: "MSFT", instrument_id: null}
+  - {symbol: NVDA, yahoo: "NVDA", instrument_id: null}
+  - {symbol: AMZN, yahoo: "AMZN", instrument_id: null}

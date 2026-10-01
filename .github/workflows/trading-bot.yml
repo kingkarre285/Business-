@@ -1,0 +1,38 @@
+name: Trading-Bot
+
+on:
+  schedule:
+    # Mo–Fr 21:30 UTC, nach US-Börsenschluss (Tageskerzen sind dann vollständig)
+    - cron: "30 21 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trading-bot
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - name: Bot ausführen
+        env:
+          ETORO_API_KEY: ${{ secrets.ETORO_API_KEY }}
+          ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
+          ETORO_ALLOW_LIVE: ${{ vars.ETORO_ALLOW_LIVE }}
+        run: python -m etoro_bot run
+      - name: Zustand und Log speichern
+        run: |
+          git config user.name "trading-bot"
+          git config user.email "trading-bot@users.noreply.github.com"
+          git add state/
+          git diff --cached --quiet || git commit -m "Bot-Lauf $(date -u +%Y-%m-%d)"
+          git push
