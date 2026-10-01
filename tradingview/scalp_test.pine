@@ -1,0 +1,88 @@
+//@version=6
+// Scalping-Test für eToro: Pullback- und Opening-Range-Breakout-Strategie (Long + Short, mit Hebel)
+// Verwendung: TradingView -> Pine-Editor -> einfügen -> "Zum Chart hinzufügen" -> Tab "Strategietester".
+// Chart auf 5 Minuten stellen. Für Indizes die Kernhandelszeit der Börse eintragen (s. Eingaben).
+// Spread/Kosten: unter Einstellungen -> Eigenschaften -> "Provision" anpassen
+//   (Wert = halber eToro-Spread in %, z. B. SPX500 0.002, NSDQ100 0.0025, GER40 0.0045, GOLD 0.0025, OIL 0.011)
+strategy("eToro Scalp Test", overlay = true, initial_capital = 10000, currency = currency.USD,
+     commission_type = strategy.commission.percent, commission_value = 0.004,
+     margin_long = 10, margin_short = 10, process_orders_on_close = true)
+
+mode        = input.string("Pullback", "Strategie", options = ["Pullback", "Opening Range Breakout"])
+riskPct     = input.float(0.5, "Risiko pro Trade (% des Kapitals)", minval = 0.1, step = 0.1)
+maxExpX     = input.float(5.0, "Max. Positionsgröße (x Kapital)", minval = 0.5, step = 0.5)
+useSession  = input.bool(true, "Nur Kernhandelszeit (für Indizes)")
+sess        = input.session("0930-1600", "Kernhandelszeit")
+tz          = input.string("America/New_York", "Zeitzone", options = ["America/New_York", "Europe/Berlin", "Europe/London", "UTC"])
+flatMinutes = input.int(5, "Minuten vor Sitzungsende alles schließen", minval = 0)
+maxBars     = input.int(12, "Pullback: max. Haltedauer (Kerzen)", minval = 1)
+
+// --- Sitzung -----------------------------------------------------------------
+inSess    = not useSession or not na(time(timeframe.period, sess, tz))
+sessStart = useSession and inSess and not inSess[1]
+endH      = str.tonumber(str.substring(sess, 5, 7))
+endM      = str.tonumber(str.substring(sess, 7, 9))
+minsNow   = hour(time_close, tz) * 60 + minute(time_close, tz)
+nearEnd   = useSession and minsNow >= endH * 60 + endM - flatMinutes
+canTrade  = inSess and not nearEnd and strategy.position_size == 0
+
+// --- Positionsgröße: Risiko bis Stop = riskPct, gedeckelt auf maxExpX x Kapital ---
+sizeFor(stopDist) =>
+    q = strategy.equity * riskPct / 100 / stopDist
+    math.min(q, strategy.equity * maxExpX / close)
+
+// --- Pullback-Strategie --------------------------------------------------------
+ema9  = ta.ema(close, 9)
+ema21 = ta.ema(close, 21)
+ema50 = ta.ema(close, 50)
+r     = ta.rsi(close, 7)
+a     = ta.atr(14)
+pbLong  = close > ema50 and ema9 > ema21 and r[1] < 35 and r >= 35
+pbShort = close < ema50 and ema9 < ema21 and r[1] > 65 and r <= 65
+
+if mode == "Pullback" and canTrade
+    if pbLong
+        strategy.entry("L", strategy.long, qty = sizeFor(1.5 * a))
+        strategy.exit("L-x", "L", stop = close - 1.5 * a, limit = close + 2.0 * a)
+    else if pbShort
+        strategy.entry("S", strategy.short, qty = sizeFor(1.5 * a))
+        strategy.exit("S-x", "S", stop = close + 1.5 * a, limit = close - 2.0 * a)
+
+if mode == "Pullback" and strategy.position_size != 0 and bar_index - strategy.opentrades.entry_bar_index(0) >= maxBars
+    strategy.close_all(comment = "Zeit")
+
+// --- Opening Range Breakout (erste 30 Minuten) ------------------------------------
+var float orHigh = na
+var float orLow  = na
+var int   orStartBar = na
+var bool  tradedToday = false
+if sessStart
+    orHigh := high
+    orLow  := low
+    orStartBar := bar_index
+    tradedToday := false
+orBars    = int(30 / timeframe.multiplier)
+inOrRange = not na(orStartBar) and bar_index - orStartBar < orBars
+if inOrRange and not sessStart
+    orHigh := math.max(orHigh, high)
+    orLow  := math.min(orLow, low)
+
+if mode == "Opening Range Breakout" and canTrade and not inOrRange and not tradedToday and not na(orHigh)
+    if close > orHigh
+        d = close - orLow
+        strategy.entry("L", strategy.long, qty = sizeFor(d))
+        strategy.exit("L-x", "L", stop = orLow, limit = close + 2 * d)
+        tradedToday := true
+    else if close < orLow
+        d = orHigh - close
+        strategy.entry("S", strategy.short, qty = sizeFor(d))
+        strategy.exit("S-x", "S", stop = orHigh, limit = close - 2 * d)
+        tradedToday := true
+
+// --- Vor Sitzungsende alles schließen (keine Übernachtgebühren) ----------------------
+if nearEnd and strategy.position_size != 0
+    strategy.close_all(comment = "Sitzungsende")
+
+plot(mode == "Pullback" ? ema50 : na, "EMA 50", color.orange)
+plot(mode != "Pullback" ? orHigh : na, "OR Hoch", color.green, style = plot.style_linebr)
+plot(mode != "Pullback" ? orLow : na, "OR Tief", color.red, style = plot.style_linebr)
