@@ -24,18 +24,16 @@ class EtoroClient:
         self.demo = demo
         self.api_key = api_key or os.environ.get("ETORO_API_KEY")
         self.user_key = user_key or os.environ.get("ETORO_USER_KEY")
-        if not self.api_key or not self.user_key:
-            raise EtoroError("ETORO_API_KEY und ETORO_USER_KEY müssen gesetzt sein.")
+        # Ohne Umgebungsvariablen werden die Schlüssel ggf. von einem Proxy angehängt
+        # (z. B. "API credentials" in der Claude-Cloud-Umgebung).
         self.session = requests.Session()
 
     # -- HTTP ---------------------------------------------------------------
     def _request(self, method: str, path: str, **kwargs):
-        headers = {
-            "x-api-key": self.api_key,
-            "x-user-key": self.user_key,
-            "x-request-id": str(uuid.uuid4()),
-            "Content-Type": "application/json",
-        }
+        headers = {"x-request-id": str(uuid.uuid4()), "Content-Type": "application/json"}
+        if self.api_key and self.user_key:
+            headers["x-api-key"] = self.api_key
+            headers["x-user-key"] = self.user_key
         for attempt in range(4):
             resp = self.session.request(method, BASE + path, headers=headers, timeout=30, **kwargs)
             if resp.status_code == 429:

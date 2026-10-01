@@ -9,8 +9,24 @@ import pandas as pd
 YAHOO_MAX_DAYS = {"1m": 7, "5m": 60, "15m": 60, "30m": 60, "1h": 730}
 
 
+_etoro_ok: bool | None = None
+
+
 def has_etoro_keys() -> bool:
-    return bool(os.environ.get("ETORO_API_KEY") and os.environ.get("ETORO_USER_KEY"))
+    """True, wenn eToro-Daten abrufbar sind: Schlüssel als Umgebungsvariablen
+    oder von einem Proxy angehängt (wird einmal per Testabruf geprüft)."""
+    global _etoro_ok
+    if _etoro_ok is None:
+        if os.environ.get("ETORO_API_KEY") and os.environ.get("ETORO_USER_KEY"):
+            _etoro_ok = True
+        else:
+            from .etoro_client import EtoroClient
+            try:
+                EtoroClient(demo=True)._request("GET", "/api/v1/data/instruments/27/candles/coverage")
+                _etoro_ok = True
+            except Exception:
+                _etoro_ok = False
+    return _etoro_ok
 
 
 def candles(item: dict, interval: str = "1d", days: int = 730) -> pd.DataFrame:
