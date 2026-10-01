@@ -58,6 +58,25 @@ class EtoroClient:
                 return int(_first(item, "instrumentId", "instrumentID", "id"))
         raise EtoroError(f"Instrument '{symbol}' nicht gefunden – instrument_id in config.yaml eintragen.")
 
+    def candles(self, instrument_id: int, interval: str, start: str | None = None,
+                end: str | None = None, max_pages: int = 1000) -> list[dict]:
+        """OHLC-Kerzen (Bid) aus eToros Datenplattform, älteste zuerst.
+        interval: 1m, 5m, 10m, 15m, 30m, 1h, 4h, 1d, 1w. start/end: ISO 8601 mit Zeitzone."""
+        params = {"interval": interval, "limit": 2000}
+        if start:
+            params["from"] = start
+        if end:
+            params["to"] = end
+        out = []
+        for _ in range(max_pages):
+            page = self._request("GET", f"/api/v1/data/instruments/{instrument_id}/candles", params=params)
+            out.extend(page.get("results", []))
+            nxt = (page.get("pagination") or {}).get("nextCursor")
+            if not nxt:
+                break
+            params = {"interval": interval, "limit": 2000, "cursor": nxt}
+        return sorted(out, key=lambda c: c["time"])
+
     # -- Konto --------------------------------------------------------------
     def portfolio(self) -> dict:
         path = "/api/v1/trading/info/demo/portfolio" if self.demo else "/api/v1/trading/info/portfolio"

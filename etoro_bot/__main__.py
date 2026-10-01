@@ -2,7 +2,7 @@
     python -m etoro_bot run              # ein Handelsdurchlauf
     python -m etoro_bot status           # Papier-Konto anzeigen
     python -m etoro_bot backtest [5y]    # Strategie historisch testen
-    python -m etoro_bot scalp-backtest   # 5-Minuten-Scalping-Strategien testen (60 Tage)
+    python -m etoro_bot scalp-backtest [Tage]  # 5-Minuten-Scalping testen (eToro-Daten mit Keys)
     python -m etoro_bot find "Gold"      # eToro-Instrument-ID suchen (API-Keys nötig)
 """
 import json
@@ -21,7 +21,7 @@ def main(argv: list[str]) -> None:
         backtest(cfg, argv[1] if len(argv) > 1 else "5y")
     elif cmd == "scalp-backtest":
         from .scalp import scalp_backtest
-        scalp_backtest()
+        scalp_backtest(days=int(argv[1]) if len(argv) > 1 else 365)
     elif cmd == "status":
         f = STATE / "paper_state.json"
         if not f.exists():

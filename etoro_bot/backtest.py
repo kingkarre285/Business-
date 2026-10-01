@@ -13,7 +13,7 @@ def backtest(cfg: dict, period: str = "5y", quiet: bool = False) -> float:
     if not quiet:
         print(f"{'Symbol':8s} {'Trades':>6s} {'Long':>5s} {'Short':>5s} {'Treffer':>8s} {'PnL USD':>10s}  Halten")
     for item in cfg["watchlist"]:
-        df = data.daily_candles(item["yahoo"], period=period)
+        df = data.daily_candles(item, days=int(period.rstrip("y")) * 365)
         equity, pos = start, None
         trades = hits = longs = shorts = 0
         lev = risk.leverage_for(item, rcfg)

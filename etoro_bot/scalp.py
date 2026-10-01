@@ -12,17 +12,19 @@ Round-Trip abgezogen. Alle Positionen werden vor Handelsschluss geschlossen
 """
 import numpy as np
 import pandas as pd
-import yfinance as yf
+
+from . import data
 
 from .strategy import atr, rsi
 
-# (Yahoo-Ticker, eToro-Spread in % des Kurses (gemessen 01.10.2026), max. eToro-Hebel, nur Kernhandelszeit)
+# (eToro-ID, Yahoo-Ticker, eToro-Spread in % des Kurses (gemessen 01.10.2026), max. Hebel,
+#  Kernhandelszeit (Zeitzone, Start, Ende) oder None für Handel rund um die Uhr)
 MARKETS = {
-    "SPX500": ("^GSPC", 0.0039, 20, True),
-    "NSDQ100": ("^NDX", 0.0046, 20, True),
-    "GER40": ("^GDAXI", 0.0088, 20, True),
-    "GOLD": ("GC=F", 0.0048, 10, False),
-    "OIL": ("CL=F", 0.0217, 10, False),
+    "SPX500": (27, "^GSPC", 0.0039, 20, ("America/New_York", "09:30", "16:00")),
+    "NSDQ100": (28, "^NDX", 0.0046, 20, ("America/New_York", "09:30", "16:00")),
+    "GER40": (32, "^GDAXI", 0.0088, 20, ("Europe/Berlin", "09:00", "17:30")),
+    "GOLD": (18, "GC=F", 0.0048, 10, None),
+    "OIL": (17, "CL=F", 0.0217, 10, None),
 }
 
 RISK_PCT = 0.5          # Risiko pro Trade in % des Kapitals
@@ -30,11 +32,15 @@ MAX_EXPOSURE_X = 5.0    # max. Marktwert pro Trade = 5 x Kapital
 SPREAD_SAFETY = 2.0
 
 
-def load(ticker: str, interval: str = "5m") -> pd.DataFrame:
-    df = yf.download(ticker, period="60d", interval=interval, progress=False, auto_adjust=True)
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-    return df.rename(columns=str.lower)[["open", "high", "low", "close"]].dropna()
+def load(instrument_id: int, ticker: str, session, days: int, interval: str = "5m") -> pd.DataFrame:
+    """eToro-Kerzen (mit API-Schlüsseln) oder Yahoo; bei Indizes auf die Kernhandelszeit
+    der Börse in deren Zeitzone beschränkt, damit 'Tag' und 'Eröffnung' stimmen."""
+    df = data.candles({"instrument_id": instrument_id, "yahoo": ticker}, interval, days)
+    if df.empty or session is None:
+        return df
+    tz, start, end = session
+    df = df.tz_convert(tz) if df.index.tz else df.tz_localize("UTC").tz_convert(tz)
+    return df.between_time(start, end, inclusive="left")
 
 
 def pullback_signals(df: pd.DataFrame) -> pd.DataFrame:
@@ -118,20 +124,21 @@ def simulate(df: pd.DataFrame, sig: pd.DataFrame, spread_pct: float, max_lev: in
             "return_pct": (equity / start - 1) * 100, "max_dd_pct": max_dd * 100}
 
 
-def scalp_backtest(spread_safety: float | None = None) -> None:
+def scalp_backtest(spread_safety: float | None = None, days: int = 365) -> None:
     global SPREAD_SAFETY
     if spread_safety is not None:
         SPREAD_SAFETY = spread_safety
-    print(f"5-Minuten-Backtest, letzte ~60 Handelstage, Risiko {RISK_PCT} %/Trade, "
+    src = "eToro" if data.has_etoro_keys() else "Yahoo (max. 60 Tage)"
+    print(f"5-Minuten-Backtest, Daten: {src}, Zeitraum bis {days} Tage, Risiko {RISK_PCT} %/Trade, "
           f"Spread x{SPREAD_SAFETY}, Startkapital je Markt 10.000 USD\n")
     print(f"{'Markt':8s} {'Strategie':9s} {'Trades':>6s} {'Treffer':>8s} {'Rendite':>8s} {'max. DD':>8s}")
-    for name, (ticker, spread, lev, rth_only) in MARKETS.items():
-        df = load(ticker)
+    for name, (iid, ticker, spread, lev, session) in MARKETS.items():
+        df = load(iid, ticker, session, days)
         if df.empty:
             print(f"{name:8s} keine Daten")
             continue
         strategies = {"pullback": pullback_signals(df)}
-        if rth_only:
+        if session:
             strategies["orb"] = orb_signals(df)
         for sname, sig in strategies.items():
             r = simulate(df, sig, spread, lev)

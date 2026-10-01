@@ -64,7 +64,7 @@ def run_once(cfg: dict | None = None):
     # 1) Kurse laden, Papier-Stops prüfen
     candles = {}
     for item in cfg["watchlist"]:
-        df = data.daily_candles(item["yahoo"])
+        df = data.daily_candles(item)
         if df.empty:
             log(f"{item['symbol']}: keine Kursdaten")
             continue
