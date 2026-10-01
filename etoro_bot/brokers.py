@@ -1,4 +1,7 @@
-"""Broker-Abstraktion: Papier-Simulation oder echtes eToro-Konto (Demo/Live)."""
+"""Broker-Abstraktion: Papier-Simulation oder echtes eToro-Konto (Demo/Live).
+
+Positionen werden einheitlich als {symbol: {"side": "long"|"short", "exposure": ...}} geliefert.
+"""
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -6,8 +9,15 @@ from pathlib import Path
 from .etoro_client import EtoroClient
 
 
+def _pnl(pos: dict, price: float) -> float:
+    sign = 1 if pos["side"] == "long" else -1
+    return sign * (price - pos["open_rate"]) * pos["units"]
+
+
 class PaperBroker:
     """Simuliert Trades lokal mit echten Kursen. Zustand in state/paper_state.json."""
+
+    tag = "PAPIER"
 
     def __init__(self, state_file: Path, start_balance: float):
         self.state_file = state_file
@@ -29,52 +39,55 @@ class PaperBroker:
         pos = self.state["positions"].get(symbol)
         if not pos:
             return
-        if pos.get("stop_loss") and low <= pos["stop_loss"]:
+        long = pos["side"] == "long"
+        sl_hit = pos.get("stop_loss") and (low <= pos["stop_loss"] if long else high >= pos["stop_loss"])
+        tp_hit = pos.get("take_profit") and (high >= pos["take_profit"] if long else low <= pos["take_profit"])
+        if sl_hit:
             self._close(symbol, pos["stop_loss"], "Stop-Loss", log)
-        elif pos.get("take_profit") and high >= pos["take_profit"]:
+        elif tp_hit:
             self._close(symbol, pos["take_profit"], "Take-Profit", log)
 
-    def positions(self) -> dict[str, dict]:
+    def positions(self, watchlist) -> dict[str, dict]:
         return self.state["positions"]
 
     def equity(self) -> float:
         value = self.state["cash"]
         for sym, p in self.state["positions"].items():
-            value += p["units"] * self.prices.get(sym, p["open_rate"])
+            value += p["margin"] + _pnl(p, self.prices.get(sym, p["open_rate"]))
         return value
 
-    def open_long(self, item: dict, amount: float, price: float, sl, tp, log):
-        amount = min(amount, self.state["cash"])
-        if amount <= 0:
+    def open(self, item: dict, side: str, exposure: float, margin: float, leverage: int,
+             price: float, sl, tp, log):
+        if margin > self.state["cash"]:
+            log(f"  -> übersprungen: zu wenig freies Kapital")
             return
-        self.state["cash"] -= amount
+        self.state["cash"] -= margin
         self.state["positions"][item["symbol"]] = {
-            "id": self.state["next_id"], "open_rate": price, "units": amount / price,
-            "amount": amount, "stop_loss": sl, "take_profit": tp,
-            "opened": datetime.now(timezone.utc).isoformat(),
+            "id": self.state["next_id"], "side": side, "open_rate": price, "units": exposure / price,
+            "exposure": exposure, "margin": margin, "leverage": leverage,
+            "stop_loss": sl, "take_profit": tp, "opened": datetime.now(timezone.utc).isoformat(),
         }
         self.state["next_id"] += 1
-        log(f"[PAPIER] KAUF {item['symbol']} {amount:.2f} USD @ {price:.2f} (SL {sl}, TP {tp})")
+        log(f"[PAPIER] {'KAUF' if side == 'long' else 'SHORT'} {item['symbol']} Einsatz {margin:.2f} USD "
+            f"x{leverage} = {exposure:.2f} USD @ {price:.2f} (SL {sl}, TP {tp})")
 
-    def close(self, symbol: str, price: float, reason: str, log):
-        self._close(symbol, price, reason, log)
+    def close(self, item: dict, position: dict, price: float, reason: str, log):
+        self._close(item["symbol"], price, reason, log)
 
     def _close(self, symbol: str, price: float, reason: str, log):
         pos = self.state["positions"].pop(symbol)
-        proceeds = pos["units"] * price
-        self.state["cash"] += proceeds
-        pnl = proceeds - pos["amount"]
+        pnl = _pnl(pos, price)
+        self.state["cash"] += pos["margin"] + pnl
         self.state["closed"].append({**pos, "symbol": symbol, "close_rate": price, "pnl": pnl,
                                      "reason": reason, "closed": datetime.now(timezone.utc).isoformat()})
-        log(f"[PAPIER] VERKAUF {symbol} @ {price:.2f} ({reason}) PnL {pnl:+.2f} USD")
+        log(f"[PAPIER] SCHLIESSEN {pos['side'].upper()} {symbol} @ {price:.2f} ({reason}) PnL {pnl:+.2f} USD")
 
 
 class EtoroBroker:
     """Handelt über die eToro-API. demo=True -> virtuelles Konto, sonst Echtgeld."""
 
-    def __init__(self, demo: bool, leverage: int):
+    def __init__(self, demo: bool):
         self.client = EtoroClient(demo=demo)
-        self.leverage = leverage
         self.tag = "DEMO" if demo else "LIVE"
         self._ids: dict[str, int] = {}
 
@@ -94,16 +107,26 @@ class EtoroBroker:
     def check_stops(self, symbol, low, high, log):
         pass  # Stop-Loss / Take-Profit werden direkt bei eToro verwaltet
 
-    def positions_by_instrument(self) -> dict[int, dict]:
-        return {p["instrument_id"]: p for p in self.client.positions() if p["is_buy"]}
+    def positions(self, watchlist) -> dict[str, dict]:
+        """Nur Positionen auf Watchlist-Instrumenten (kopierte Trader etc. bleiben unberührt)."""
+        by_id = {self.instrument_id(it): it["symbol"] for it in watchlist}
+        out = {}
+        for p in self.client.positions():
+            sym = by_id.get(p["instrument_id"])
+            if sym:
+                out[sym] = {**p, "side": "long" if p["is_buy"] else "short",
+                            "exposure": p["amount"] * p.get("leverage", 1)}
+        return out
 
     def equity(self) -> float:
         return self.client.equity()
 
-    def open_long(self, item: dict, amount: float, price: float, sl, tp, log):
-        res = self.client.open_long(self.instrument_id(item), amount, self.leverage, sl, tp)
-        log(f"[{self.tag}] KAUF {item['symbol']} {amount:.2f} USD (SL {sl}, TP {tp}) -> {res}")
+    def open(self, item: dict, side: str, exposure: float, margin: float, leverage: int,
+             price: float, sl, tp, log):
+        res = self.client.open_position(self.instrument_id(item), side, margin, leverage, sl, tp)
+        log(f"[{self.tag}] {'KAUF' if side == 'long' else 'SHORT'} {item['symbol']} Einsatz {margin:.2f} USD "
+            f"x{leverage} (SL {sl}, TP {tp}) -> {res}")
 
-    def close_position(self, item: dict, position: dict, reason: str, log):
+    def close(self, item: dict, position: dict, price: float, reason: str, log):
         res = self.client.close(position["position_id"])
-        log(f"[{self.tag}] VERKAUF {item['symbol']} ({reason}) -> {res}")
+        log(f"[{self.tag}] SCHLIESSEN {item['symbol']} ({reason}) -> {res}")

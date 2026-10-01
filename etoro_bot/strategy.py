@@ -1,4 +1,4 @@
-"""Trendfolge-Strategie: SMA-Kreuzung mit Trendfilter, RSI-Filter und ATR-Stops."""
+"""Trendfolge-Strategie für Long und Short: SMA-Kreuzung mit Trendfilter, RSI-Filter und ATR-Stops."""
 from dataclasses import dataclass
 
 import pandas as pd
@@ -6,7 +6,7 @@ import pandas as pd
 
 @dataclass
 class Signal:
-    action: str          # "buy", "sell" (Position schließen) oder "hold"
+    action: str          # "buy" (Long eröffnen), "short" (Short eröffnen), "close" oder "hold"
     price: float
     stop_loss: float | None = None
     take_profit: float | None = None
@@ -30,9 +30,10 @@ def atr(df: pd.DataFrame, period: int) -> pd.Series:
     return tr.ewm(alpha=1 / period, adjust=False).mean()
 
 
-def generate_signal(df: pd.DataFrame, cfg: dict, has_position: bool) -> Signal:
-    """df: Tageskerzen mit Spalten open/high/low/close, älteste zuerst."""
-    need = max(cfg["slow_sma"], cfg["trend_sma"]) + 2
+def generate_signal(df: pd.DataFrame, cfg: dict, position: str | None) -> Signal:
+    """df: Tageskerzen (open/high/low/close), älteste zuerst.
+    position: None (keine Position), "long" oder "short"."""
+    need = max(cfg["slow_sma"], cfg["trend_sma"]) + 5
     if len(df) < need:
         return Signal("hold", float(df["close"].iloc[-1]) if len(df) else 0.0, reason="zu wenig Daten")
 
@@ -44,21 +45,35 @@ def generate_signal(df: pd.DataFrame, cfg: dict, has_position: bool) -> Signal:
     a = atr(df, cfg["atr_period"]).iloc[-1]
     price = float(close.iloc[-1])
 
-    uptrend = fast.iloc[-1] > slow.iloc[-1] and price > trend.iloc[-1]
-
-    if has_position:
+    if position == "long":
         if fast.iloc[-1] < slow.iloc[-1]:
-            return Signal("sell", price, reason="schnelle SMA unter langsamer SMA – Trend gebrochen")
-        return Signal("hold", price, reason="Trend intakt")
+            return Signal("close", price, reason="Long: SMA-Trend nach unten gedreht")
+        return Signal("hold", price, reason="Long: Trend intakt")
+    if position == "short":
+        if fast.iloc[-1] > slow.iloc[-1]:
+            return Signal("close", price, reason="Short: SMA-Trend nach oben gedreht")
+        return Signal("hold", price, reason="Short: Abwärtstrend intakt")
 
+    up = fast.iloc[-1] > slow.iloc[-1] and price > trend.iloc[-1]
     crossed_up = fast.iloc[-2] <= slow.iloc[-2] and fast.iloc[-1] > slow.iloc[-1]
-    fresh_trend = uptrend and (crossed_up or (close.iloc[-1] > fast.iloc[-1] and fast.iloc[-1] > fast.iloc[-5]))
-    if fresh_trend and r < cfg["rsi_max_entry"]:
+    if up and (crossed_up or (price > fast.iloc[-1] and fast.iloc[-1] > fast.iloc[-5])) and r < cfg["rsi_max_entry"]:
         return Signal(
-            "buy",
-            price,
+            "buy", price,
             stop_loss=round(price - cfg["stop_atr_mult"] * a, 4),
             take_profit=round(price + cfg["take_profit_atr_mult"] * a, 4),
             reason=f"Aufwärtstrend (SMA{cfg['fast_sma']}>SMA{cfg['slow_sma']}, Kurs>SMA{cfg['trend_sma']}), RSI {r:.0f}",
         )
-    return Signal("hold", price, reason=f"kein Einstieg (Trend={'ja' if uptrend else 'nein'}, RSI {r:.0f})")
+
+    if cfg.get("allow_short", False):
+        down = fast.iloc[-1] < slow.iloc[-1] and price < trend.iloc[-1]
+        crossed_down = fast.iloc[-2] >= slow.iloc[-2] and fast.iloc[-1] < slow.iloc[-1]
+        if down and (crossed_down or (price < fast.iloc[-1] and fast.iloc[-1] < fast.iloc[-5])) \
+                and r > cfg["rsi_min_short"]:
+            return Signal(
+                "short", price,
+                stop_loss=round(price + cfg["stop_atr_mult"] * a, 4),
+                take_profit=round(price - cfg["take_profit_atr_mult"] * a, 4),
+                reason=f"Abwärtstrend (SMA{cfg['fast_sma']}<SMA{cfg['slow_sma']}, Kurs<SMA{cfg['trend_sma']}), RSI {r:.0f}",
+            )
+
+    return Signal("hold", price, reason=f"kein Einstieg (RSI {r:.0f})")

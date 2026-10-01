@@ -35,11 +35,11 @@ def make_broker(cfg: dict):
     if mode == "paper":
         return PaperBroker(STATE / "paper_state.json", cfg["paper_start_balance"])
     if mode == "demo":
-        return EtoroBroker(demo=True, leverage=cfg["risk"]["leverage"])
+        return EtoroBroker(demo=True)
     if mode == "live":
         if os.environ.get("ETORO_ALLOW_LIVE") != "yes":
             raise SystemExit("Live-Modus gesperrt: ETORO_ALLOW_LIVE=yes setzen, um mit echtem Geld zu handeln.")
-        return EtoroBroker(demo=False, leverage=cfg["risk"]["leverage"])
+        return EtoroBroker(demo=False)
     raise SystemExit(f"Unbekannter mode: {mode}")
 
 
@@ -55,9 +55,10 @@ def day_start_equity(equity: float) -> float:
 
 def run_once(cfg: dict | None = None):
     cfg = cfg or load_config()
+    rcfg = cfg["risk"]
+    scfg = {**cfg["strategy"], "allow_short": rcfg["allow_short"]}
     log = make_logger()
     broker = make_broker(cfg)
-    paper = isinstance(broker, PaperBroker)
     log(f"=== Lauf gestartet (Modus: {cfg['mode']}) ===")
 
     # 1) Kurse laden, Papier-Stops prüfen
@@ -74,42 +75,45 @@ def run_once(cfg: dict | None = None):
 
     equity = broker.equity()
     start = day_start_equity(equity)
-    halted = risk.daily_loss_exceeded(start, equity, cfg["risk"])
+    halted = risk.daily_loss_exceeded(start, equity, rcfg)
     log(f"Kapital: {equity:.2f} USD (Tagesstart {start:.2f})" + (" – TAGESVERLUST-STOPP AKTIV" if halted else ""))
 
-    held = broker.positions() if paper else broker.positions_by_instrument()
+    held = broker.positions(cfg["watchlist"])
+    total_exposure = sum(p.get("exposure", 0) for p in held.values())
 
     # 2) Signale auswerten
     for item in cfg["watchlist"]:
         df = candles.get(item["symbol"])
         if df is None:
             continue
-        if paper:
-            position = held.get(item["symbol"])
-        else:
-            position = held.get(broker.instrument_id(item))
-        sig = generate_signal(df, cfg["strategy"], has_position=position is not None)
-        log(f"{item['symbol']:8s} {sig.price:>10.2f}  {sig.action.upper():4s}  {sig.reason}")
+        position = held.get(item["symbol"])
+        sig = generate_signal(df, scfg, position["side"] if position else None)
+        log(f"{item['symbol']:8s} {sig.price:>10.2f}  {sig.action.upper():5s}  {sig.reason}")
 
-        if sig.action == "sell" and position:
-            if paper:
-                broker.close(item["symbol"], sig.price, sig.reason, log)
-            else:
-                broker.close_position(item, position, sig.reason, log)
-        elif sig.action == "buy" and not position:
+        if sig.action == "close" and position:
+            broker.close(item, position, sig.price, sig.reason, log)
+            held.pop(item["symbol"])
+            total_exposure -= position.get("exposure", 0)
+        elif sig.action in ("buy", "short") and not position:
             if halted:
-                log(f"  -> übersprungen: Tagesverlust-Stopp")
+                log("  -> übersprungen: Tagesverlust-Stopp")
                 continue
-            if len(held) >= cfg["risk"]["max_open_positions"]:
-                log(f"  -> übersprungen: max. {cfg['risk']['max_open_positions']} Positionen offen")
+            if len(held) >= rcfg["max_open_positions"]:
+                log(f"  -> übersprungen: max. {rcfg['max_open_positions']} Positionen offen")
                 continue
-            amount = risk.position_size_usd(equity, sig.price, sig.stop_loss, cfg["risk"],
-                                             item.get("min_usd", 0))
-            if amount <= 0:
+            lev = risk.leverage_for(item, rcfg)
+            exposure, margin = risk.position_size(equity, sig.price, sig.stop_loss, rcfg, lev,
+                                                  item.get("min_usd", 0))
+            if exposure <= 0:
                 log("  -> übersprungen: Positionsgröße unter Mindestbetrag")
                 continue
-            broker.open_long(item, amount, sig.price, sig.stop_loss, sig.take_profit, log)
-            held = broker.positions() if paper else {**held, broker.instrument_id(item): {}}
+            if total_exposure + exposure > equity * rcfg["max_total_exposure_pct"] / 100:
+                log(f"  -> übersprungen: Gesamt-Exposure über {rcfg['max_total_exposure_pct']} % des Kapitals")
+                continue
+            side = "long" if sig.action == "buy" else "short"
+            broker.open(item, side, exposure, margin, lev, sig.price, sig.stop_loss, sig.take_profit, log)
+            held[item["symbol"]] = {"side": side, "exposure": exposure}
+            total_exposure += exposure
 
     broker.save()
     log(f"=== Lauf beendet. Kapital: {broker.equity():.2f} USD ===")

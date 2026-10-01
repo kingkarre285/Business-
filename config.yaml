@@ -9,13 +9,21 @@ mode: paper
 # Startkapital für den Papier-Modus (USD)
 paper_start_balance: 10000
 
+# Grobe Schätzung der Übernachtgebühren für Hebel-/Short-Positionen (% des Marktwerts pro Jahr),
+# nur für den Backtest. Die echten eToro-Gebühren variieren je Instrument.
+backtest_overnight_fee_pct_per_year: 6.0
+
 risk:
   risk_per_trade_pct: 1.0      # max. Verlust pro Trade bis zum Stop-Loss, in % des Kapitals
-  max_position_pct: 15.0       # max. Positionsgröße in % des Kapitals
-  max_open_positions: 6
+  max_position_pct: 15.0       # max. Einsatz (Margin) pro Position in % des Kapitals
+  max_exposure_pct: 30.0       # max. Marktwert (Einsatz x Hebel) pro Position in % des Kapitals
+  max_total_exposure_pct: 150.0  # max. Marktwert aller Positionen zusammen in % des Kapitals
+  max_open_positions: 8
   max_daily_loss_pct: 3.0      # Tagesverlust-Stopp: keine neuen Trades mehr an diesem Tag
-  min_order_usd: 50            # eToro-Mindestbetrag (je nach Instrument ggf. höher)
-  leverage: 1                  # bewusst ohne Hebel
+  min_order_usd: 50            # Mindesteinsatz pro Trade
+  leverage: 2                  # Standard-Hebel; pro Instrument überschreibbar (eToro erlaubt
+                               # Indizes bis 20, Rohstoffe bis 10, Aktien bis 5)
+  allow_short: true            # auch auf fallende Kurse setzen
 
 strategy:
   fast_sma: 20
@@ -23,6 +31,7 @@ strategy:
   trend_sma: 200
   rsi_period: 14
   rsi_max_entry: 70            # nicht kaufen, wenn überkauft
+  rsi_min_short: 30            # nicht shorten, wenn überverkauft
   atr_period: 14
   stop_atr_mult: 2.0           # Stop-Loss = Einstieg - 2 x ATR
   take_profit_atr_mult: 4.0    # Take-Profit = Einstieg + 4 x ATR

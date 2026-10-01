@@ -75,6 +75,7 @@ class EtoroClient:
                 "is_buy": bool(_first(p, "isBuy", default=True)),
                 "open_rate": float(_first(p, "openRate", default=0)),
                 "amount": float(_first(p, "investedAmount", "amount", default=0)),
+                "leverage": int(_first(p, "leverage", default=1)),
             })
         return out
 
@@ -88,24 +89,24 @@ class EtoroClient:
         return float(value)
 
     # -- Orders -------------------------------------------------------------
-    def open_long(self, instrument_id: int, amount_usd: float, leverage: int = 1,
-                  stop_loss: float | None = None, take_profit: float | None = None) -> dict:
+    def open_position(self, instrument_id: int, side: str, amount_usd: float, leverage: int = 1,
+                      stop_loss: float | None = None, take_profit: float | None = None) -> dict:
+        """side: "long" oder "short". amount_usd = eingesetztes Kapital (Margin)."""
         path = "/api/v2/trading/execution/demo/orders" if self.demo else "/api/v2/trading/execution/orders"
         body = {
             "action": "open",
-            "transaction": "buy",
+            "transaction": "buy" if side == "long" else "sellShort",
             "instrumentId": instrument_id,
             "orderType": "mkt",
-            "amount": amount_usd,
+            "amount": round(amount_usd, 2),
             "orderCurrency": "usd",
             "leverage": leverage,
-            "stopLossType": "fixed",
         }
-        result = self._request("POST", path, json=body)
-        position_id = _first(result, "positionId", "positionID", default=None)
-        if position_id and (stop_loss or take_profit):
-            self.set_stops(position_id, stop_loss, take_profit)
-        return result
+        if stop_loss:
+            body["stopLossRate"] = stop_loss
+        if take_profit:
+            body["takeProfitRate"] = take_profit
+        return self._request("POST", path, json=body)
 
     def set_stops(self, position_id, stop_loss: float | None, take_profit: float | None) -> dict:
         path = (f"/api/v2/trading/demo/positions/{position_id}" if self.demo

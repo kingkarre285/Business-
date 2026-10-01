@@ -26,7 +26,8 @@ def main(argv: list[str]) -> None:
         s = json.loads(f.read_text())
         print(f"Cash: {s['cash']:.2f} USD")
         for sym, p in s["positions"].items():
-            print(f"  {sym:8s} {p['amount']:.2f} USD @ {p['open_rate']:.2f}  SL {p['stop_loss']}  TP {p['take_profit']}")
+            print(f"  {sym:8s} {p['side'].upper():5s} Einsatz {p['margin']:.2f} USD x{p['leverage']} "
+                  f"@ {p['open_rate']:.2f}  SL {p['stop_loss']}  TP {p['take_profit']}")
         pnl = sum(t["pnl"] for t in s["closed"])
         print(f"Geschlossene Trades: {len(s['closed'])}, realisierter PnL {pnl:+.2f} USD")
     elif cmd == "find":
