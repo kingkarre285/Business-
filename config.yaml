@@ -30,19 +30,19 @@ strategy:
 # Watchlist: Indizes, Rohstoffe, Unternehmen.
 #   symbol:      eToro-Suchbegriff / Ticker
 #   yahoo:       Ticker für historische Kursdaten (Yahoo Finance)
-#   instrument_id: eToro-ID; leer lassen -> wird per API-Suche ermittelt
-#                  (prüfen mit: python -m etoro_bot find "<Name>")
+#   instrument_id: eToro-ID (leer lassen -> wird per API-Suche ermittelt)
+#   min_usd:     eToro-Mindestbetrag pro Position (Indizes/Rohstoffe: 1000 USD)
 watchlist:
   # Indizes
-  - {symbol: SPX500, yahoo: "^GSPC", instrument_id: null}
-  - {symbol: NSDQ100, yahoo: "^NDX", instrument_id: null}
-  - {symbol: GER40, yahoo: "^GDAXI", instrument_id: null}
+  - {symbol: SPX500, yahoo: "^GSPC", instrument_id: 27, min_usd: 1000}
+  - {symbol: NSDQ100, yahoo: "^NDX", instrument_id: 28, min_usd: 1000}
+  - {symbol: GER40, yahoo: "^GDAXI", instrument_id: 32, min_usd: 1000}
   # Rohstoffe
-  - {symbol: GOLD, yahoo: "GC=F", instrument_id: null}
-  - {symbol: OIL, yahoo: "CL=F", instrument_id: null}
-  - {symbol: SILVER, yahoo: "SI=F", instrument_id: null}
+  - {symbol: GOLD, yahoo: "GC=F", instrument_id: 18, min_usd: 1000}
+  - {symbol: OIL, yahoo: "CL=F", instrument_id: 17, min_usd: 1000}
+  - {symbol: SILVER, yahoo: "SI=F", instrument_id: 19, min_usd: 1000}
   # Unternehmen
-  - {symbol: AAPL, yahoo: "AAPL", instrument_id: null}
-  - {symbol: MSFT, yahoo: "MSFT", instrument_id: null}
-  - {symbol: NVDA, yahoo: "NVDA", instrument_id: null}
-  - {symbol: AMZN, yahoo: "AMZN", instrument_id: null}
+  - {symbol: AAPL, yahoo: "AAPL", instrument_id: 1001, min_usd: 10}
+  - {symbol: MSFT, yahoo: "MSFT", instrument_id: 1004, min_usd: 10}
+  - {symbol: NVDA, yahoo: "NVDA", instrument_id: 1137, min_usd: 10}
+  - {symbol: AMZN, yahoo: "AMZN", instrument_id: 1005, min_usd: 10}

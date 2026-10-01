@@ -39,6 +39,8 @@ def test_position_size_respects_risk_and_cap():
     assert risk.position_size_usd(10000, 100, 99, RISK) == 1500
     assert risk.position_size_usd(1000, 100, 50, RISK) == 0  # unter Mindestbetrag
     assert risk.position_size_usd(10000, 100, 101, RISK) == 0  # ungültiger Stop
+    assert risk.position_size_usd(10000, 100, 90, RISK, min_usd=1000) == 1000
+    assert risk.position_size_usd(5000, 100, 90, RISK, min_usd=1000) == 0  # Index-Minimum
 
 
 def test_daily_loss_stop():

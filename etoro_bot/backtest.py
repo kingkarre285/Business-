@@ -34,7 +34,7 @@ def backtest(cfg: dict, period: str = "5y") -> None:
                 continue
             sig = generate_signal(window, scfg, has_position=False)
             if sig.action == "buy":
-                amount = risk.position_size_usd(equity, sig.price, sig.stop_loss, rcfg)
+                amount = risk.position_size_usd(equity, sig.price, sig.stop_loss, rcfg, item.get("min_usd", 0))
                 if amount > 0:
                     pos = {"units": amount / sig.price, "amount": amount, "sl": sig.stop_loss, "tp": sig.take_profit}
         if pos:

@@ -103,7 +103,8 @@ def run_once(cfg: dict | None = None):
             if len(held) >= cfg["risk"]["max_open_positions"]:
                 log(f"  -> übersprungen: max. {cfg['risk']['max_open_positions']} Positionen offen")
                 continue
-            amount = risk.position_size_usd(equity, sig.price, sig.stop_loss, cfg["risk"])
+            amount = risk.position_size_usd(equity, sig.price, sig.stop_loss, cfg["risk"],
+                                             item.get("min_usd", 0))
             if amount <= 0:
                 log("  -> übersprungen: Positionsgröße unter Mindestbetrag")
                 continue
