@@ -39,10 +39,13 @@ class EtoroClient:
             if resp.status_code == 429:
                 time.sleep(float(resp.headers.get("Retry-After", 2 ** attempt * 5)))
                 continue
+            if resp.status_code in (502, 503, 504) and method == "GET":
+                time.sleep(2 ** attempt * 5)  # vorübergehend nicht verfügbar, Lesen ist wiederholbar
+                continue
             if resp.status_code >= 400:
                 raise EtoroError(f"{method} {path} -> {resp.status_code}: {resp.text[:500]}")
             return resp.json() if resp.content else {}
-        raise EtoroError(f"{method} {path}: Rate-Limit nach mehreren Versuchen")
+        raise EtoroError(f"{method} {path}: nach mehreren Versuchen nicht erreichbar (Rate-Limit/503)")
 
     # -- Marktdaten ---------------------------------------------------------
     def search(self, query: str) -> list[dict]:
