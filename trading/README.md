@@ -8,6 +8,7 @@ mit echten eToro-Kursdaten. Es werden **keine Trades ausgeführt**, das Skript l
 ```bash
 python3 -m trading.run                                     # 24 Stunden, Stundenkerzen
 python3 -m trading.run --horizon 168 --interval FourHours  # 1 Woche, 4-Stunden-Kerzen
+python3 -m trading.run --horizon 720 --interval OneDay     # 1 Monat, Tageskerzen (ca. 4 Jahre)
 python3 -m trading.run --target 10                         # anderes Ziel, z. B. 10 % netto
 python3 -m trading.run --cached                            # gespeicherte Kurse wiederverwenden
 

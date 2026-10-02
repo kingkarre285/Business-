@@ -140,16 +140,16 @@ def backtest(symbol: str, candles: list[dict]) -> BacktestResult:
     return res
 
 
-def weekly_multipliers(result: BacktestResult, candles: list[dict]) -> list[float]:
-    """Faktor, um den sich das Konto in jeder Kalenderwoche (7-Tage-Blöcke ab
-    Beginn der Kursdaten) verändert hat. 2.0 = verdoppelt."""
+def period_multipliers(result: BacktestResult, candles: list[dict], days: int = 7) -> list[float]:
+    """Faktor, um den sich das Konto in jedem Zeitraum (Blöcke von `days` Tagen
+    ab Beginn der Kursdaten) verändert hat. 2.0 = verdoppelt."""
     start, end = _ts(candles[0]), _ts(candles[-1])
     points = [(datetime.fromisoformat(t.exit_time.replace("Z", "+00:00")), e)
               for t, e in zip(result.trades, result.equity_curve)]
     factors = []
     week_start, equity_at_start = start, cfg.START_CAPITAL
-    while week_start + timedelta(days=7) <= end:
-        week_end = week_start + timedelta(days=7)
+    while week_start + timedelta(days=days) <= end:
+        week_end = week_start + timedelta(days=days)
         equity_at_end = equity_at_start
         for t, e in points:
             if week_start <= t < week_end:

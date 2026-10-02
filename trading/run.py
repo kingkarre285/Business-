@@ -3,6 +3,7 @@
 Aufruf (im Repository-Hauptordner):
     python3 -m trading.run                     # 24 h, Stundenkerzen
     python3 -m trading.run --horizon 168 --interval FourHours   # 1 Woche
+    python3 -m trading.run --horizon 720 --interval OneDay      # 1 Monat
     python3 -m trading.run --cached            # gespeicherte Kurse verwenden
 """
 
@@ -12,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import config as cfg
-from .analysis import backtest, scan, weekly_multipliers
+from .analysis import backtest, period_multipliers, scan
 from .etoro_client import get_candles
 
 ROOT = Path(__file__).parent
@@ -61,6 +62,9 @@ def main() -> None:
 
     rows, all_trades, total_start, total_end = [], [], 0.0, 0.0
     weeks = []
+    # Auswertung je Woche, ab Zeitfenstern von einem Monat je Monat.
+    period_days = 30 if args.horizon >= 720 else 7
+    period_name, period_plural = ("Monat", "Monate") if period_days == 30 else ("Woche", "Kalenderwochen")
 
     for symbol in cfg.UNIVERSE:
         candles = load_candles(symbol, args.cached)
@@ -72,7 +76,7 @@ def main() -> None:
         all_trades += bt.trades
         total_start += cfg.START_CAPITAL
         total_end += bt.final_equity
-        weeks += weekly_multipliers(bt, candles)
+        weeks += period_multipliers(bt, candles, period_days)
         rows.append((symbol, candles, s, bt))
         print(f"{symbol:8} Bewegung nötig {cfg.required_move_pct(symbol):6.2f} % | "
               f"möglich (perfekte Vorhersage) {s['hit_rate']*100:5.1f} % | "
@@ -113,11 +117,11 @@ def main() -> None:
         f"- Kapital gesamt: {total_start:.0f} $ → **{total_end:.2f} $** "
         f"({pct(total_end / total_start - 1)})",
         f"- Märkte mit Totalverlust (< 1 % übrig): **{ruined} von {len(rows)}**",
-        f"- Kalenderwochen (alle Märkte zusammen): **{len(weeks)}**, davon Konto "
+        f"- {period_plural} à {period_days} Tage (alle Märkte zusammen): **{len(weeks)}**, davon Konto "
         f"verdoppelt: **{sum(w >= 2 for w in weeks)}**, im Plus: "
         f"{sum(w > 1 for w in weeks)}, im Minus: {sum(w < 1 for w in weeks)}",
-        f"- Beste Woche: {pct(max(weeks) - 1) if weeks else '–'}, "
-        f"schlechteste Woche: {pct(min(weeks) - 1) if weeks else '–'}",
+        f"- Beste(r) {period_name}: {pct(max(weeks) - 1) if weeks else '–'}, "
+        f"schlechteste(r) {period_name}: {pct(min(weeks) - 1) if weeks else '–'}",
         "",
         "## Je Markt",
         "",
