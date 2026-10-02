@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import config as cfg
-from .analysis import backtest, period_multipliers, scan
+from .analysis import STRATEGIES, backtest, period_multipliers, scan
 from .etoro_client import get_candles
 
 ROOT = Path(__file__).parent
@@ -48,6 +48,9 @@ def main() -> None:
                     help="Hebel begrenzen (1 = ohne Hebel)")
     ap.add_argument("--risk", type=float, default=None,
                     help="Risiko pro Trade in %% des Kontos (bestimmt den Einsatz)")
+    ap.add_argument("--strategy", default="breakout", choices=STRATEGIES)
+    ap.add_argument("--markets", default=None,
+                    help="Kommagetrennte Liste, z. B. GOLD,OIL,SPX500 (Standard: alle)")
     ap.add_argument("--cached", action="store_true")
     args = ap.parse_args()
     cfg.HORIZON_HOURS = args.horizon
@@ -66,13 +69,14 @@ def main() -> None:
     period_days = 30 if args.horizon >= 720 else 7
     period_name, period_plural = ("Monat", "Monate") if period_days == 30 else ("Woche", "Kalenderwochen")
 
-    for symbol in cfg.UNIVERSE:
+    markets = args.markets.split(",") if args.markets else list(cfg.UNIVERSE)
+    for symbol in markets:
         candles = load_candles(symbol, args.cached)
         if len(candles) < cfg.BREAKOUT_LOOKBACK_HOURS // cfg.INTERVAL_HOURS[args.interval] + 2:
             print(f"{symbol}: zu wenig Kursdaten, übersprungen")
             continue
         s = scan(symbol, candles)
-        bt = backtest(symbol, candles)
+        bt = backtest(symbol, candles, args.strategy)
         all_trades += bt.trades
         total_start += cfg.START_CAPITAL
         total_end += bt.final_equity
@@ -90,7 +94,7 @@ def main() -> None:
 
     lines = [
         "# Backtest: mindestens "
-        f"{cfg.MIN_NET_PROFIT_PCT:.0f} % netto pro Trade",
+        f"{cfg.MIN_NET_PROFIT_PCT:.0f} % netto pro Trade ({args.strategy})",
         "",
         f"Erstellt: {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC · "
         f"Kursdaten: eToro, {cfg.CANDLE_INTERVAL}-Kerzen, {first} bis {last}",
@@ -106,8 +110,8 @@ def main() -> None:
          f"- Hebel: höchstens {cfg.MAX_LEVERAGE}x" + (" (ohne Hebel)" if cfg.MAX_LEVERAGE == 1 else "")),
         f"- Risiko pro Trade: {cfg.STAKE_PCT_OF_EQUITY * cfg.STOP_LOSS_PCT_OF_MARGIN / 100:.1f} % "
         "des Kontos (Einsatz × Stop-Loss)",
-        f"- Einstieg: Breakout über das Hoch / unter das Tief der letzten "
-        f"{cfg.BREAKOUT_LOOKBACK_HOURS} Stunden",
+        f"- Einstieg: {STRATEGIES[args.strategy]}"
+        + (f" ({cfg.BREAKOUT_LOOKBACK_HOURS} Stunden)" if args.strategy == "breakout" else ""),
         f"- Startkapital je Markt: {cfg.START_CAPITAL:.0f} $",
         "",
         "## Ergebnis gesamt",
@@ -151,7 +155,8 @@ def main() -> None:
     ]
 
     RESULTS.mkdir(exist_ok=True)
-    out = RESULTS / f"report_{cfg.HORIZON_HOURS}h_{cfg.MIN_NET_PROFIT_PCT:g}pct.md"
+    suffix = "" if args.strategy == "breakout" else f"_{args.strategy}"
+    out = RESULTS / f"report_{cfg.HORIZON_HOURS}h_{cfg.MIN_NET_PROFIT_PCT:g}pct{suffix}.md"
     out.write_text("\n".join(lines) + "\n")
     print(f"\nBericht: {out}")
 

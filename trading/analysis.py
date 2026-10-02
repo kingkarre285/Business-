@@ -4,8 +4,9 @@ Scanner: Wie oft hat sich der Kurs innerhalb des Zeitfensters überhaupt weit
 genug bewegt? Unterstellt PERFEKTE Vorhersage der Richtung, also eine Obergrenze,
 die keine echte Strategie erreicht.
 
-Backtest: Eine einfache Breakout-Strategie handelt mit festem Ziel (X % netto)
-und Stop-Loss. Ergebnis zeigt, was nach Kosten tatsächlich übrig bleibt.
+Backtest: Eine Einstiegsregel (Breakout, Trendfolge oder Rücksetzer) handelt
+mit festem Ziel (X % netto) und Stop-Loss. Ergebnis zeigt, was nach Kosten
+tatsächlich übrig bleibt.
 """
 
 from dataclasses import dataclass, field
@@ -16,6 +17,80 @@ from . import config as cfg
 
 def _ts(c: dict) -> datetime:
     return datetime.fromisoformat(c["time"].replace("Z", "+00:00"))
+
+
+def _sma(values: list[float], n: int) -> list[float | None]:
+    out, total = [], 0.0
+    for i, v in enumerate(values):
+        total += v
+        if i >= n:
+            total -= values[i - n]
+        out.append(total / n if i >= n - 1 else None)
+    return out
+
+
+def _rsi(closes: list[float], n: int = 14) -> list[float | None]:
+    """RSI nach Wilder."""
+    out: list[float | None] = [None] * len(closes)
+    if len(closes) <= n:
+        return out
+    gains = [max(closes[i] - closes[i - 1], 0) for i in range(1, len(closes))]
+    losses = [max(closes[i - 1] - closes[i], 0) for i in range(1, len(closes))]
+    avg_g, avg_l = sum(gains[:n]) / n, sum(losses[:n]) / n
+    for i in range(n, len(closes)):
+        if i > n:
+            avg_g = (avg_g * (n - 1) + gains[i - 1]) / n
+            avg_l = (avg_l * (n - 1) + losses[i - 1]) / n
+        out[i] = 100.0 if avg_l == 0 else 100 - 100 / (1 + avg_g / avg_l)
+    return out
+
+
+STRATEGIES = {
+    "breakout": "Breakout über das Hoch / unter das Tief des Zeitfensters davor",
+    "trend": "Trendfolge: Long, wenn Kurs > 50-Perioden-Schnitt > 200-Perioden-Schnitt; "
+             "Short umgekehrt",
+    "pullback": "Rücksetzer: Long bei RSI(14) < 30 über dem 200-Perioden-Schnitt; "
+                "Short bei RSI(14) > 70 darunter",
+}
+
+
+def _signals(candles: list[dict], strategy: str):
+    """Liefert (erster nutzbarer Index, Funktion i -> +1 / -1 / 0)."""
+    closes = [c["close"] for c in candles]
+    if strategy == "breakout":
+        n = max(1, cfg.BREAKOUT_LOOKBACK_HOURS // cfg.INTERVAL_HOURS[cfg.CANDLE_INTERVAL])
+
+        def signal(i: int) -> int:
+            prev = candles[i - n:i]
+            if closes[i] > max(c["high"] for c in prev):
+                return 1
+            if closes[i] < min(c["low"] for c in prev):
+                return -1
+            return 0
+        return n, signal
+
+    sma50, sma200 = _sma(closes, 50), _sma(closes, 200)
+    if strategy == "trend":
+        def signal(i: int) -> int:
+            if closes[i] > sma50[i] > sma200[i]:
+                return 1
+            if closes[i] < sma50[i] < sma200[i]:
+                return -1
+            return 0
+        return 199, signal
+
+    if strategy == "pullback":
+        rsi = _rsi(closes)
+
+        def signal(i: int) -> int:
+            if closes[i] > sma200[i] and rsi[i] < 30:
+                return 1
+            if closes[i] < sma200[i] and rsi[i] > 70:
+                return -1
+            return 0
+        return 199, signal
+
+    raise ValueError(f"unbekannte Strategie: {strategy}")
 
 
 def _window_end(candles: list[dict], start: int) -> int:
@@ -86,27 +161,22 @@ class BacktestResult:
         return self.final_equity < cfg.START_CAPITAL * 0.01
 
 
-def backtest(symbol: str, candles: list[dict]) -> BacktestResult:
+def backtest(symbol: str, candles: list[dict], strategy: str = "breakout") -> BacktestResult:
     lev = cfg.leverage_for(symbol)
     cost = cfg.cost_for(symbol) / 100
     target_move = cfg.required_move_pct(symbol) / 100
     stop_move = cfg.stop_move_pct(symbol) / 100
     overnight = cfg.overnight_for(symbol) / 100
-    n = max(1, cfg.BREAKOUT_LOOKBACK_HOURS // cfg.INTERVAL_HOURS[cfg.CANDLE_INTERVAL])
+    first, signal = _signals(candles, strategy)
 
     res = BacktestResult(symbol)
     if stop_move <= 0:
         return res  # Kosten allein sind höher als der erlaubte Verlust
     equity = cfg.START_CAPITAL
-    i = n
+    i = first
     while i < len(candles) - 1 and equity >= cfg.START_CAPITAL * 0.01:
-        prev = candles[i - n:i]
-        close = candles[i]["close"]
-        if close > max(c["high"] for c in prev):
-            d = 1
-        elif close < min(c["low"] for c in prev):
-            d = -1
-        else:
+        d = signal(i)
+        if d == 0:
             i += 1
             continue
 

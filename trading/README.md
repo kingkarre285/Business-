@@ -29,6 +29,6 @@ Stop-Loss, Einsatz pro Trade, Märkte, Hebel und geschätzte Kosten.
 
 ## Dateien
 
-- `analysis.py`: Scanner (theoretische Obergrenze) und Breakout-Backtest
+- `analysis.py`: Scanner (theoretische Obergrenze) und Backtest mit den Einstiegsregeln `breakout`, `trend` und `pullback` (Option `--strategy`)
 - `etoro_client.py`: Lesezugriff auf die eToro-Kursdaten
 - `run.py`: führt alles aus und schreibt `results/report_<Stunden>h_<Ziel>pct.md`

@@ -1,6 +1,6 @@
-# Backtest: mindestens 10 % netto pro Trade
+# Backtest: mindestens 10 % netto pro Trade (breakout)
 
-Erstellt: 2026-10-02 08:25 UTC · Kursdaten: eToro, OneDay-Kerzen, 2022-09-02 bis 2026-10-02
+Erstellt: 2026-10-02 08:27 UTC · Kursdaten: eToro, OneDay-Kerzen, 2022-09-02 bis 2026-10-02
 
 ## Regeln
 
@@ -8,7 +8,7 @@ Erstellt: 2026-10-02 08:25 UTC · Kursdaten: eToro, OneDay-Kerzen, 2022-09-02 bi
 - Stop-Loss: −5 % des Einsatzes; Einsatz pro Trade: 20 % des Kontos
 - Hebel: höchstens 1x (ohne Hebel)
 - Risiko pro Trade: 1.0 % des Kontos (Einsatz × Stop-Loss)
-- Einstieg: Breakout über das Hoch / unter das Tief der letzten 720 Stunden
+- Einstieg: Breakout über das Hoch / unter das Tief des Zeitfensters davor (720 Stunden)
 - Startkapital je Markt: 100 $
 
 ## Ergebnis gesamt
