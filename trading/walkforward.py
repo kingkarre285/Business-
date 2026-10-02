@@ -33,6 +33,20 @@ def add_months(key: str, n: int) -> str:
     return f"{y:04d}-{m:02d}"
 
 
+def select(trades_by_combo, month: str, lookback: int, top: int) -> list:
+    """Die `top` Kombinationen mit der besten Summe der Netto-Renditen aus den
+    `lookback` Monaten vor `month` (nur im Plus, mindestens 3 Trades)."""
+    window_start = add_months(month, -lookback)
+    scores = {}
+    for combo, trades in trades_by_combo.items():
+        past = [t.net_return for t in trades
+                if window_start <= month_key(t.exit_time) < month]
+        if len(past) >= 3:
+            scores[combo] = sum(past)
+    best = sorted((c for c in scores if scores[c] > 0), key=scores.get, reverse=True)
+    return best[:top]
+
+
 def simulate(trades_by_combo, selection_by_month, stake):
     """Konto über alle Trades, deren Einstiegsmonat die Kombination ausgewählt hat."""
     picked = [
@@ -85,16 +99,9 @@ def main() -> None:
     # Walk-Forward: Auswahl nur mit Wissen aus der Vergangenheit.
     selection, picks_log = {}, []
     for m in months:
-        window_start = add_months(m, -args.lookback)
-        scores = {}
-        for combo, trades in trades_by_combo.items():
-            past = [t.net_return for t in trades
-                    if window_start <= month_key(t.exit_time) < m]
-            if len(past) >= 3:
-                scores[combo] = sum(past)
-        best = sorted((c for c in scores if scores[c] > 0), key=scores.get, reverse=True)
-        selection[m] = set(best[:args.top])
-        picks_log.append((m, best[:args.top]))
+        best = select(trades_by_combo, m, args.lookback, args.top)
+        selection[m] = set(best)
+        picks_log.append((m, best))
 
     wf_equity, wf_mdd, wf_monthly, wf_trades = simulate(trades_by_combo, selection, stake)
 
