@@ -11,7 +11,9 @@ Ablauf bei jedem Lauf (gedacht für einmal täglich):
    Position mit Stop-Loss und Kursziel eröffnet.
 
 Der Bot fasst nur Positionen an, die er selbst eröffnet hat (siehe state.json).
-Ohne --execute zeigt er nur an, was er tun würde.
+Pro Markt versucht er höchstens einmal am Tag einen Einstieg, so dass er auch
+alle 15 Minuten laufen kann. Gespeichert und protokolliert wird nur, wenn sich
+etwas geändert hat. Ohne --execute zeigt er nur an, was er tun würde.
 
 Aufruf:
     python3 -m trading.bot              # Probelauf, keine Orders
@@ -82,6 +84,11 @@ def main() -> None:
     mode = "AUSFÜHRUNG (Demokonto)" if args.execute else "PROBELAUF (keine Orders)"
     out = [f"## {now:%Y-%m-%d %H:%M} UTC · {mode}", ""]
     state = load_state()
+    state.setdefault("attempts", {})
+    before = json.dumps(state, sort_keys=True)
+    today = now.strftime("%Y-%m-%d")
+    # Alte Einstiegsversuche vergessen, nur heute zählt.
+    state["attempts"] = {k: v for k, v in state["attempts"].items() if k.startswith(today)}
 
     portfolio = api.demo_portfolio()
     by_order = {p["orderID"]: p for p in portfolio["positions"]}
@@ -133,6 +140,8 @@ def main() -> None:
     for symbol, strategy in selection:
         if symbol in held or symbol not in done:
             continue
+        if f"{today}:{symbol}" in state["attempts"]:
+            continue  # heute schon versucht (eröffnet, abgelehnt oder ausgestoppt)
         _, signal = _signals(done[symbol], strategy)
         d = signal(len(done[symbol]) - 1)
         if d == 0:
@@ -149,6 +158,7 @@ def main() -> None:
         out.append(f"- {symbol} / {strategy}: **{side}** {amount:.2f} $ × {lev}x "
                    f"bei ~{price:g}, Stop {sl:.5g}, Ziel {tp:.5g}")
         if args.execute:
+            state["attempts"][f"{today}:{symbol}"] = strategy
             try:
                 res = api.demo_open_by_amount(cfg.UNIVERSE[symbol][0], d == 1, amount,
                                               lev, round(sl, 5), round(tp, 5))
@@ -168,7 +178,7 @@ def main() -> None:
     out.append(f"- Konto: {equity:.2f} $ (Guthaben {credit:.2f} $), "
                f"offene Bot-Positionen: {len(state['open'])}")
     print("\n".join(out))
-    if args.execute:
+    if args.execute and json.dumps(state, sort_keys=True) != before:
         save_state(state)
         log(out)
 
