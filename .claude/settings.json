@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m trading.bot --execute)",
+      "Bash(python3 -m trading.bot)"
+    ]
+  }
+}
