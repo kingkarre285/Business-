@@ -1,8 +1,9 @@
-"""Walk-Forward-Test: Markt und Strategie jeden Monat neu wählen.
+"""Walk-Forward-Test: Markt und Strategie jeden Monat (oder jede Woche) neu wählen.
 
 Am Anfang jedes Monats werden alle Kombinationen aus Markt und Einstiegsregel
-nach ihrem Ergebnis der letzten LOOKBACK_MONTHS Monate bewertet. Die besten
-TOP_N (nur solche im Plus) werden im folgenden Monat gehandelt. Die Auswahl
+nach ihrem Ergebnis der letzten --lookback Monate bewertet. Die besten
+--top (nur solche im Plus) werden im folgenden Monat gehandelt. Mit
+--period week gilt dasselbe wochenweise. Die Auswahl
 kennt also nie die Zukunft, so wie im echten Handel.
 
 Zum Vergleich: dieselbe Auswahl "mit Rückblick", also die Kombinationen, die
@@ -14,19 +15,39 @@ Aufruf:
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import config as cfg
 from .analysis import STRATEGIES, backtest
-from .run import RESULTS, load_candles
+from .etoro_client import get_history
+from .run import CACHE, RESULTS, load_candles
+
+
+def load_history(symbol: str, interval: str, start: str, end: str) -> list[dict]:
+    path = CACHE / f"{symbol}_{interval}_{start[:10]}_{end[:10]}.json"
+    if path.exists():
+        return json.loads(path.read_text())
+    candles = get_history(cfg.UNIVERSE[symbol][0], interval, start, end)
+    CACHE.mkdir(exist_ok=True)
+    path.write_text(json.dumps(candles))
+    return candles
+
+
+# Auswahl-Rhythmus: "month" (YYYY-MM) oder "week" (Datum des Montags).
+PERIOD = "month"
 
 
 def month_key(iso: str) -> str:
+    if PERIOD == "week":
+        d = date.fromisoformat(iso[:10])
+        return (d - timedelta(days=d.weekday())).isoformat()
     return iso[:7]
 
 
 def add_months(key: str, n: int) -> str:
+    if PERIOD == "week":
+        return (date.fromisoformat(key) + timedelta(weeks=n)).isoformat()
     y, m = map(int, key.split("-"))
     m += n
     y, m = y + (m - 1) // 12, (m - 1) % 12 + 1
@@ -35,7 +56,7 @@ def add_months(key: str, n: int) -> str:
 
 def select(trades_by_combo, month: str, lookback: int, top: int) -> list:
     """Die `top` Kombinationen mit der besten Summe der Netto-Renditen aus den
-    `lookback` Monaten vor `month` (nur im Plus, mindestens 3 Trades)."""
+    `lookback` Monaten (bzw. Wochen) vor `month` (nur im Plus, mindestens 3 Trades)."""
     window_start = add_months(month, -lookback)
     scores = {}
     for combo, trades in trades_by_combo.items():
@@ -68,17 +89,26 @@ def simulate(trades_by_combo, selection_by_month, stake):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--top", type=int, default=3, help="Anzahl Kombinationen pro Monat")
-    ap.add_argument("--lookback", type=int, default=12, help="Bewertungszeitraum in Monaten")
+    ap.add_argument("--lookback", type=int, default=12,
+                    help="Bewertungszeitraum in Monaten (bzw. Wochen bei --period week)")
     ap.add_argument("--risk", type=float, default=1.5, help="Risiko pro Trade in %% des Kontos")
     ap.add_argument("--target", type=float, default=10.0)
     ap.add_argument("--stop", type=float, default=5.0)
     ap.add_argument("--max-leverage", type=int, default=2)
+    ap.add_argument("--horizon", type=int, default=720, help="Zeitfenster pro Trade in Stunden")
+    ap.add_argument("--interval", default="OneDay", choices=cfg.INTERVAL_HOURS)
+    ap.add_argument("--period", default="month", choices=["month", "week"],
+                    help="wie oft neu ausgewählt wird; --lookback zählt in dieser Einheit")
+    ap.add_argument("--history", default=None, metavar="VON:BIS",
+                    help="lange Historie laden, z. B. 2024-10-01:2026-09-29")
     ap.add_argument("--cached", action="store_true")
     args = ap.parse_args()
 
-    cfg.HORIZON_HOURS = 720
-    cfg.CANDLE_INTERVAL = "OneDay"
-    cfg.BREAKOUT_LOOKBACK_HOURS = 720
+    global PERIOD
+    PERIOD = args.period
+    cfg.HORIZON_HOURS = args.horizon
+    cfg.CANDLE_INTERVAL = args.interval
+    cfg.BREAKOUT_LOOKBACK_HOURS = args.horizon
     cfg.MIN_NET_PROFIT_PCT = args.target
     cfg.STOP_LOSS_PCT_OF_MARGIN = args.stop
     cfg.MAX_LEVERAGE = args.max_leverage
@@ -86,7 +116,13 @@ def main() -> None:
 
     trades_by_combo = {}
     for symbol in cfg.UNIVERSE:
-        candles = load_candles(symbol, args.cached)
+        if args.history:
+            start, end = args.history.split(":")
+            candles = load_history(symbol, args.interval, f"{start}T00:00:00Z", f"{end}T00:00:00Z")
+        else:
+            candles = load_candles(symbol, args.cached)
+        if len(candles) < 250:
+            continue
         for strategy in STRATEGIES:
             trades_by_combo[(symbol, strategy)] = backtest(symbol, candles, strategy).trades
 
@@ -121,37 +157,38 @@ def main() -> None:
                 f"| {(max(vals) - 1) * 100 if vals else 0:+.1f} % "
                 f"| {(min(vals) - 1) * 100 if vals else 0:+.1f} % | {mdd * 100:.0f} % |")
 
+    unit, units = ("Woche", "Wochen") if PERIOD == "week" else ("Monat", "Monate")
     lines = [
         "# Walk-Forward-Test: Markt und Strategie monatlich frei wählen",
         "",
         f"Erstellt: {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC · "
-        f"Kursdaten: eToro, Tageskerzen · gehandelt: {months[0]} bis {months[-1]}",
+        f"Kursdaten: eToro, {args.interval}-Kerzen · gehandelt: {months[0]} bis {months[-1]}",
         "",
         "## Regeln",
         "",
-        f"- Auswahl: jeden Monat die {args.top} besten Kombinationen aus "
+        f"- Auswahl: jede(n) {unit} die {args.top} besten Kombinationen aus "
         f"{len(cfg.UNIVERSE)} Märkten × {len(STRATEGIES)} Einstiegsregeln "
-        f"({', '.join(STRATEGIES)}), bewertet über die letzten {args.lookback} Monate; "
+        f"({', '.join(STRATEGIES)}), bewertet über die letzten {args.lookback} {units}; "
         "nur Kombinationen im Plus und mit mindestens 3 Trades",
         "- Long und Short erlaubt",
         f"- Ziel +{args.target:g} % / Stop −{args.stop:g} % auf den Einsatz, Hebel "
-        f"höchstens {args.max_leverage}x, Zeitfenster 30 Tage",
+        f"höchstens {args.max_leverage}x, Zeitfenster {args.horizon} Stunden",
         f"- Risiko pro Trade: {args.risk:g} % des Kontos (Einsatz {stake * 100:.0f} %)",
         f"- Startkapital: {cfg.START_CAPITAL:.0f} $",
         "",
         "## Ergebnis",
         "",
-        "| Auswahl | Trades | Ziel erreicht | Endkapital | Monate Plus / Minus "
-        "| bester Monat | schlechtester Monat | max. Rückgang |",
+        f"| Auswahl | Trades | Ziel erreicht | Endkapital | {units} Plus / Minus "
+        f"| beste(r) {unit} | schlechteste(r) {unit} | max. Rückgang |",
         "|---|---|---|---|---|---|---|---|",
         summary("**Walk-Forward (realistisch)**", wf_equity, wf_mdd, wf_monthly, wf_trades),
         summary("Rückblick (unmöglich)", hs_equity, hs_mdd, hs_monthly, hs_trades),
         "",
         f"Rückblick-Auswahl: {', '.join(f'{s} / {st}' for s, st in hindsight)}",
         "",
-        "## Monatliche Auswahl (Walk-Forward)",
+        f"## Auswahl je {unit} (Walk-Forward)",
         "",
-        "| Monat | gewählt | Konto im Monat |",
+        f"| {unit} | gewählt | Konto in diesem Zeitraum |",
         "|---|---|---|",
     ]
     for m, best in picks_log:
@@ -165,7 +202,10 @@ def main() -> None:
     ]
 
     RESULTS.mkdir(exist_ok=True)
-    out = RESULTS / f"walkforward_top{args.top}_risk{args.risk:g}_lb{args.lookback}.md"
+    tag = "" if (args.horizon, args.period) == (720, "month") else f"_{args.horizon}h_{args.period}"
+    out = RESULTS / (f"walkforward{tag}_top{args.top}_risk{args.risk:g}_lb{args.lookback}"
+                     f"_t{args.target:g}.md" if tag else
+                     f"walkforward_top{args.top}_risk{args.risk:g}_lb{args.lookback}.md")
     out.write_text("\n".join(lines) + "\n")
     print("\n".join(lines[13:17]))
     print(f"\nBericht: {out}")

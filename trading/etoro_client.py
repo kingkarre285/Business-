@@ -68,6 +68,30 @@ def get_candles(instrument_id: int, interval: str = "OneHour", count: int = 1000
     ]
 
 
+_HISTORY_INTERVALS = {"OneHour": "1h", "FourHours": "4h", "OneDay": "1d"}
+
+
+def get_history(instrument_id: int, interval: str, start: str, end: str) -> list[dict]:
+    """Komplette Kurshistorie zwischen start und end (ISO-Zeitpunkte, UTC),
+    von alt nach neu. Nutzt die Daten-Schnittstelle mit Blättern (max. 2000 je Seite)."""
+    from urllib.parse import urlencode
+    params = {"interval": _HISTORY_INTERVALS[interval], "from": start, "to": end, "limit": 2000}
+    rows = []
+    while True:
+        page = _get(f"/api/v1/data/instruments/{instrument_id}/candles?" + urlencode(params))
+        rows += page["results"]
+        if not page["pagination"]["hasNext"]:
+            break
+        params["cursor"] = page["pagination"]["nextCursor"]
+    candles = [
+        {"time": r["time"].replace("+00:00", "Z"), "open": float(r["open"]),
+         "high": float(r["high"]), "low": float(r["low"]), "close": float(r["close"])}
+        for r in rows if None not in (r["open"], r["high"], r["low"], r["close"])
+    ]
+    candles.sort(key=lambda c: c["time"])
+    return candles
+
+
 # --- Demokonto (nur Demo-Adressen, kein Echtgeld) ---------------------------
 
 def demo_portfolio() -> dict:
