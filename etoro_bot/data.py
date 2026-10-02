@@ -1,6 +1,7 @@
 """Historische Kerzen: bevorzugt von eToro (exakt die gehandelten CFD-Kurse),
 ohne API-Schlüssel ersatzweise von Yahoo Finance."""
 import os
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
@@ -38,10 +39,33 @@ def candles(item: dict, interval: str = "1d", days: int = 730) -> pd.DataFrame:
     return yahoo_candles(item["yahoo"], interval, period)
 
 
+CACHE = Path(__file__).resolve().parent.parent / ".cache"
+
+
 def etoro_candles(instrument_id: int, interval: str, days: int) -> pd.DataFrame:
+    """Lädt Kerzen von eToro; Intraday-Daten werden in .cache/ zwischengespeichert
+    und nur um neue Kerzen ergänzt."""
     from .etoro_client import EtoroClient
-    start = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    rows = EtoroClient(demo=True).candles(instrument_id, interval, start=start)
+    now = datetime.now(timezone.utc)
+    start = now - timedelta(days=days)
+    cache = CACHE / f"{instrument_id}_{interval}.pkl"
+    df = pd.read_pickle(cache) if cache.exists() else pd.DataFrame(columns=["open", "high", "low", "close"])
+    client = EtoroClient(demo=True)
+    parts = [df]
+    if df.empty or df.index[0] > start + timedelta(days=1):
+        older_end = df.index[0].to_pydatetime() if not df.empty else now
+        parts.append(_to_frame(client.candles(instrument_id, interval, start.isoformat(), older_end.isoformat())))
+    if not df.empty:
+        parts.append(_to_frame(client.candles(instrument_id, interval, df.index[-1].isoformat(), now.isoformat())))
+    df = pd.concat([p for p in parts if not p.empty])
+    df = df[~df.index.duplicated(keep="last")].sort_index()
+    if interval != "1d" and not df.empty:
+        CACHE.mkdir(exist_ok=True)
+        df.to_pickle(cache)
+    return df[df.index >= start]
+
+
+def _to_frame(rows: list[dict]) -> pd.DataFrame:
     if not rows:
         return pd.DataFrame(columns=["open", "high", "low", "close"])
     df = pd.DataFrame(rows)

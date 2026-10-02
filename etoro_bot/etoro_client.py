@@ -56,24 +56,35 @@ class EtoroClient:
                 return int(_first(item, "instrumentId", "instrumentID", "id"))
         raise EtoroError(f"Instrument '{symbol}' nicht gefunden – instrument_id in config.yaml eintragen.")
 
+    # Max. Zeitspanne pro Abruf laut eToro: 10.080 Perioden; wir bleiben darunter
+    _CANDLE_MINUTES = {"1m": 1, "5m": 5, "10m": 10, "15m": 15, "30m": 30, "1h": 60, "4h": 240, "1d": 1440, "1w": 10080}
+
     def candles(self, instrument_id: int, interval: str, start: str | None = None,
-                end: str | None = None, max_pages: int = 1000) -> list[dict]:
+                end: str | None = None) -> list[dict]:
         """OHLC-Kerzen (Bid) aus eToros Datenplattform, älteste zuerst.
-        interval: 1m, 5m, 10m, 15m, 30m, 1h, 4h, 1d, 1w. start/end: ISO 8601 mit Zeitzone."""
-        params = {"interval": interval, "limit": 2000}
-        if start:
-            params["from"] = start
-        if end:
-            params["to"] = end
-        out = []
-        for _ in range(max_pages):
-            page = self._request("GET", f"/api/v1/data/instruments/{instrument_id}/candles", params=params)
-            out.extend(page.get("results", []))
-            nxt = (page.get("pagination") or {}).get("nextCursor")
-            if not nxt:
-                break
-            params = {"interval": interval, "limit": 2000, "cursor": nxt}
-        return sorted(out, key=lambda c: c["time"])
+        interval: 1m, 5m, 10m, 15m, 30m, 1h, 4h, 1d, 1w. start/end: ISO 8601 mit Zeitzone.
+        Lange Zeiträume werden in Abschnitte zerlegt, jeder Abschnitt seitenweise geladen."""
+        from datetime import datetime, timedelta, timezone
+        t_end = datetime.fromisoformat(end) if end else datetime.now(timezone.utc)
+        t_start = datetime.fromisoformat(start) if start else t_end - timedelta(days=30)
+        span = timedelta(minutes=self._CANDLE_MINUTES[interval] * 9000)
+        out: dict[str, dict] = {}
+        w_end = t_end
+        while w_end > t_start:
+            w_start = max(t_start, w_end - span)
+            base = {"interval": interval, "limit": 2000,
+                    "from": w_start.isoformat(), "to": w_end.isoformat()}
+            params = dict(base)
+            while True:
+                page = self._request("GET", f"/api/v1/data/instruments/{instrument_id}/candles", params=params)
+                for c in page.get("results", []):
+                    out[c["time"]] = c
+                nxt = (page.get("pagination") or {}).get("nextCursor")
+                if not nxt:
+                    break
+                params = {**base, "cursor": nxt}
+            w_end = w_start
+        return [out[k] for k in sorted(out)]
 
     # -- Konto --------------------------------------------------------------
     def portfolio(self) -> dict:
