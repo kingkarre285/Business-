@@ -31,4 +31,5 @@ Stop-Loss, Einsatz pro Trade, Märkte, Hebel und geschätzte Kosten.
 
 - `analysis.py`: Scanner (theoretische Obergrenze) und Backtest mit den Einstiegsregeln `breakout`, `trend` und `pullback` (Option `--strategy`)
 - `etoro_client.py`: Lesezugriff auf die eToro-Kursdaten
+- `walkforward.py`: wählt jeden Monat Markt und Strategie neu, nur anhand der Vergangenheit (`python3 -m trading.walkforward --cached`)
 - `run.py`: führt alles aus und schreibt `results/report_<Stunden>h_<Ziel>pct.md`
