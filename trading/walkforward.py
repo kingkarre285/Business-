@@ -68,7 +68,7 @@ def select(trades_by_combo, month: str, lookback: int, top: int) -> list:
     return best[:top]
 
 
-def simulate(trades_by_combo, selection_by_month, stake):
+def simulate(trades_by_combo, selection_by_month, risk):
     """Konto über alle Trades, deren Einstiegsmonat die Kombination ausgewählt hat."""
     picked = [
         t for combo, trades in trades_by_combo.items() for t in trades
@@ -79,7 +79,8 @@ def simulate(trades_by_combo, selection_by_month, stake):
     monthly: dict[str, float] = {}
     for t in picked:
         before = equity
-        equity *= 1 + stake * t.net_return
+        # Jeder Trade riskiert `risk` des Kontos bis zu seinem ersten Stop.
+        equity *= 1 + risk * t.net_return / t.risk
         m = month_key(t.exit_time)
         monthly[m] = monthly.get(m, 1.0) * equity / before
         peak, mdd = max(peak, equity), max(mdd, 1 - equity / peak)
@@ -101,6 +102,9 @@ def main() -> None:
                     help="wie oft neu ausgewählt wird; --lookback zählt in dieser Einheit")
     ap.add_argument("--history", default=None, metavar="VON:BIS",
                     help="lange Historie laden, z. B. 2024-10-01:2026-09-29")
+    ap.add_argument("--exit", default="fixed", choices=["fixed", "trailing"],
+                    help="fixed = Kursziel + Stop; trailing = nachgezogener ATR-Stop ohne Ziel")
+    ap.add_argument("--atr", type=float, default=3.0, help="Stop-Abstand in ATR (bei --exit trailing)")
     ap.add_argument("--cached", action="store_true")
     args = ap.parse_args()
 
@@ -112,7 +116,8 @@ def main() -> None:
     cfg.MIN_NET_PROFIT_PCT = args.target
     cfg.STOP_LOSS_PCT_OF_MARGIN = args.stop
     cfg.MAX_LEVERAGE = args.max_leverage
-    stake = args.risk / args.stop  # Anteil des Kontos pro Trade
+    cfg.EXIT_MODE = args.exit
+    cfg.ATR_MULT = args.atr
 
     trades_by_combo = {}
     for symbol in cfg.UNIVERSE:
@@ -139,14 +144,14 @@ def main() -> None:
         selection[m] = set(best)
         picks_log.append((m, best))
 
-    wf_equity, wf_mdd, wf_monthly, wf_trades = simulate(trades_by_combo, selection, stake)
+    wf_equity, wf_mdd, wf_monthly, wf_trades = simulate(trades_by_combo, selection, args.risk / 100)
 
     # Rückblick: die über den gesamten Testzeitraum besten Kombinationen.
     total = {c: sum(t.net_return for t in ts if month_key(t.entry_time) >= start)
              for c, ts in trades_by_combo.items()}
     hindsight = sorted(total, key=total.get, reverse=True)[:args.top]
     hs_equity, hs_mdd, hs_monthly, hs_trades = simulate(
-        trades_by_combo, {m: set(hindsight) for m in months}, stake)
+        trades_by_combo, {m: set(hindsight) for m in months}, args.risk / 100)
 
     def summary(name, equity, mdd, monthly, trades):
         vals = list(monthly.values())
@@ -171,9 +176,11 @@ def main() -> None:
         f"({', '.join(STRATEGIES)}), bewertet über die letzten {args.lookback} {units}; "
         "nur Kombinationen im Plus und mit mindestens 3 Trades",
         "- Long und Short erlaubt",
-        f"- Ziel +{args.target:g} % / Stop −{args.stop:g} % auf den Einsatz, Hebel "
-        f"höchstens {args.max_leverage}x, Zeitfenster {args.horizon} Stunden",
-        f"- Risiko pro Trade: {args.risk:g} % des Kontos (Einsatz {stake * 100:.0f} %)",
+        (f"- Ziel +{args.target:g} % / Stop −{args.stop:g} % auf den Einsatz"
+         if args.exit == "fixed" else
+         f"- Kein festes Ziel: nachgezogener Stop im Abstand von {args.atr:g} × ATR(14)")
+        + f", Hebel höchstens {args.max_leverage}x, längstens {args.horizon} Stunden",
+        f"- Risiko pro Trade: {args.risk:g} % des Kontos bis zum ersten Stop",
         f"- Startkapital: {cfg.START_CAPITAL:.0f} $",
         "",
         "## Ergebnis",
@@ -203,6 +210,8 @@ def main() -> None:
 
     RESULTS.mkdir(exist_ok=True)
     tag = "" if (args.horizon, args.period) == (720, "month") else f"_{args.horizon}h_{args.period}"
+    if args.exit == "trailing":
+        tag = f"{tag or '_' + str(args.horizon) + 'h_' + args.period}_trail{args.atr:g}"
     out = RESULTS / (f"walkforward{tag}_top{args.top}_risk{args.risk:g}_lb{args.lookback}"
                      f"_t{args.target:g}.md" if tag else
                      f"walkforward_top{args.top}_risk{args.risk:g}_lb{args.lookback}.md")

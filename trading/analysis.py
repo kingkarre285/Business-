@@ -132,6 +132,7 @@ class Trade:
     exit: float
     outcome: str  # "Ziel", "Stop", "Zeit"
     net_return: float  # bezogen auf den Einsatz, 0.57 = +57 %
+    risk: float = 0.0  # geplanter Verlust bis zum ersten Stop, bezogen auf den Einsatz
 
 
 @dataclass
@@ -161,7 +162,26 @@ class BacktestResult:
         return self.final_equity < cfg.START_CAPITAL * 0.01
 
 
+def _atr(candles: list[dict], n: int = 14) -> list[float | None]:
+    """Average True Range nach Wilder."""
+    out: list[float | None] = [None] * len(candles)
+    trs = [candles[0]["high"] - candles[0]["low"]] + [
+        max(c["high"], p["close"]) - min(c["low"], p["close"])
+        for p, c in zip(candles, candles[1:])
+    ]
+    if len(trs) < n:
+        return out
+    atr = sum(trs[:n]) / n
+    out[n - 1] = atr
+    for i in range(n, len(trs)):
+        atr = (atr * (n - 1) + trs[i]) / n
+        out[i] = atr
+    return out
+
+
 def backtest(symbol: str, candles: list[dict], strategy: str = "breakout") -> BacktestResult:
+    if getattr(cfg, "EXIT_MODE", "fixed") == "trailing":
+        return backtest_trailing(symbol, candles, strategy)
     lev = cfg.leverage_for(symbol)
     cost = cfg.cost_for(symbol) / 100
     target_move = cfg.required_move_pct(symbol) / 100
@@ -204,7 +224,52 @@ def backtest(symbol: str, candles: list[dict], strategy: str = "breakout") -> Ba
         stake = equity * cfg.STAKE_PCT_OF_EQUITY / 100
         equity += stake * r
         res.trades.append(Trade(candles[i + 1]["time"], exit_time, d, entry, exit_price,
-                                outcome, r))
+                                outcome, r, cfg.STOP_LOSS_PCT_OF_MARGIN / 100))
+        res.equity_curve.append(equity)
+        i = j + 1
+    return res
+
+
+def backtest_trailing(symbol: str, candles: list[dict], strategy: str) -> BacktestResult:
+    """Ohne festes Kursziel: Der Stop startet ATR_MULT × ATR vom Einstieg entfernt
+    und wird mit dem besten Kurs seit Einstieg nachgezogen (nie zurück).
+    Spätestens nach HORIZON_HOURS wird geschlossen."""
+    lev = cfg.leverage_for(symbol)
+    cost = cfg.cost_for(symbol) / 100
+    overnight = cfg.overnight_for(symbol) / 100
+    first, signal = _signals(candles, strategy)
+    atr = _atr(candles)
+
+    res = BacktestResult(symbol)
+    equity = cfg.START_CAPITAL
+    i = max(first, 14)
+    while i < len(candles) - 1:
+        d = signal(i)
+        if d == 0 or atr[i] is None:
+            i += 1
+            continue
+        entry = candles[i + 1]["open"]
+        dist = cfg.ATR_MULT * atr[i]
+        stop = entry - d * dist
+        best = entry
+        end = _window_end(candles, i + 1)
+        exit_price, outcome, j = candles[end - 1]["close"], "Zeit", end - 1
+        for j in range(i + 1, end):
+            c = candles[j]
+            if (d == 1 and c["low"] <= stop) or (d == -1 and c["high"] >= stop):
+                gap = (d == 1 and c["open"] < stop) or (d == -1 and c["open"] > stop)
+                exit_price, outcome = (c["open"] if gap else stop), "Stop"
+                break
+            # Stop erst nach Ende der Kerze nachziehen (kein Blick in die Zukunft).
+            best = max(best, c["high"]) if d == 1 else min(best, c["low"])
+            stop = max(stop, best - dist) if d == 1 else min(stop, best + dist)
+
+        nights = (_ts(candles[j]).date() - _ts(candles[i + 1]).date()).days
+        r = max(lev * (d * (exit_price / entry - 1) - cost - overnight * nights), -1.0)
+        risk = lev * (dist / entry + cost)
+        equity *= 1 + 0.01 * r / risk  # 1 % Risiko pro Trade, nur für die Einzelauswertung
+        res.trades.append(Trade(candles[i + 1]["time"], candles[j]["time"], d, entry,
+                                exit_price, outcome, r, risk))
         res.equity_curve.append(equity)
         i = j + 1
     return res

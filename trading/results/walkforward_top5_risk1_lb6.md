@@ -1,13 +1,13 @@
 # Walk-Forward-Test: Markt und Strategie monatlich frei wählen
 
-Erstellt: 2026-10-02 08:45 UTC · Kursdaten: eToro, OneDay-Kerzen · gehandelt: 2023-04 bis 2026-10
+Erstellt: 2026-10-02 22:39 UTC · Kursdaten: eToro, OneDay-Kerzen · gehandelt: 2023-04 bis 2026-10
 
 ## Regeln
 
 - Auswahl: jede(n) Monat die 5 besten Kombinationen aus 20 Märkten × 3 Einstiegsregeln (breakout, trend, pullback), bewertet über die letzten 6 Monate; nur Kombinationen im Plus und mit mindestens 3 Trades
 - Long und Short erlaubt
-- Ziel +10 % / Stop −5 % auf den Einsatz, Hebel höchstens 2x, Zeitfenster 720 Stunden
-- Risiko pro Trade: 1 % des Kontos (Einsatz 20 %)
+- Ziel +10 % / Stop −5 % auf den Einsatz, Hebel höchstens 2x, längstens 720 Stunden
+- Risiko pro Trade: 1 % des Kontos bis zum ersten Stop
 - Startkapital: 100 $
 
 ## Ergebnis
