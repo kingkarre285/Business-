@@ -95,6 +95,8 @@ def backtest(symbol: str, candles: list[dict]) -> BacktestResult:
     n = max(1, cfg.BREAKOUT_LOOKBACK_HOURS // cfg.INTERVAL_HOURS[cfg.CANDLE_INTERVAL])
 
     res = BacktestResult(symbol)
+    if stop_move <= 0:
+        return res  # Kosten allein sind höher als der erlaubte Verlust
     equity = cfg.START_CAPITAL
     i = n
     while i < len(candles) - 1 and equity >= cfg.START_CAPITAL * 0.01:

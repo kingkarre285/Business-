@@ -41,11 +41,21 @@ def main() -> None:
     ap.add_argument("--interval", default=cfg.CANDLE_INTERVAL, choices=cfg.INTERVAL_HOURS)
     ap.add_argument("--target", type=float, default=cfg.MIN_NET_PROFIT_PCT,
                     help="Mindest-Nettogewinn pro Trade in %%")
+    ap.add_argument("--stop", type=float, default=cfg.STOP_LOSS_PCT_OF_MARGIN,
+                    help="Stop-Loss in %% des Einsatzes")
+    ap.add_argument("--max-leverage", type=int, default=None,
+                    help="Hebel begrenzen (1 = ohne Hebel)")
+    ap.add_argument("--risk", type=float, default=None,
+                    help="Risiko pro Trade in %% des Kontos (bestimmt den Einsatz)")
     ap.add_argument("--cached", action="store_true")
     args = ap.parse_args()
     cfg.HORIZON_HOURS = args.horizon
     cfg.CANDLE_INTERVAL = args.interval
     cfg.MIN_NET_PROFIT_PCT = args.target
+    cfg.STOP_LOSS_PCT_OF_MARGIN = args.stop
+    cfg.MAX_LEVERAGE = args.max_leverage
+    if args.risk is not None:
+        cfg.STAKE_PCT_OF_EQUITY = min(100.0, args.risk / args.stop * 100)
     # Breakout über das Hoch/Tief eines Zeitraums so lang wie das Zeitfenster.
     cfg.BREAKOUT_LOOKBACK_HOURS = args.horizon
 
@@ -87,7 +97,11 @@ def main() -> None:
         f"innerhalb von {cfg.HORIZON_HOURS} Stunden",
         f"- Stop-Loss: −{cfg.STOP_LOSS_PCT_OF_MARGIN:.0f} % des Einsatzes; "
         f"Einsatz pro Trade: {cfg.STAKE_PCT_OF_EQUITY:.0f} % des Kontos",
-        "- Hebel: jeweils der für Privatkunden maximal erlaubte (ESMA)",
+        ("- Hebel: jeweils der für Privatkunden maximal erlaubte (ESMA)"
+         if not cfg.MAX_LEVERAGE else
+         f"- Hebel: höchstens {cfg.MAX_LEVERAGE}x" + (" (ohne Hebel)" if cfg.MAX_LEVERAGE == 1 else "")),
+        f"- Risiko pro Trade: {cfg.STAKE_PCT_OF_EQUITY * cfg.STOP_LOSS_PCT_OF_MARGIN / 100:.1f} % "
+        "des Kontos (Einsatz × Stop-Loss)",
         f"- Einstieg: Breakout über das Hoch / unter das Tief der letzten "
         f"{cfg.BREAKOUT_LOOKBACK_HOURS} Stunden",
         f"- Startkapital je Markt: {cfg.START_CAPITAL:.0f} $",
@@ -116,7 +130,8 @@ def main() -> None:
         timeouts = sum(t.outcome == "Zeit" for t in bt.trades)
         lines.append(
             f"| {symbol} | {cfg.leverage_for(symbol)}x | {cfg.required_move_pct(symbol):.2f} % "
-            f"| −{cfg.stop_move_pct(symbol):.2f} % | {s['hit_rate'] * 100:.1f} % "
+            f"| {f'−{cfg.stop_move_pct(symbol):.2f} %' if cfg.stop_move_pct(symbol) > 0 else 'Kosten > Stop'} "
+            f"| {s['hit_rate'] * 100:.1f} % "
             f"| {len(bt.trades)} | {bt.wins} | {stops} | {timeouts} "
             f"| {bt.final_equity:.2f} $ | {bt.max_drawdown * 100:.0f} % |"
         )
@@ -132,7 +147,7 @@ def main() -> None:
     ]
 
     RESULTS.mkdir(exist_ok=True)
-    out = RESULTS / f"report_{cfg.HORIZON_HOURS}h.md"
+    out = RESULTS / f"report_{cfg.HORIZON_HOURS}h_{cfg.MIN_NET_PROFIT_PCT:g}pct.md"
     out.write_text("\n".join(lines) + "\n")
     print(f"\nBericht: {out}")
 

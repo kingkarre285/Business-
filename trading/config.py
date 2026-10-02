@@ -32,6 +32,9 @@ ASSET_CLASSES = {
     "Indices":   {"max_leverage": 20, "cost_pct": 0.05, "overnight_pct": 0.02},
 }
 
+# Optionaler Deckel für den Hebel (None = maximal erlaubter Hebel, 1 = ohne Hebel).
+MAX_LEVERAGE = None
+
 # Forex-Majors dürfen 30x, Nebenwerte/Kreuzkurse nur 20x.
 LEVERAGE_OVERRIDES = {"GBPJPY": 20, "GOLD": 20}
 
@@ -72,7 +75,8 @@ INTERVAL_HOURS = {"OneHour": 1, "FourHours": 4, "OneDay": 24}
 
 def leverage_for(symbol: str) -> int:
     asset_class = UNIVERSE[symbol][1]
-    return LEVERAGE_OVERRIDES.get(symbol, ASSET_CLASSES[asset_class]["max_leverage"])
+    allowed = LEVERAGE_OVERRIDES.get(symbol, ASSET_CLASSES[asset_class]["max_leverage"])
+    return min(allowed, MAX_LEVERAGE) if MAX_LEVERAGE else allowed
 
 
 def cost_for(symbol: str) -> float:

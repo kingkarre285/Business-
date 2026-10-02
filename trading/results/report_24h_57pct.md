@@ -1,12 +1,13 @@
 # Backtest: mindestens 57 % netto pro Trade
 
-Erstellt: 2026-10-02 08:10 UTC · Kursdaten: eToro, OneHour-Kerzen, 2026-07-24 bis 2026-10-02
+Erstellt: 2026-10-02 08:23 UTC · Kursdaten: eToro, OneHour-Kerzen, 2026-07-24 bis 2026-10-02
 
 ## Regeln
 
 - Ziel: +57 % auf den Einsatz **nach Kosten**, innerhalb von 24 Stunden
 - Stop-Loss: −50 % des Einsatzes; Einsatz pro Trade: 100 % des Kontos
 - Hebel: jeweils der für Privatkunden maximal erlaubte (ESMA)
+- Risiko pro Trade: 50.0 % des Kontos (Einsatz × Stop-Loss)
 - Einstieg: Breakout über das Hoch / unter das Tief der letzten 24 Stunden
 - Startkapital je Markt: 100 $
 
