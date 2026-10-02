@@ -66,12 +66,23 @@ Alle Varianten liegen deutlich unter Buy & Hold (S&P 500 +88 %).
 | GOLD | Pullback | 1010 | 46 % | −22,6 % | 24,2 % |
 | OIL | Pullback | 1103 | 43 % | −67,2 % | 67,3 % |
 
+### ORB-Langzeittest
+eToro-5-Minuten-Daten von Juni 2012 bis September 2026, je Markt rund 3.600 Trades:
+
+| Markt | Rendite gesamt | max. DD | Jahre im Plus |
+|---|---|---|---|
+| SPX500 | **−25,1 %** | 45,8 % | 4 von 15 |
+| NSDQ100 | +4,2 % | 28,7 % | 8 von 15 |
+| GER40 | **−33,8 %** | 35,4 % | 4 von 15 |
+
 **Fazit:**
-- Die Pullback-Strategie ist unbrauchbar.
-- Der ORB auf dem SPX500 ist das einzige positive Ergebnis. Das kann Zufall sein, weil er auf Nasdaq und DAX nicht funktioniert.
-- Nächster sinnvoller Schritt: ORB auf dem SPX500 mit eToro-Daten **ab 2012** prüfen, also außerhalb der bisherigen Stichprobe.
+- Beide Scalping-Strategien haben **keinen dauerhaften Vorteil**.
+- Das Plus der letzten 2 Jahre beim SPX500 war Zufall, denn 2022 und 2023 waren Ausnahmejahre.
+- **Scalping wird nicht weiterverfolgt**, es sei denn, der Nutzer bringt eine neue Idee ein.
 
 ## Offene Punkte
+- Der TradingView-Connector ist laut Nutzer angebunden, wird aber erst in einer neuen Sitzung geladen.
+  - Idee: Wirtschaftskalender als Filter, damit der Bot an großen Terminen wie Fed-Entscheiden oder Inflationsdaten pausiert.
 - Short-Positionen abschalten (Variante „Nur Long, Hebel 2“)? Der Nutzer hat noch nicht entschieden.
 - Erste Demo-Trades (NSDQ100, MSFT, NVDA, je 15.000 USD) wurden am 01.10. vorbereitet, aber **nicht ausgeführt**.
   - Vor jeder Ausführung braucht es eine neue Vorschau und die Zustimmung des Nutzers.
