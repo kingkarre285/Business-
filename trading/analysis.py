@@ -51,6 +51,7 @@ def scan(symbol: str, candles: list[dict]) -> dict:
 @dataclass
 class Trade:
     entry_time: str
+    exit_time: str
     direction: int  # +1 long, -1 short
     entry: float
     exit: float
@@ -90,7 +91,8 @@ def backtest(symbol: str, candles: list[dict]) -> BacktestResult:
     cost = cfg.cost_for(symbol) / 100
     target_move = cfg.required_move_pct(symbol) / 100
     stop_move = cfg.stop_move_pct(symbol) / 100
-    n = cfg.BREAKOUT_LOOKBACK_HOURS
+    overnight = cfg.overnight_for(symbol) / 100
+    n = max(1, cfg.BREAKOUT_LOOKBACK_HOURS // cfg.INTERVAL_HOURS[cfg.CANDLE_INTERVAL])
 
     res = BacktestResult(symbol)
     equity = cfg.START_CAPITAL
@@ -122,11 +124,35 @@ def backtest(symbol: str, candles: list[dict]) -> BacktestResult:
                 exit_price, outcome = target, "Ziel"
                 break
 
-        r = lev * (d * (exit_price / entry - 1) - cost)
+        # Übernachtgebühr für jede angefangene Nacht, in der die Position offen war.
+        exit_time = candles[j]["time"]
+        nights = (_ts(candles[j]).date() - _ts(candles[i + 1]).date()).days
+        r = lev * (d * (exit_price / entry - 1) - cost - overnight * nights)
         r = max(r, -1.0)  # mehr als der Einsatz kann nicht verloren gehen
         stake = equity * cfg.STAKE_PCT_OF_EQUITY / 100
         equity += stake * r
-        res.trades.append(Trade(candles[i + 1]["time"], d, entry, exit_price, outcome, r))
+        res.trades.append(Trade(candles[i + 1]["time"], exit_time, d, entry, exit_price,
+                                outcome, r))
         res.equity_curve.append(equity)
         i = j + 1
     return res
+
+
+def weekly_multipliers(result: BacktestResult, candles: list[dict]) -> list[float]:
+    """Faktor, um den sich das Konto in jeder Kalenderwoche (7-Tage-Blöcke ab
+    Beginn der Kursdaten) verändert hat. 2.0 = verdoppelt."""
+    start, end = _ts(candles[0]), _ts(candles[-1])
+    points = [(datetime.fromisoformat(t.exit_time.replace("Z", "+00:00")), e)
+              for t, e in zip(result.trades, result.equity_curve)]
+    factors = []
+    week_start, equity_at_start = start, cfg.START_CAPITAL
+    while week_start + timedelta(days=7) <= end:
+        week_end = week_start + timedelta(days=7)
+        equity_at_end = equity_at_start
+        for t, e in points:
+            if week_start <= t < week_end:
+                equity_at_end = e
+        if equity_at_start > 0:
+            factors.append(equity_at_end / equity_at_start)
+        week_start, equity_at_start = week_end, equity_at_end
+    return factors

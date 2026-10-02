@@ -21,14 +21,15 @@ STAKE_PCT_OF_EQUITY = 100.0
 
 START_CAPITAL = 100.0
 
-# Maximaler Hebel für Privatkunden (ESMA-Grenzen, wie bei eToro EU)
-# und geschätzte Kosten pro Round-Trip in % des Positionswerts.
+# Maximaler Hebel für Privatkunden (ESMA-Grenzen, wie bei eToro EU),
+# geschätzte Kosten pro Round-Trip und geschätzte Übernachtgebühr pro Tag,
+# jeweils in % des Positionswerts.
 ASSET_CLASSES = {
-    "Crypto":    {"max_leverage": 2,  "cost_pct": 2.00},  # 1 % Gebühr je Kauf/Verkauf
-    "Stocks":    {"max_leverage": 5,  "cost_pct": 0.30},
-    "Forex":     {"max_leverage": 30, "cost_pct": 0.02},
-    "Commodity": {"max_leverage": 10, "cost_pct": 0.10},
-    "Indices":   {"max_leverage": 20, "cost_pct": 0.05},
+    "Crypto":    {"max_leverage": 2,  "cost_pct": 2.00, "overnight_pct": 0.04},  # 1 % Gebühr je Kauf/Verkauf
+    "Stocks":    {"max_leverage": 5,  "cost_pct": 0.30, "overnight_pct": 0.03},
+    "Forex":     {"max_leverage": 30, "cost_pct": 0.02, "overnight_pct": 0.01},
+    "Commodity": {"max_leverage": 10, "cost_pct": 0.10, "overnight_pct": 0.02},
+    "Indices":   {"max_leverage": 20, "cost_pct": 0.05, "overnight_pct": 0.02},
 }
 
 # Forex-Majors dürfen 30x, Nebenwerte/Kreuzkurse nur 20x.
@@ -62,9 +63,11 @@ UNIVERSE = {
 # liegt, Short, wenn er darunter liegt.
 BREAKOUT_LOOKBACK_HOURS = 24
 
-# Kerzen für den Backtest (OneHour, max. 1000 pro Abruf = ca. 6 Wochen Krypto).
+# Kerzen für den Backtest (max. 1000 pro Abruf; OneHour = ca. 6 Wochen Krypto,
+# FourHours = ca. 5,5 Monate Krypto).
 CANDLE_INTERVAL = "OneHour"
 CANDLE_COUNT = 1000
+INTERVAL_HOURS = {"OneHour": 1, "FourHours": 4, "OneDay": 24}
 
 
 def leverage_for(symbol: str) -> int:
@@ -76,14 +79,20 @@ def cost_for(symbol: str) -> float:
     return ASSET_CLASSES[UNIVERSE[symbol][1]]["cost_pct"]
 
 
+def overnight_for(symbol: str) -> float:
+    return ASSET_CLASSES[UNIVERSE[symbol][1]]["overnight_pct"]
+
+
 def required_move_pct(symbol: str) -> float:
     """Kursbewegung in %, die mit maximalem Hebel nötig ist, um nach Kosten
-    MIN_NET_PROFIT_PCT auf den Einsatz zu erzielen.
+    MIN_NET_PROFIT_PCT auf den Einsatz zu erzielen. Übernachtgebühren werden
+    für das volle Zeitfenster eingerechnet, damit das Ziel sicher netto erreicht ist.
 
     Netto-Rendite auf Einsatz = Hebel * (Kursbewegung - Kosten)
     => Kursbewegung = Ziel / Hebel + Kosten
     """
-    return MIN_NET_PROFIT_PCT / leverage_for(symbol) + cost_for(symbol)
+    fees = cost_for(symbol) + overnight_for(symbol) * HORIZON_HOURS / 24
+    return MIN_NET_PROFIT_PCT / leverage_for(symbol) + fees
 
 
 def stop_move_pct(symbol: str) -> float:
