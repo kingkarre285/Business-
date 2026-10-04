@@ -68,7 +68,7 @@ def get_candles(instrument_id: int, interval: str = "OneHour", count: int = 1000
     ]
 
 
-_HISTORY_INTERVALS = {"OneHour": "1h", "FourHours": "4h", "OneDay": "1d"}
+_HISTORY_INTERVALS = {"FifteenMinutes": "15m", "OneHour": "1h", "FourHours": "4h", "OneDay": "1d"}
 
 
 def get_history(instrument_id: int, interval: str, start: str, end: str) -> list[dict]:
