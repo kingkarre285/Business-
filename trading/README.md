@@ -36,13 +36,21 @@ Stop-Loss, Einsatz pro Trade, Märkte, Hebel und geschätzte Kosten.
 
 ## Demo-Bot
 
-Handelt die beste Walk-Forward-Variante im **eToro-Demokonto**: Er wählt monatlich die
-5 besten Kombinationen aus Markt und Strategie (letzte 6 Monate), riskiert 1 % des Kontos
-pro Trade, nutzt Hebel 2x, Ziel +10 % / Stop −5 % auf den Einsatz und schließt spätestens nach 30 Tagen.
+Handelt die Walk-Forward-Auswahl im **eToro-Demokonto**, mit zwei Profilen nebeneinander:
+Jedes hat ein eigenes virtuelles Budget, eigenen Hebel und eigenes Risiko und wird getrennt abgerechnet.
+
+| Profil | Budget | Hebel | Ziel / Stop (auf Einsatz) | Risiko pro Trade |
+|---|---|---|---|---|
+| A · Standard | 54.000 $ | bis 2x | +10 % / −5 % | 1 % |
+| B · Offensiv | 25.000 $ | bis 5x | +25 % / −12,5 % | 2 % |
+
+Beide wählen monatlich die 5 besten Kombinationen aus Markt und Strategie (letzte 6 Monate)
+und schließen Positionen spätestens nach 30 Tagen.
 
 ```bash
 python3 -m trading.bot              # Probelauf: zeigt nur, was der Bot tun würde
 python3 -m trading.bot --execute    # Orders im Demokonto ausführen
+python3 -m trading.bot --status     # Zwischenstand je Profil
 ```
 
 Der Bot ruft ausschließlich Demo-Adressen der eToro-API auf und fasst nur Positionen an,
