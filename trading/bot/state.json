@@ -1,57 +1,121 @@
 {
-  "selection": {
-    "2026-10": [
-      [
-        "OIL",
-        "trend"
+  "profiles": {
+    "A": {
+      "selection": {
+        "2026-10": [
+          [
+            "OIL",
+            "trend"
+          ],
+          [
+            "AMD",
+            "trend"
+          ],
+          [
+            "MSTR",
+            "trend"
+          ],
+          [
+            "TSLA",
+            "breakout"
+          ],
+          [
+            "MSTR",
+            "breakout"
+          ]
+        ]
+      },
+      "open": [
+        {
+          "symbol": "OIL",
+          "strategy": "trend",
+          "instrumentID": 17,
+          "orderID": 385869829,
+          "isBuy": true,
+          "amount": 15800.0,
+          "leverage": 2,
+          "stopLoss": 86.59071999999999,
+          "takeProfit": 93.77704,
+          "opened": "2026-10-02T11:31:24.396971+00:00",
+          "positionID": 3608771485,
+          "openRate": 88.76
+        },
+        {
+          "symbol": "AMD",
+          "strategy": "trend",
+          "instrumentID": 1832,
+          "orderID": 385900735,
+          "isBuy": true,
+          "amount": 15800.0,
+          "leverage": 2,
+          "stopLoss": 612.31602,
+          "takeProfit": 664.90758,
+          "opened": "2026-10-02T11:31:24.396971+00:00",
+          "positionID": 3608771487,
+          "openRate": 626.28
+        }
       ],
-      [
-        "AMD",
-        "trend"
-      ],
-      [
-        "MSTR",
-        "trend"
-      ],
-      [
-        "TSLA",
-        "breakout"
-      ],
-      [
-        "MSTR",
-        "breakout"
-      ]
-    ]
-  },
-  "open": [
-    {
-      "symbol": "OIL",
-      "strategy": "trend",
-      "instrumentID": 17,
-      "orderID": 385869829,
-      "isBuy": true,
-      "amount": 15800.0,
-      "leverage": 2,
-      "stopLoss": 86.59071999999999,
-      "takeProfit": 93.77704,
-      "opened": "2026-10-02T11:31:24.396971+00:00"
+      "closed": [],
+      "attempts": {},
+      "realized": 0.0
     },
-    {
-      "symbol": "AMD",
-      "strategy": "trend",
-      "instrumentID": 1832,
-      "orderID": 385900735,
-      "isBuy": true,
-      "amount": 15800.0,
-      "leverage": 2,
-      "stopLoss": 612.31602,
-      "takeProfit": 664.90758,
-      "opened": "2026-10-02T11:31:24.396971+00:00"
+    "B": {
+      "selection": {
+        "2026-10": [
+          [
+            "OIL",
+            "trend"
+          ],
+          [
+            "TSLA",
+            "breakout"
+          ],
+          [
+            "MSTR",
+            "breakout"
+          ],
+          [
+            "NSDQ100",
+            "trend"
+          ],
+          [
+            "SILVER",
+            "breakout"
+          ]
+        ]
+      },
+      "open": [
+        {
+          "symbol": "OIL",
+          "strategy": "trend",
+          "instrumentID": 17,
+          "orderID": 386300986,
+          "isBuy": true,
+          "amount": 4000.0,
+          "leverage": 5,
+          "stopLoss": 87.02992,
+          "takeProfit": 94.25269,
+          "opened": "2026-10-05T05:55:55.722819+00:00"
+        },
+        {
+          "symbol": "NSDQ100",
+          "strategy": "trend",
+          "instrumentID": 28,
+          "orderID": 386271375,
+          "isBuy": true,
+          "amount": 4000.0,
+          "leverage": 5,
+          "stopLoss": 30024.134100000003,
+          "takeProfit": 32517.1683,
+          "opened": "2026-10-05T05:55:55.722819+00:00"
+        }
+      ],
+      "closed": [],
+      "attempts": {
+        "2026-10-05:OIL": "trend",
+        "2026-10-05:NSDQ100": "trend"
+      },
+      "realized": 0.0
     }
-  ],
-  "closed": [],
-  "attempts": {
-    "2026-10-02:OIL": "trend",
-    "2026-10-02:AMD": "trend"
   }
 }
