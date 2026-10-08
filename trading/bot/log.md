@@ -33,3 +33,25 @@
 - Budget 25000.00 $ (davon investiert 8000.00 $), offene Positionen: 2
 
 Freies Demo-Guthaben: 39352.62 $
+
+## 2026-10-08 15:22 UTC · AUSFÜHRUNG (Demokonto)
+
+### Profil A · Standard (Hebel bis 2x, Ziel +10 % / Stop −5 %, Risiko 1 %)
+- OIL: von eToro geschlossen (Stop/Ziel), Ergebnis -779.68 $
+- Auswahl 2026-10: OIL / trend, AMD / trend, MSTR / trend, TSLA / breakout, MSTR / breakout
+- OIL / trend: kein Signal
+- MSTR / trend: kein Signal
+- TSLA / breakout: kein Signal
+- MSTR / breakout: kein Signal
+- Budget 53220.32 $ (davon investiert 15800.00 $), offene Positionen: 1
+
+### Profil B · Offensiv (Hebel bis 5x, Ziel +25 % / Stop −12.5 %, Risiko 2 %)
+- OIL: von eToro geschlossen (Stop/Ziel), Ergebnis -495.46 $
+- Auswahl 2026-10: OIL / trend, TSLA / breakout, MSTR / breakout, NSDQ100 / trend, SILVER / breakout
+- OIL / trend: kein Signal
+- TSLA / breakout: kein Signal
+- MSTR / breakout: kein Signal
+- SILVER / breakout: kein Signal
+- Budget 24504.54 $ (davon investiert 4000.00 $), offene Positionen: 1
+
+Freies Demo-Guthaben: 58930.32 $

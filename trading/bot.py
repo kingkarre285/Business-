@@ -88,9 +88,9 @@ def log(lines: list[str]) -> None:
 
 
 def closed_trades(since: str) -> dict:
-    """Geschlossene Demo-Trades seit `since` (YYYY-MM-DD), nach positionID."""
+    """Geschlossene Demo-Trades seit `since` (YYYY-MM-DD), nach positionID und orderID."""
     rows = api._get(f"/api/v1/trading/info/trade/demo/history?minDate={since}&pageSize=500")
-    return {r["positionId"]: r for r in rows}
+    return {("pos", r["positionId"]): r for r in rows} | {("order", r["orderId"]): r for r in rows}
 
 
 def run_profile(pid: str, prof: dict, portfolio: dict, history: dict, candles: dict,
@@ -114,7 +114,7 @@ def run_profile(pid: str, prof: dict, portfolio: dict, history: dict, candles: d
             pos["openRate"] = live["openRate"]
             still_open.append(pos)
         elif pos.get("positionID") or now - datetime.fromisoformat(pos["opened"]) > timedelta(hours=1):
-            h = history.get(pos.get("positionID"))
+            h = history.get(("pos", pos.get("positionID"))) or history.get(("order", pos["orderID"]))
             pnl = h["netProfit"] if h else 0.0
             prof["realized"] += pnl
             reason = "von eToro geschlossen (Stop/Ziel)" if h else "nicht gefunden (Order abgelehnt?)"
