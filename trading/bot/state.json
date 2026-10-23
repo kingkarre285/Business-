@@ -27,18 +27,28 @@
       },
       "open": [
         {
-          "symbol": "AMD",
+          "symbol": "OIL",
           "strategy": "trend",
-          "instrumentID": 1832,
-          "orderID": 385900735,
+          "instrumentID": 17,
+          "orderID": 390134243,
           "isBuy": true,
-          "amount": 15800.0,
+          "amount": 10502.18,
           "leverage": 2,
-          "stopLoss": 612.31602,
-          "takeProfit": 664.90758,
-          "opened": "2026-10-02T11:31:24.396971+00:00",
-          "positionID": 3608771487,
-          "openRate": 626.28
+          "stopLoss": 97.88304000000001,
+          "takeProfit": 106.00653,
+          "opened": "2026-10-23T07:35:13.276102+00:00"
+        },
+        {
+          "symbol": "MSTR",
+          "strategy": "trend",
+          "instrumentID": 6473,
+          "orderID": 390130544,
+          "isBuy": true,
+          "amount": 10502.18,
+          "leverage": 2,
+          "stopLoss": 144.16698,
+          "takeProfit": 156.54942,
+          "opened": "2026-10-23T07:35:13.276102+00:00"
         }
       ],
       "closed": [
@@ -58,10 +68,30 @@
           "closed": "2026-10-08T15:22:33.822974+00:00",
           "reason": "eToro",
           "pnl": -779.68
+        },
+        {
+          "symbol": "AMD",
+          "strategy": "trend",
+          "instrumentID": 1832,
+          "orderID": 385900735,
+          "isBuy": true,
+          "amount": 15800.0,
+          "leverage": 2,
+          "stopLoss": 612.31602,
+          "takeProfit": 664.90758,
+          "opened": "2026-10-02T11:31:24.396971+00:00",
+          "positionID": 3608771487,
+          "openRate": 626.28,
+          "closed": "2026-10-23T07:35:13.276102+00:00",
+          "reason": "eToro",
+          "pnl": -709.42
         }
       ],
-      "attempts": {},
-      "realized": -779.68
+      "attempts": {
+        "2026-10-23:OIL": "trend",
+        "2026-10-23:MSTR": "trend"
+      },
+      "realized": -1489.1
     },
     "B": {
       "selection": {
@@ -90,18 +120,28 @@
       },
       "open": [
         {
-          "symbol": "NSDQ100",
+          "symbol": "OIL",
           "strategy": "trend",
-          "instrumentID": 28,
-          "orderID": 386271375,
+          "instrumentID": 17,
+          "orderID": 390095667,
           "isBuy": true,
-          "amount": 4000.0,
+          "amount": 3842.16,
           "leverage": 5,
-          "stopLoss": 30024.134100000003,
-          "takeProfit": 32517.1683,
-          "opened": "2026-10-05T05:55:55.722819+00:00",
-          "positionID": 3609922747,
-          "openRate": 30779.8
+          "stopLoss": 97.88304000000001,
+          "takeProfit": 106.00653,
+          "opened": "2026-10-23T07:35:13.276102+00:00"
+        },
+        {
+          "symbol": "SILVER",
+          "strategy": "breakout",
+          "instrumentID": 19,
+          "orderID": 390136188,
+          "isBuy": false,
+          "amount": 3842.16,
+          "leverage": 5,
+          "stopLoss": 55.20384,
+          "takeProfit": 50.837129999999995,
+          "opened": "2026-10-23T07:35:13.276102+00:00"
         }
       ],
       "closed": [
@@ -119,10 +159,30 @@
           "closed": "2026-10-08T15:22:33.822974+00:00",
           "reason": "eToro",
           "pnl": -495.46
+        },
+        {
+          "symbol": "NSDQ100",
+          "strategy": "trend",
+          "instrumentID": 28,
+          "orderID": 386271375,
+          "isBuy": true,
+          "amount": 4000.0,
+          "leverage": 5,
+          "stopLoss": 30024.134100000003,
+          "takeProfit": 32517.1683,
+          "opened": "2026-10-05T05:55:55.722819+00:00",
+          "positionID": 3609922747,
+          "openRate": 30779.8,
+          "closed": "2026-10-23T07:35:13.276102+00:00",
+          "reason": "eToro",
+          "pnl": -491.04
         }
       ],
-      "attempts": {},
-      "realized": -495.46
+      "attempts": {
+        "2026-10-23:OIL": "trend",
+        "2026-10-23:SILVER": "breakout"
+      },
+      "realized": -986.5
     }
   }
 }
