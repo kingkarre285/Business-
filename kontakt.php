@@ -436,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <section class="section section--tight" id="notfall">
     <div class="container container--narrow">
       <div class="notice notice--urgent">
-        <h2 style="font-size: 1.1875rem; margin-bottom: 0.5rem;">Wichtig: keine Notfallversorgung</h2>
+        <h2>Wichtig: keine Notfallversorgung</h2>
         <p>
           Anfragen über dieses Formular werden nicht täglich und nicht rund um die
           Uhr gelesen. Wenn Sie akut Hilfe brauchen oder daran denken, sich das

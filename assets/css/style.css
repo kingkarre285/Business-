@@ -533,6 +533,20 @@ hr {
 
 .btn--light:hover { background-color: var(--c-akzent); color: var(--c-heading); }
 
+/* Zweite, zurückhaltende Schaltfläche auf dunklem Grund – das Gegenstück
+   zu .btn--ghost auf hellem Grund. */
+.btn--umriss {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+.btn--umriss:hover {
+  background-color: #fff;
+  border-color: #fff;
+  color: var(--c-heading);
+}
+
 .btn-row {
   display: flex;
   flex-wrap: wrap;
@@ -540,47 +554,105 @@ hr {
   margin-top: var(--sp-5);
 }
 
-/* --- 6. Hero ------------------------------------------------------------- */
+/* --- 6. Banner ----------------------------------------------------------- */
 
-.hero {
-  background-color: var(--c-bg);
-  padding-block: var(--sp-9) var(--sp-8);
-}
+/* Vollbreites Auftaktband, zweigeteilt: links das Foto, rechts eine ruhige
+   dunkle Fläche mit der Überschrift. Schrift auf Farbe statt Schrift auf
+   Foto – das liest sich klarer, bleibt bei jedem Bildausschnitt lesbar und
+   zeigt das Foto unangetastet.
 
-.hero__grid {
+   Nebeneffekt: Die Bildhälfte ist nie breiter als etwa 1000 Pixel. Die
+   Fotos haben 1080 Pixel Breite und werden also verkleinert statt
+   hochgerechnet – sie bleiben scharf. */
+.banner {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: var(--sp-8);
-  align-items: center;
+  grid-template-columns: 1fr 1fr;
+  min-height: clamp(24rem, 42vw, 34rem);
+  background-color: var(--c-bg-deep);
+  color: var(--c-text-invert);
 }
 
-@media (max-width: 56rem) {
-  .hero { padding-block: var(--sp-7); }
-  .hero__grid { grid-template-columns: 1fr; gap: var(--sp-6); }
-}
-
-.hero__text { max-width: 34rem; }
-
-.hero__text h1 { margin-bottom: var(--sp-5); }
-
-/* Bild im Hero – das Schlüsselmotiv der Praxis */
-.hero__bild {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--c-bg-alt);
-}
-
-.hero__bild img {
+/* picture ist standardmäßig inline und hat keine eigene Höhe – ohne diese
+   Regel liefe height: 100% am Bild ins Leere. */
+.banner__bild picture {
+  display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
+  height: 100%;
 }
 
-/* Kontaktstreifen direkt unter dem Hero */
+.banner__bild img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Zeigt Fenster, Vorhang und die Lehne des Sofas; weiter oben wird der
+     Ausschnitt zu leer, weiter unten zu unruhig. */
+  object-position: center 55%;
+}
+
+/* Der Text endet bündig mit dem Inhaltsraster der übrigen Abschnitte:
+   außen so viel Abstand, wie der Container auf dieser Breite frei lässt. */
+.banner__inhalt {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: var(--sp-7);
+  padding-inline:
+    clamp(var(--sp-5), 4vw, var(--sp-7))
+    max(var(--sp-5), calc((100vw - var(--maxw)) / 2));
+}
+
+.banner__inhalt > :last-child { margin-bottom: 0; }
+
+.banner .eyebrow { color: var(--c-akzent); }
+
+/* Akzentlinie wie bei allen übrigen Überschriften */
+.banner h1 {
+  position: relative;
+  color: #fff;
+  font-size: clamp(2rem, 3.1vw, 2.75rem);
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-5);
+}
+
+.banner h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 10rem;
+  max-width: 55%;
+  height: 3px;
+  background-color: var(--c-akzent);
+}
+
+.banner .lead { color: #ece3d6; }
+
+.banner :focus-visible { outline-color: var(--c-akzent); }
+
+/* Schmale Fenster: Foto oben, Text darunter */
+@media (max-width: 56rem) {
+  .banner {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .banner__bild img {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .banner__inhalt {
+    padding: var(--sp-7) var(--sp-5);
+  }
+}
+
+/* Kontaktstreifen direkt unter dem Banner: eine ruhige Zeile mit den
+   vier Angaben, die beim ersten Besuch zählen. */
 .kontaktstreifen {
   background: var(--c-bg-alt);
-  padding-block: var(--sp-6);
+  border-bottom: 1px solid var(--c-border);
+  padding-block: var(--sp-5);
 }
 
 .kontaktstreifen__grid {
@@ -590,12 +662,31 @@ hr {
   align-items: start;
 }
 
+/* Feine Trennstriche statt vier frei stehender Blöcke */
+.kontaktstreifen__grid > div {
+  padding-left: var(--sp-5);
+  border-left: 1px solid var(--c-border);
+}
+
+.kontaktstreifen__grid > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
 @media (max-width: 56rem) {
   .kontaktstreifen__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kontaktstreifen__grid > div:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
 @media (max-width: 30rem) {
   .kontaktstreifen__grid { grid-template-columns: 1fr; }
+  .kontaktstreifen__grid > div {
+    padding-left: 0;
+    border-left: 0;
+  }
 }
 
 .kontaktstreifen dt {
@@ -604,14 +695,14 @@ hr {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-text-muted);
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-1);
 }
 
 .kontaktstreifen dd {
   margin: 0;
   color: var(--c-heading);
   font-size: var(--fs-sm);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* Vollbreites Bildband, etwa für ein Zitat */
@@ -644,9 +735,9 @@ hr {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Zeigt den oberen Bildbereich mit Fenster und Lichteinfall; weiter unten
-     füllt das Sofa den schmalen Streifen zu unruhig. */
-  object-position: center 28%;
+  /* Zeigt Sofa und Kissen. Weiter oben liegt nur helle Wand – der Streifen
+     wirkt dann ausgewaschen und der Text verliert an Halt. */
+  object-position: center 60%;
 }
 
 /* Abdunkelung, damit der Text auf jedem Bildausschnitt sicher lesbar bleibt */
@@ -695,30 +786,6 @@ hr {
   .medien--gedreht .medien__bild { order: 0; }
 }
 
-.hero__aside {
-  background: var(--c-bg-alt);
-  border-radius: var(--radius-lg);
-  padding: var(--sp-7) var(--sp-6);
-}
-
-.hero__aside h2 {
-  font-size: var(--fs-lg);
-  letter-spacing: 0.04em;
-  margin-bottom: var(--sp-5);
-  padding-bottom: var(--sp-4);
-  position: relative;
-}
-
-.hero__aside h2::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 9rem;
-  height: 3px;
-  background-color: var(--c-akzent);
-}
-
 /* --- 7. Karten und Raster ------------------------------------------------ */
 
 .grid {
@@ -728,6 +795,9 @@ hr {
 
 .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Mehr Luft zwischen den Spalten – für Text neben Text statt Karte neben Karte */
+.grid--weit { gap: var(--sp-7); align-items: start; }
 
 @media (max-width: 56rem) {
   .grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -788,15 +858,50 @@ hr {
   display: block;
 }
 
-/* Hervorgehobenes Angebot – trägt auf der Startseite das meiste Gewicht */
+/* Hervorgehobenes Angebot – trägt auf der Startseite das meiste Gewicht.
+   Zwei Spalten: links die Beschreibung, rechts die Abrechnungswege. So
+   füllt der Block seine Breite aus, statt rechts leer zu laufen. */
 .angebot--gross {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--sp-7);
   background: var(--c-bg-alt);
   border-radius: var(--radius-lg);
   padding: var(--sp-7);
   border-left: 4px solid var(--c-akzent);
 }
 
-.angebot--gross > div { max-width: 46rem; }
+@media (max-width: 56rem) {
+  .angebot--gross { grid-template-columns: 1fr; gap: var(--sp-6); }
+}
+
+/* Die Nebenspalte setzt sich mit einer feinen Linie ab, nicht mit einer
+   weiteren Fläche – im getönten Block wäre das zu viel. */
+.angebot__wege {
+  border-left: 1px solid var(--c-border);
+  padding-left: var(--sp-6);
+}
+
+.angebot__wege h4 {
+  font-size: var(--fs-xs);
+  font-family: var(--font-head);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: var(--sp-5);
+}
+
+.angebot__wege .checklist { margin-bottom: 0; }
+
+@media (max-width: 56rem) {
+  .angebot__wege {
+    border-left: 0;
+    border-top: 1px solid var(--c-border);
+    padding-left: 0;
+    padding-top: var(--sp-6);
+  }
+}
 
 .angebot--gross h3 {
   font-size: var(--fs-2xl);
@@ -932,6 +1037,19 @@ hr {
 }
 
 .notice p:last-child { margin-bottom: 0; }
+
+/* Steht der Hinweis allein in einem Abschnitt, trägt dieser schon den
+   Abstand – der eigene Außenabstand käme sonst obendrauf. */
+.section--tight > .container > .notice { margin-block: 0; }
+
+/* Überschrift im Hinweiskasten: kleiner als eine Abschnittsüberschrift,
+   damit der Kasten den Lesefluss nicht unterbricht. */
+.notice h2,
+.notice h3 {
+  font-size: var(--fs-lg);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--sp-2);
+}
 
 .notice--urgent {
   border-left-color: #a8452c;
@@ -1281,6 +1399,7 @@ textarea[aria-invalid="true"] {
 .text-muted { color: var(--c-text-muted); }
 .text-sm    { font-size: var(--fs-sm); }
 .mt-0 { margin-top: 0; }
+.mt-6 { margin-top: var(--sp-6); }
 .mb-0 { margin-bottom: 0; }
 .visually-hidden {
   position: absolute;

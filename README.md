@@ -14,7 +14,7 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 
 | Datei | Inhalt |
 |---|---|
-| `index.html` | Startseite: Angebotsübersicht, Arbeitsweise, Krisenhinweise |
+| `index.html` | Startseite: Banner, Angebotsübersicht, Arbeitsweise, Krisenhinweise |
 | `psychotherapie.html` | Hauptseite: Verfahren, Anlässe, Formen, Ablauf, Kosten, FAQ |
 | `mental-health-coaching.html` | Mental Health Coaching, ohne Krankheitsbezug |
 | `adhs-diagnostik.html` | ADHS-Abklärung für Erwachsene |
@@ -208,8 +208,8 @@ muss am HTML nichts geändert werden.
 
 | Datei | Wo sie erscheint | Motiv |
 |---|---|---|
-| `praxis-sofa` | Startseite, neben der Hauptüberschrift | Sofa mit Bild und Pflanze |
-| `praxis-licht` | Zitatband auf der Startseite | Fenster mit Lichteinfall |
+| `praxis-sofa` | Zitatband auf der Startseite | Sofa mit Bild und Pflanze |
+| `praxis-licht` | Banner oben auf der Startseite | Fenster mit Lichteinfall |
 | `praxis-sessel` | „Ein Raum, der trägt", Psychotherapie-Seite | Sessel mit Bilderwand |
 | `praxis-bilderwand` | „Wo wir arbeiten", Coaching-Seite | Bilderwand mit Blumen |
 | `praxis-wartebereich` | „Wohin Sie kommen", Kontaktseite | Wartebereich mit zwei Sesseln |

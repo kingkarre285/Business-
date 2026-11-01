@@ -76,30 +76,30 @@
 </header>
 
 <main id="inhalt">
-  <!-- ================= Hero ================= -->
-  <section class="hero">
-    <div class="container hero__grid">
-      <div class="hero__text">
-        <span class="eyebrow">Praxis für Psychotherapie in Frankfurt am Main</span>
-        <h1>Verstehen, was unter der Oberfläche wirkt.</h1>
-        <p class="lead">
-          Manche Belastungen lassen sich nicht wegargumentieren. Sie haben eine Geschichte –
-          und oft einen guten Grund. In der tiefenpsychologisch fundierten Psychotherapie
-          gehen wir dieser Geschichte gemeinsam nach, in Ihrem Tempo und in einem
-          geschützten Rahmen.
-        </p>
-        <div class="btn-row">
-          <a class="btn btn--primary" href="kontakt.php">Erstgespräch anfragen</a>
-          <a class="btn btn--ghost" href="psychotherapie.html">Zur Psychotherapie</a>
-        </div>
-      </div>
+  <!-- ================= Banner =================
+       Vollbreites Auftaktband: links das Foto, rechts die Überschrift auf
+       dunklem Grund. Das Bild steht als eigenes Element im Quelltext statt
+       als CSS-Hintergrund – so lädt der Browser es früh und kann die
+       kleinere WebP-Fassung wählen. -->
+  <section class="banner">
+    <div class="banner__bild">
+      <picture>
+        <source srcset="assets/img/praxis-licht.webp" type="image/webp">
+        <img src="assets/img/praxis-licht.jpg" width="1080" height="810" fetchpriority="high"
+             alt="Behandlungsraum der Praxis: Sonnenlicht fällt durch einen hellen Vorhang auf eine cremefarbene Wand und ein dunkelblaues Sofa mit einem terrakottafarbenen Kissen">
+      </picture>
+    </div>
 
-      <div class="hero__bild">
-        <picture>
-          <source srcset="assets/img/praxis-sofa.webp" type="image/webp">
-          <img src="assets/img/praxis-sofa.jpg" width="1080" height="1080" fetchpriority="high"
-               alt="Behandlungsraum der Praxis: ein dunkelblaues Sofa mit Kissen vor einer hellen Wand, darüber ein gerahmtes Bild, daneben eine große Zimmerpflanze und ein Beistelltisch mit Rosen">
-        </picture>
+    <div class="banner__inhalt">
+      <span class="eyebrow">Praxis für Psychotherapie in Frankfurt am Main</span>
+      <h1>Verstehen, was unter der Oberfläche wirkt.</h1>
+      <p class="lead">
+        Manche Belastungen lassen sich nicht wegargumentieren. Sie haben eine
+        Geschichte – und oft einen guten Grund. Wir gehen ihr gemeinsam nach,
+        in Ihrem Tempo und in einem geschützten Rahmen.
+      </p>
+      <div class="btn-row">
+        <a class="btn btn--light" href="kontakt.php">Erstgespräch anfragen</a>
       </div>
     </div>
   </section>
@@ -153,19 +153,22 @@
             arbeiten daran, zu verstehen, was unter der Oberfläche wirkt – nicht
             nur daran, Symptome zu dämpfen.
           </p>
+          <div class="btn-row">
+            <a class="btn btn--primary" href="psychotherapie.html">Zur Psychotherapie</a>
+          </div>
+        </div>
+
+        <div class="angebot__wege">
+          <h4>Abrechnung</h4>
           <ul class="checklist">
             <li><strong>Privat und Beihilfe:</strong> kurzfristige Termine, da das Antragsverfahren entfällt</li>
             <li><strong>Selbstzahlend:</strong> ohne Diagnose, ohne Meldung an eine Versicherung, mit frei vereinbarter Frequenz und Sitzungslänge</li>
             <li><strong>Gesetzlich versichert:</strong> vollständige Kostenübernahme, hier gelten die üblichen Wartezeiten</li>
           </ul>
-          <div class="btn-row">
-            <a class="btn btn--primary" href="psychotherapie.html">Zur Psychotherapie</a>
-            <a class="btn btn--ghost" href="psychotherapie.html#kosten">Kosten &amp; Selbstzahler</a>
-          </div>
         </div>
       </article>
 
-      <div class="grid grid--2" style="margin-top: 2rem;">
+      <div class="grid grid--2 mt-6">
         <article class="card">
           <div class="card__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 7-8"/><path d="M15 7h5v5"/></svg>
@@ -226,10 +229,12 @@
   <!-- ================= Arbeitsweise ================= -->
   <section class="section section--alt">
     <div class="container">
-      <div class="grid grid--2" style="gap: 3rem; align-items: start;">
+      <div class="grid grid--2 grid--weit">
         <div>
-          <span class="eyebrow">Arbeitsweise</span>
-          <h2>Tiefenpsychologisch fundiert – was heißt das?</h2>
+          <div class="section__head">
+            <span class="eyebrow">Arbeitsweise</span>
+            <h2>Tiefenpsychologisch fundiert – was heißt das?</h2>
+          </div>
           <p>
             Die tiefenpsychologisch fundierte Psychotherapie geht davon aus, dass
             unser Erleben von unbewussten Konflikten und frühen Beziehungs&shy;erfahrungen
@@ -305,7 +310,6 @@
 
       <div class="btn-row">
         <a class="btn btn--primary" href="psychotherapie.html#kosten">Kosten und Abrechnung</a>
-        <a class="btn btn--ghost" href="kontakt.php">Termin anfragen</a>
       </div>
     </div>
   </section>
@@ -314,8 +318,8 @@
   <section class="bildband">
     <div class="bildband__bild" aria-hidden="true">
       <picture>
-        <source srcset="assets/img/praxis-licht.webp" type="image/webp">
-        <img src="assets/img/praxis-licht.jpg" width="1080" height="810" loading="lazy" alt="">
+        <source srcset="assets/img/praxis-sofa.webp" type="image/webp">
+        <img src="assets/img/praxis-sofa.jpg" width="1080" height="1080" loading="lazy" alt="">
       </picture>
     </div>
     <div class="container">
@@ -350,7 +354,7 @@
   <section class="section section--tight">
     <div class="container container--narrow">
       <div class="notice notice--urgent">
-        <h2 style="font-size: 1.1875rem; margin-bottom: 0.5rem;">In einer akuten Krise</h2>
+        <h2>In einer akuten Krise</h2>
         <p>
           Diese Praxis ist keine Notfalleinrichtung, und Anfragen werden nicht
           rund um die Uhr gelesen. Wenn Sie sich in einer akuten Krise befinden

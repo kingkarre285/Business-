@@ -39,8 +39,8 @@ except ImportError:
 # Fotos erhalten bleibt: 0.0 ganz oben beziehungsweise links, 0.5 mittig,
 # 1.0 ganz unten beziehungsweise rechts.
 BILDPLAETZE = {
-    'praxis-sofa':         (1080, 1080, 86, 0.50),  # Startseite, neben der Hauptüberschrift
-    'praxis-licht':        (1080, 810, 84, 0.45),   # Zitatband auf der Startseite
+    'praxis-sofa':         (1080, 1080, 86, 0.50),  # Zitatband auf der Startseite
+    'praxis-licht':        (1080, 810, 84, 0.45),   # Banner oben auf der Startseite
     'praxis-sessel':       (1080, 810, 86, 0.40),   # Psychotherapie-Seite
     'praxis-bilderwand':   (1080, 810, 86, 0.45),   # Coaching-Seite
     'praxis-wartebereich': (1080, 810, 86, 0.58),   # "Wohin Sie kommen", Kontaktseite
