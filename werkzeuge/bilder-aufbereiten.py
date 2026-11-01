@@ -41,10 +41,10 @@ except ImportError:
 BILDPLAETZE = {
     'banner':              (2400, 900, 88, 0.55),   # Banner oben auf der Startseite
     'teilen':              (1200, 630, 86, 0.45),   # Vorschaubild beim Teilen in Messengern
-    'praxis-sofa':         (1080, 1080, 86, 0.50),  # Zitatband auf der Startseite
-    'praxis-licht':        (1080, 810, 84, 0.45),   # noch ohne festen Platz
+    'praxis-sofa':         (1080, 1080, 86, 0.50),  # Vorlage für 'teilen'
+    'praxis-licht':        (1080, 810, 84, 0.45),   # Vorlage für 'banner'
     'praxis-sessel':       (1080, 810, 86, 0.40),   # Psychotherapie-Seite
-    'praxis-bilderwand':   (1080, 810, 86, 0.45),   # Coaching-Seite
+    'praxis-bilderwand':   (1080, 810, 86, 0.45),   # Zitatband Startseite, Coaching-Seite
     'praxis-wartebereich': (1080, 810, 86, 0.58),   # "Wohin Sie kommen", Kontaktseite
     'portraet':            (800, 1000, 88, 0.50),   # Über-mich-Seite
 }

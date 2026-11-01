@@ -238,10 +238,11 @@ muss am HTML nichts geändert werden.
 | Datei | Wo sie erscheint | Motiv |
 |---|---|---|
 | `banner` | Banner oben auf der Startseite | Vorhang, Wand und Sofalehne |
-| `praxis-sofa` | Zitatband auf der Startseite | Sofa mit Bild und Pflanze |
-| `praxis-licht` | zurzeit nirgends – Quelle für `banner` | Fenster mit Lichteinfall |
+| `teilen` | Vorschaubild beim Teilen in Messengern | Sofa mit Bild und Pflanze |
+| `praxis-licht` | erscheint selbst nirgends – Vorlage für `banner` | Fenster mit Lichteinfall |
+| `praxis-sofa` | erscheint selbst nirgends – Vorlage für `teilen` | Sofa mit Bild und Pflanze |
 | `praxis-sessel` | „Ein Raum, der trägt", Psychotherapie-Seite | Sessel mit Bilderwand |
-| `praxis-bilderwand` | „Wo wir arbeiten", Coaching-Seite | Bilderwand mit Blumen |
+| `praxis-bilderwand` | Zitatband auf der Startseite, „Wo wir arbeiten" auf der Coaching-Seite | Bilderwand mit Blumen |
 | `praxis-wartebereich` | „Wohin Sie kommen", Kontaktseite | Wartebereich mit zwei Sesseln |
 | `portraet` | Über-mich-Seite | Porträtfoto |
 

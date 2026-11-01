@@ -674,9 +674,10 @@ hr {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Zeigt Sofa und Kissen. Weiter oben liegt nur helle Wand – der Streifen
-     wirkt dann ausgewaschen und der Text verliert an Halt. */
-  object-position: center 60%;
+  /* Zeigt die gerahmten Arbeiten und das Schattenspiel an der Wand. Weiter
+     oben ist der Streifen zu leer, weiter unten drängen die Hortensien ins
+     Bild und machen ihn unruhig. */
+  object-position: center 36%;
 }
 
 /* Abdunkelung, damit der Text auf jedem Bildausschnitt sicher lesbar bleibt */
