@@ -25,7 +25,7 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `404.html` | Fehlerseite |
 | `.htaccess` | HTTPS-Umleitung, Sicherheits-Header, Caching |
 | `robots.txt`, `sitemap.xml` | Für Suchmaschinen |
-| `werkzeuge/` | Hilfsskripte für Fotos, Navigation und Platzhalter |
+| `werkzeuge/` | Hilfsskripte für Fotos, Navigation, Platzhalter und Upload |
 | `assets/css/style.css` | Gesamtes Design |
 | `assets/css/fonts.css` | Einbindung der Schriften |
 | `assets/fonts/` | Nunito und Roboto als lokale Dateien |
@@ -312,28 +312,39 @@ Im GitHub-Repository oben links auf den Zweig
 
 ### 3.4 Hochladen
 
+Damit nicht versehentlich das Falsche auf den Server kommt, legt ein Skript
+den Upload-Ordner an:
+
+```
+python3 werkzeuge/paket-bauen.py
+```
+
+Daraus entsteht:
+
+```
+hochladen/1-zuerst/    alle Seiten, Bilder, Schriften
+hochladen/2-zuletzt/   nur die .htaccess
+hochladen/LIESMICH.txt eine Kurzfassung dieser Anleitung
+```
+
+`README.md`, `CLAUDE.md`, der Ordner `werkzeuge` und `.git` sind darin nicht
+enthalten – die gehören nicht ins Internet. Stehen noch Beispielwerte in den
+Seiten, warnt das Skript am Ende.
+
 Mit [FileZilla](https://filezilla-project.org) per **SFTP** verbinden
 (Zugangsdaten: IONOS → Hosting → SFTP/SSH) und in das Verzeichnis der Domain
 wechseln – je nach Paket `/`, `htdocs` oder der Domainname.
 
-Jetzt **alles außer `.htaccess`** hochladen:
-
-- alle `.html`-Dateien
-- `kontakt.php`
-- `robots.txt` und `sitemap.xml`
-- den kompletten Ordner `assets`
-
-**Nicht hochladen:** `README.md`, `CLAUDE.md`, den Ordner `werkzeuge` und den
-Ordner `.git`. Die gehören nicht ins Internet.
+Jetzt den **Inhalt** von `1-zuerst` hochladen, nicht den Ordner selbst.
 
 Solange die alte `.htaccess` noch liegt, ist weiterhin die alte Seite zu
 sehen. Die neuen Dateien liegen nur daneben.
 
 ### 3.5 Umschalten
 
-Jetzt die neue `.htaccess` hochladen. Ab diesem Moment ist die neue Seite
-online: Darin steht `DirectoryIndex index.html index.php`, und damit gewinnt
-`index.html` gegen die `index.php` der alten Installation.
+Jetzt die `.htaccess` aus `2-zuletzt` hochladen. Ab diesem Moment ist die
+neue Seite online: Darin steht `DirectoryIndex index.html index.php`, und
+damit gewinnt `index.html` gegen die `index.php` der alten Installation.
 
 > Die Datei `.htaccess` beginnt mit einem Punkt und wird von manchen
 > FTP-Programmen ausgeblendet. In FileZilla:

@@ -2,6 +2,10 @@
 # jederzeit neu baubar, gehört deshalb nicht ins Repository.
 vorschau.html
 
+# Wird von werkzeuge/paket-bauen.py erzeugt: eine Kopie der Seiten für den
+# Upload. Ebenfalls jederzeit neu baubar.
+hochladen/
+
 # Python legt beim Import von Skripten Zwischendateien an
 __pycache__/
 *.pyc
