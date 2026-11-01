@@ -161,9 +161,8 @@ bitte auch dieses `span` – dann wird die Prüfliste kürzer.
 | `psychotherapie.html` | Wartezeit Therapieplatz / Sprechstunde | 6 bzw. 2 Wochen |
 | `psychotherapie.html` | Erstgespräch, Einzelsitzung | je 110 € |
 | `psychotherapie.html` | Ausfallhonorar | 80 € |
-| `mental-health-coaching.html` | Erstgespräch, Sitzung | je 150 € |
-| `mental-health-coaching.html` | Doppelsitzung 100 Min | 280 € |
-| `mental-health-coaching.html` | Ausfallhonorar | 110 € |
+| `mental-health-coaching.html` | Doppelsitzung 100 Min | 340 €, aus den 180 € abgeleitet |
+| `mental-health-coaching.html` | Ausfallhonorar | 130 €, aus den 180 € abgeleitet |
 | `mental-health-coaching.html` | Umsatzsteuerhinweis | „inklusive“ |
 | `adhs-diagnostik.html` | Vorgespräch | 110 € |
 | `adhs-diagnostik.html` | Gesamtpaket, Umfang | 690 €, 3–4 Termine über 4 Wochen |
@@ -175,7 +174,12 @@ bitte auch dieses `span` – dann wird die Prüfliste kürzer.
 | `impressum.html` | Berufshaftpflichtversicherung | noch offen |
 | `impressum.html` | Bildnachweise | noch offen |
 
-Zwei Hinweise zu den Beträgen:
+Drei Hinweise zu den Beträgen:
+
+**Das Coaching-Honorar steht fest: 180 €** für das Erstgespräch und für jede
+Sitzung von 50 Minuten. Diese beiden Beträge sind bestätigt und daher nicht
+mehr als Beispielwert markiert. Doppelsitzung und Ausfallhonorar sind aus den
+180 € abgeleitet und noch zu bestätigen.
 
 **Die 110 € orientieren sich an der GOP.** Die Ziffer 870 für eine Einzelsitzung
 von 50 Minuten ergibt beim 2,3-fachen Satz rund 100 €. Für Selbstzahler sind
