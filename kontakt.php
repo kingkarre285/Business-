@@ -375,13 +375,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
       <div class="medien medien--gedreht">
         <div class="medien__bild">
-          <!-- Platzhalterbild. Eine eigene Aufnahme des Behandlungsraums wirkt
-               deutlich vertrauensbildender – Ratsuchende möchten sehen, wohin
-               sie kommen. -->
           <picture>
-            <source srcset="assets/img/raum.webp" type="image/webp">
-            <img src="assets/img/raum.jpg" width="1200" height="800" loading="lazy"
-                 alt="Heller Raum mit großen Fenstern und Pflanzen">
+            <source srcset="assets/img/praxis-wartebereich.webp" type="image/webp">
+            <img src="assets/img/praxis-wartebereich.jpg" width="1080" height="810" loading="lazy"
+                 alt="Wartebereich der Praxis: zwei Sessel mit heller Polsterung links und rechts eines kleinen Tisches mit Wasser und Gläsern, darüber ein großformatiges Blumenbild">
           </picture>
         </div>
         <div>
@@ -392,9 +389,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Grüneburgweg ist wenige Minuten entfernt.
           </p>
           <p>
-            Es gibt kein Wartezimmer im üblichen Sinne und keinen Publikumsverkehr.
-            Ich hole Sie zum vereinbarten Termin persönlich ab – Sie begegnen also
-            in aller Regel niemandem außer mir.
+            Im Wartebereich steht Wasser bereit. Weil ausschließlich nach
+            Vereinbarung gearbeitet wird, treffen Sie dort in aller Regel
+            niemanden – ich hole Sie zum vereinbarten Termin persönlich ab.
           </p>
         </div>
       </div>

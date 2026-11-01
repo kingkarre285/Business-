@@ -2,14 +2,16 @@
 """
 Tönt ein Schwarzweißbild in die warmen Farben der Website ein.
 
-Reines Schwarzweiß wirkt auf dem beigen Grund wie ein aufgesetzter weißer
-Kasten. Dieses Skript bildet die Graustufen stattdessen auf die Palette ab:
+Derzeit nutzt die Website nur Farbfotos; dieses Skript steht für den Fall
+bereit, dass später Schwarzweißmotive dazukommen. Reines Schwarzweiß wirkt
+auf dem beigen Grund wie ein aufgesetzter weißer Kasten. Das Skript bildet
+die Graustufen stattdessen auf die Palette ab:
 Schwarz wird zum dunklen Warmbraun, Weiß zum beigen Seitengrund.
 Das Bild fügt sich dadurch nahtlos ein.
 
 Aufruf im Projektordner:
 
-    python3 werkzeuge/bilder-toenen.py assets/img/baum-kopf.jpg
+    python3 werkzeuge/bilder-toenen.py assets/img/mein-schwarzweissbild.jpg
 
 Die Datei wird ersetzt; die zugehörige .webp wird mit erzeugt. Sinnvoll nur
 für Schwarzweißaufnahmen – Farbfotos verlieren dabei ihre Farben.

@@ -31,7 +31,7 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 | `assets/fonts/` | Nunito und Roboto als lokale Dateien |
 | `assets/js/main.js` | Mobiles Menü (die Seite funktioniert auch ohne JavaScript) |
 | `assets/img/favicon.svg` | Symbol im Browser-Tab |
-| `assets/img/*.jpg` / `*.webp` | Bilder – derzeit Platzhalter, siehe Abschnitt 2 |
+| `assets/img/*.jpg` / `*.webp` | Fotos der Praxis, siehe Abschnitt 2 |
 
 ## 1a. Aufbau und Gewichtung
 
@@ -198,28 +198,53 @@ Weitere offene Punkte:
 
 ### Bilder austauschen
 
-Die vier Bilder sind **Platzhalter** von der alten Website. Zum Austauschen
-einfach die Dateien in `assets/img/` überschreiben – die Dateinamen müssen
-gleich bleiben, dann muss am HTML nichts geändert werden.
+Es sind **echte Fotos der Praxis** eingebunden. Zum Austauschen die Dateien
+in `assets/img/` überschreiben – die Dateinamen müssen gleich bleiben, dann
+muss am HTML nichts geändert werden.
 
-| Datei | Wo sie erscheint | Empfohlene Größe |
+| Datei | Wo sie erscheint | Motiv |
 |---|---|---|
-| `baum-kopf.jpg` | Startseite, neben der Hauptüberschrift | quadratisch, ab 900 × 900 px |
-| `hero-meer.jpg` | Zitatband auf der Startseite | quer, ab 1800 × 1000 px |
-| `raum.jpg` | „Wohin Sie kommen", Kontaktseite | quer, ab 1400 × 950 px |
-| `portraet.jpg` | Über-mich-Seite | hoch, ab 800 × 1000 px |
+| `praxis-sofa` | Startseite, neben der Hauptüberschrift | Sofa mit Bild und Pflanze |
+| `praxis-licht` | Zitatband auf der Startseite | Fenster mit Lichteinfall |
+| `praxis-sessel` | „Ein Raum, der trägt", Psychotherapie-Seite | Sessel mit Bilderwand |
+| `praxis-bilderwand` | „Wo wir arbeiten", Coaching-Seite | Bilderwand mit Blumen |
+| `praxis-wartebereich` | „Wohin Sie kommen", Kontaktseite | Wartebereich mit zwei Sesseln |
+| `portraet` | Über-mich-Seite | Porträtfoto |
 
-Zu jeder `.jpg` gehört eine gleichnamige `.webp`. Moderne Browser laden die
-WebP-Fassung, weil sie kleiner ist. Wenn Sie nur die JPEG austauschen, zeigen
-diese Browser weiterhin das alte Bild – löschen Sie in dem Fall die zugehörige
-`.webp`, dann greifen alle auf die JPEG zurück.
+**Am einfachsten geht es mit dem Skript** – es schneidet zu, verkleinert und
+legt beide Dateiformate an:
 
-Am einfachsten: Schicken Sie mir die neuen Fotos, dann schneide ich sie zu,
-verkleinere sie und lege beide Formate an. Alternativ erledigt das Skript
-`werkzeuge/bilder-aufbereiten.py` die Umrechnung.
+```
+python3 werkzeuge/bilder-aufbereiten.py praxis-sofa ~/Bilder/neues-foto.jpg
+```
 
-Die Bildbeschreibungen für Screenreader (`alt`-Texte) beschreiben die
-jetzigen Motive und müssen beim Austausch mit angepasst werden.
+Die Zielmaße und die Ausschnittlage jedes Bildplatzes stehen oben im Skript
+in `BILDPLAETZE`. Die Lage bestimmt, welcher Teil eines Hochformats erhalten
+bleibt: `0.0` oben, `0.5` mittig, `1.0` unten.
+
+Zu jeder `.jpg` gehört eine gleichnamige `.webp`; moderne Browser laden die
+kleinere WebP-Fassung. Wenn Sie eine Datei von Hand austauschen, denken Sie
+an beide – sonst zeigen manche Browser weiterhin das alte Bild.
+
+Die Bildbeschreibungen für Screenreader (`alt`-Texte) im HTML beschreiben die
+jetzigen Motive und müssen beim Austausch mitgeändert werden.
+
+**Noch offen:** Das Porträtfoto stammt von der alten Website und liegt nur in
+356 × 399 px vor. Auf modernen Bildschirmen wirkt es dadurch etwas weich –
+falls die Originaldatei der Fotografin existiert, lohnt sich der Austausch.
+Außerdem gehören die Bildnachweise ins Impressum.
+
+### Die Seite vorab ansehen
+
+```
+python3 werkzeuge/vorschau-bauen.py
+```
+
+Das bündelt alle Seiten samt Schriften und Bildern in eine einzelne Datei
+`vorschau.html`, die sich per Doppelklick öffnen und weitergeben lässt –
+ohne Webserver und ohne die Seite online zu stellen. Oben schaltet eine
+Leiste zwischen den Seiten um; ein Hinweisstreifen weist die Datei als
+Entwurf aus.
 
 ## 3. Auf IONOS hochladen
 

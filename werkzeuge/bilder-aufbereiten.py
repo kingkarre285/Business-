@@ -7,7 +7,7 @@ verkleinert es und legt es zweifach ab: als JPEG und als kleineres WebP.
 
 Aufruf:
 
-    python3 werkzeuge/bilder-aufbereiten.py portraet ~/Bilder/mein-foto.jpg
+    python3 werkzeuge/bilder-aufbereiten.py praxis-sofa ~/Bilder/mein-foto.jpg
 
 Der erste Wert ist der Bildplatz (siehe Tabelle unten), der zweite der Pfad
 zum eigenen Foto. Die fertigen Dateien landen in assets/img/.
@@ -17,7 +17,7 @@ Alle Bildplätze auf einmal ersetzen:
     python3 werkzeuge/bilder-aufbereiten.py --alle ordner-mit-fotos/
 
 Dazu müssen die Fotos in diesem Ordner so heißen wie die Bildplätze,
-also portraet.jpg, raum.jpg und so weiter.
+also portraet.jpg, praxis-sofa.jpg und so weiter.
 
 Voraussetzung ist die Bibliothek Pillow:
 
@@ -33,12 +33,18 @@ except ImportError:
     sys.exit('Die Bibliothek Pillow fehlt. Bitte zuerst installieren:\n\n'
              '    pip install Pillow\n')
 
-# Bildplatz: (Breite, Höhe, JPEG-Qualität)
+# Bildplatz: (Breite, Höhe, JPEG-Qualität, Ausschnittlage)
+#
+# Die Ausschnittlage bestimmt, welcher Teil eines zu hohen oder zu breiten
+# Fotos erhalten bleibt: 0.0 ganz oben beziehungsweise links, 0.5 mittig,
+# 1.0 ganz unten beziehungsweise rechts.
 BILDPLAETZE = {
-    'baum-kopf': (900, 900, 86),    # Startseite, neben der Hauptüberschrift
-    'hero-meer': (1800, 1000, 82),  # Zitatband auf der Startseite
-    'raum':      (1400, 950, 82),   # "Wohin Sie kommen", Ablauf-Seite
-    'portraet':  (800, 1000, 88),   # Über-mich-Seite
+    'praxis-sofa':         (1080, 1080, 86, 0.50),  # Startseite, neben der Hauptüberschrift
+    'praxis-licht':        (1080, 810, 84, 0.45),   # Zitatband auf der Startseite
+    'praxis-sessel':       (1080, 810, 86, 0.40),   # Psychotherapie-Seite
+    'praxis-bilderwand':   (1080, 810, 86, 0.45),   # Coaching-Seite
+    'praxis-wartebereich': (1080, 810, 86, 0.58),   # "Wohin Sie kommen", Kontaktseite
+    'portraet':            (800, 1000, 88, 0.50),   # Über-mich-Seite
 }
 
 ZIELORDNER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -54,7 +60,7 @@ def aufbereiten(bildplatz: str, quelldatei: str) -> None:
     if not os.path.exists(quelldatei):
         sys.exit(f'Datei nicht gefunden: {quelldatei}')
 
-    breite, hoehe, qualitaet = BILDPLAETZE[bildplatz]
+    breite, hoehe, qualitaet, lage = BILDPLAETZE[bildplatz]
     bild = Image.open(quelldatei)
 
     # Drehung aus den EXIF-Daten anwenden, sonst liegen Handyfotos quer
@@ -76,16 +82,17 @@ def aufbereiten(bildplatz: str, quelldatei: str) -> None:
               f'als empfohlen. Es wird auf {breite} × {hoehe} px zugeschnitten '
               f'statt hochgerechnet – hochrechnen würde es nur unscharf machen.')
 
-    # Mittig auf das Zielverhältnis beschneiden
+    # Auf das Zielverhältnis beschneiden – wo der Ausschnitt sitzt, bestimmt
+    # die Lage aus BILDPLAETZE.
     ziel = breite / hoehe
     ist = bild.width / bild.height
     if ist > ziel:
         neue_breite = int(bild.height * ziel)
-        links = (bild.width - neue_breite) // 2
+        links = round((bild.width - neue_breite) * lage)
         bild = bild.crop((links, 0, links + neue_breite, bild.height))
     else:
         neue_hoehe = int(bild.width / ziel)
-        oben = (bild.height - neue_hoehe) // 2
+        oben = round((bild.height - neue_hoehe) * lage)
         bild = bild.crop((0, oben, bild.width, oben + neue_hoehe))
 
     bild = bild.resize((breite, hoehe), Image.LANCZOS)
@@ -107,8 +114,8 @@ def main() -> None:
     if not argumente or argumente[0] in ('-h', '--hilfe', '--help'):
         print(__doc__)
         print('Bildplätze:\n')
-        for name, (b, h, _) in BILDPLAETZE.items():
-            print(f'  {name:12} {b} × {h} px')
+        for name, (b, h, _, _lage) in BILDPLAETZE.items():
+            print(f'  {name:20} {b} × {h} px')
         return
 
     if argumente[0] == '--alle':

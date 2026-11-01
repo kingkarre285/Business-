@@ -644,9 +644,9 @@ hr {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Der untere Bildbereich mit den Felsen ist strukturreicher als der
-     gleichmäßige Horizont und trägt den Ausschnitt besser. */
-  object-position: center 72%;
+  /* Zeigt den oberen Bildbereich mit Fenster und Lichteinfall; weiter unten
+     füllt das Sofa den schmalen Streifen zu unruhig. */
+  object-position: center 28%;
 }
 
 /* Abdunkelung, damit der Text auf jedem Bildausschnitt sicher lesbar bleibt */

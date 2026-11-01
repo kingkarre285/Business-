@@ -17,8 +17,14 @@ Grundfarbe der Seite ist ein **Beige, kein Weiß** (`#f4ebdd`). Dazu dunkles
 Warmbraun und ein sandfarbener Akzent. Alle Farben stehen im Block `:root` in
 `assets/css/style.css`.
 
-Schwarzweißbilder werden mit `werkzeuge/bilder-toenen.py` in dieselbe Palette
-getönt, damit sie auf dem Beige nicht als weiße Kästen auffallen.
+Eingebunden sind echte Fotos der Praxis. Neue Bilder mit
+`werkzeuge/bilder-aufbereiten.py` auf die Zielmaße bringen; die Bildplätze
+stehen oben im Skript. Für etwaige Schwarzweißmotive gibt es
+`werkzeuge/bilder-toenen.py`, damit sie auf dem Beige nicht als weiße Kästen
+auffallen.
+
+Mit `werkzeuge/vorschau-bauen.py` entsteht eine einzelne `vorschau.html` zum
+Durchklicken – praktisch, um dem Nutzer den Stand zu zeigen.
 
 Grundregel für dieses Projekt: **keine externen Ressourcen** – keine Schriften,
 Karten, Skripte oder Trackingdienste von fremden Servern. Nur so bleibt die
