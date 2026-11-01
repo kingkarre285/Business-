@@ -1,3 +1,7 @@
 # Wird von werkzeuge/vorschau-bauen.py erzeugt und ist rund 1 MB groß –
 # jederzeit neu baubar, gehört deshalb nicht ins Repository.
 vorschau.html
+
+# Python legt beim Import von Skripten Zwischendateien an
+__pycache__/
+*.pyc
