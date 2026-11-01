@@ -26,7 +26,8 @@ $mindestzeit = 3;
 /* --- Verarbeitung --------------------------------------------------------- */
 
 $fehler   = [];
-$werte    = ['name' => '', 'email' => '', 'telefon' => '', 'erreichbar' => '', 'anliegen' => ''];
+$werte    = ['name' => '', 'email' => '', 'telefon' => '', 'erreichbar' => '',
+             'abrechnung' => '', 'anliegen' => ''];
 $gesendet = isset($_GET['status']) && $_GET['status'] === 'ok';
 
 /**
@@ -48,6 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     foreach ($werte as $feld => $_) {
         $werte[$feld] = isset($_POST[$feld]) ? trim((string) $_POST[$feld]) : '';
+    }
+
+    // Nur die angebotenen Auswahlwerte zulassen
+    $abrechnungswege = ['privat', 'beihilfe', 'selbstzahlend', 'gesetzlich', 'unklar'];
+    if (!in_array($werte['abrechnung'], $abrechnungswege, true)) {
+        $werte['abrechnung'] = '';
     }
 
     $honeypot   = isset($_POST['website']) ? trim((string) $_POST['website']) : '';
@@ -95,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               . "Name:        " . $werte['name'] . "\n"
               . "E-Mail:      " . ($werte['email'] !== '' ? $werte['email'] : '– nicht angegeben –') . "\n"
               . "Telefon:     " . ($werte['telefon'] !== '' ? $werte['telefon'] : '– nicht angegeben –') . "\n"
-              . "Erreichbar:  " . ($werte['erreichbar'] !== '' ? $werte['erreichbar'] : '– keine Angabe –') . "\n\n"
+              . "Erreichbar:  " . ($werte['erreichbar'] !== '' ? $werte['erreichbar'] : '– keine Angabe –') . "\n"
+              . "Abrechnung:  " . ($werte['abrechnung'] !== '' ? $werte['abrechnung'] : '– keine Angabe –') . "\n\n"
               . "Anliegen:\n"
               . str_repeat('-', 40) . "\n"
               . $werte['anliegen'] . "\n"
@@ -264,6 +272,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </label>
                 <input type="text" id="erreichbar" name="erreichbar"
                        value="<?= h($werte['erreichbar']) ?>">
+              </div>
+
+              <div class="form__row">
+                <label for="abrechnung">
+                  Wie möchten Sie die Behandlung abrechnen?
+                  <span class="label-hint">
+                    Freiwillig – hilft mir, Ihnen gleich einen passenden Termin
+                    vorzuschlagen. Privat, beihilfeberechtigt und selbstzahlend
+                    kann ich kurzfristiger anbieten.
+                  </span>
+                </label>
+                <select id="abrechnung" name="abrechnung">
+                  <option value="">Bitte auswählen</option>
+                  <option value="privat"<?= $werte['abrechnung'] === 'privat' ? ' selected' : '' ?>>Private Krankenversicherung</option>
+                  <option value="beihilfe"<?= $werte['abrechnung'] === 'beihilfe' ? ' selected' : '' ?>>Beihilfe</option>
+                  <option value="selbstzahlend"<?= $werte['abrechnung'] === 'selbstzahlend' ? ' selected' : '' ?>>Selbstzahlerin / Selbstzahler</option>
+                  <option value="gesetzlich"<?= $werte['abrechnung'] === 'gesetzlich' ? ' selected' : '' ?>>Gesetzliche Krankenkasse</option>
+                  <option value="unklar"<?= $werte['abrechnung'] === 'unklar' ? ' selected' : '' ?>>Noch unklar</option>
+                </select>
               </div>
 
               <div class="form__row">
