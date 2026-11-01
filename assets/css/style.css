@@ -1149,6 +1149,14 @@ textarea:focus {
   outline-offset: 1px;
 }
 
+/* Feld, das der Server beanstandet hat – passend zur Meldung oben */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: #a8452c;
+  background: #fdf6f3;
+}
+
 .form__consent {
   display: flex;
   gap: var(--sp-3);

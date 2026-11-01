@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $werte[$feld] = isset($_POST[$feld]) ? trim((string) $_POST[$feld]) : '';
     }
 
-    // Nur die angebotenen Auswahlwerte zulassen
+    // Nur die angebotenen Auswahlwerte zulassen. Alles andere wird verworfen und
+    // gilt damit als "nicht ausgewählt" – die Pflichtprüfung weiter unten greift.
     $abrechnungswege = ['privat', 'beihilfe', 'selbstzahlend', 'gesetzlich', 'unklar'];
     if (!in_array($werte['abrechnung'], $abrechnungswege, true)) {
         $werte['abrechnung'] = '';
@@ -73,6 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fehler['email'] = 'Bitte hinterlassen Sie eine E-Mail-Adresse oder eine Telefonnummer, damit ich Sie erreichen kann.';
     } elseif ($werte['email'] !== '' && !filter_var($werte['email'], FILTER_VALIDATE_EMAIL)) {
         $fehler['email'] = 'Diese E-Mail-Adresse scheint nicht zu stimmen.';
+    }
+
+    if ($werte['abrechnung'] === '') {
+        $fehler['abrechnung'] = 'Bitte wählen Sie aus, wie Sie die Behandlung abrechnen möchten. Wenn Sie es noch nicht wissen, genügt „Noch unklar“.';
     }
 
     if ($werte['anliegen'] === '' || mb_strlen($werte['anliegen']) < 10) {
@@ -276,14 +281,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
               <div class="form__row">
                 <label for="abrechnung">
-                  Wie möchten Sie die Behandlung abrechnen?
+                  Wie möchten Sie die Behandlung abrechnen? <span aria-hidden="true">*</span><span class="visually-hidden">(Pflichtfeld)</span>
                   <span class="label-hint">
-                    Freiwillig – hilft mir, Ihnen gleich einen passenden Termin
-                    vorzuschlagen. Privat, beihilfeberechtigt und selbstzahlend
-                    kann ich kurzfristiger anbieten.
+                    So kann ich Ihnen gleich einen passenden Termin vorschlagen.
+                    Privat, beihilfeberechtigt und selbstzahlend kann ich
+                    kurzfristiger anbieten. Wenn Sie es noch nicht wissen,
+                    wählen Sie bitte „Noch unklar“.
                   </span>
                 </label>
-                <select id="abrechnung" name="abrechnung">
+                <select id="abrechnung" name="abrechnung" required
+                        <?= isset($fehler['abrechnung']) ? 'aria-invalid="true"' : '' ?>>
                   <option value="">Bitte auswählen</option>
                   <option value="privat"<?= $werte['abrechnung'] === 'privat' ? ' selected' : '' ?>>Private Krankenversicherung</option>
                   <option value="beihilfe"<?= $werte['abrechnung'] === 'beihilfe' ? ' selected' : '' ?>>Beihilfe</option>
