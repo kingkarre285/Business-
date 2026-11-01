@@ -273,26 +273,102 @@ ohne Webserver und ohne die Seite online zu stellen. Oben schaltet eine
 Leiste zwischen den Seiten um; ein Hinweisstreifen weist die Datei als
 Entwurf aus.
 
-## 3. Auf IONOS hochladen
+## 3. Die alte Seite auf IONOS ablösen
 
-1. Im IONOS-Kundenkonto unter **Hosting → SFTP/SSH** die Zugangsdaten ansehen
-   (Server, Benutzername, Passwort).
-2. Ein FTP-Programm installieren, zum Beispiel [FileZilla](https://filezilla-project.org)
-   (kostenlos).
-3. Verbinden – bitte **SFTP** wählen, nicht das unverschlüsselte FTP.
-4. Auf dem Server in das Verzeichnis Ihrer Domain wechseln. Es heißt je nach
-   Paket `/` oder `htdocs` oder trägt den Namen der Domain.
-5. Hochladen: alle `.html`-Dateien, `kontakt.php`, `.htaccess`, `robots.txt`,
-   `sitemap.xml` und den kompletten Ordner `assets`.
+Auf der Domain läuft bisher eine andere Website. Der Umstieg ist so
+aufgebaut, dass er in **einem Moment** passiert und sich mit **einer einzigen
+Datei zurücknehmen** lässt, falls etwas nicht stimmt.
 
-   **Nicht hochladen:** `README.md` und den Ordner `.git` – die gehören nicht
-   ins Internet. (Die `.htaccess` sperrt sie zur Sicherheit zusätzlich.)
+### 3.1 Vorher erledigen
 
-6. In den IONOS-Einstellungen prüfen, dass **PHP 8.x** aktiv ist.
-7. Website aufrufen und das Formular einmal selbst testen.
+- Die Checkliste aus Abschnitt 2 abarbeiten. Vor allem: keine Beispielwerte
+  mehr bei Honoraren und Sprechzeiten.
+- **SSL-Zertifikat aktivieren**, falls noch nicht geschehen. Die `.htaccess`
+  erzwingt HTTPS – ohne Zertifikat ist die Seite danach nicht erreichbar.
+- **PHP 8.x** einstellen (IONOS: Hosting → PHP-Einstellungen).
+- Das Absenderpostfach anlegen (Abschnitt 4).
+- Prüfen, ob es sich um ein **Managed-WordPress-Paket** handelt. Dort lässt
+  sich nicht einfach eigenes HTML ablegen; das Paket muss dann erst auf
+  normales Webhosting umgestellt werden. Beim gewöhnlichen Webhosting-Paket
+  mit SFTP-Zugang ist alles in Ordnung.
 
-> Die Datei `.htaccess` beginnt mit einem Punkt und wird von manchen FTP-Programmen
-> ausgeblendet. In FileZilla: *Server → Versteckte Dateien anzeigen erzwingen*.
+### 3.2 Die Dateien holen
+
+Im GitHub-Repository oben links auf den Zweig
+`claude/psychotherapy-practice-homepage-7ozcxi` umschalten, dann
+**Code → Download ZIP**. Das Archiv entpacken.
+
+### 3.3 Die alte Seite sichern
+
+**Nicht überspringen.** Auch wenn alles gut geht, ist das die Rückfahrkarte.
+
+1. Im FTP-Programm den **gesamten bisherigen Inhalt** des Domainverzeichnisses
+   herunterladen und beiseitelegen.
+2. Falls eine Datenbank dazugehört (bei WordPress immer): im IONOS-Konto unter
+   **Datenbanken → phpMyAdmin** die Datenbank exportieren und die Datei
+   ebenfalls aufheben.
+3. Die bisherige `.htaccess` getrennt aufbewahren – die wird gleich
+   überschrieben und ist der schnellste Rückweg.
+
+### 3.4 Hochladen
+
+Mit [FileZilla](https://filezilla-project.org) per **SFTP** verbinden
+(Zugangsdaten: IONOS → Hosting → SFTP/SSH) und in das Verzeichnis der Domain
+wechseln – je nach Paket `/`, `htdocs` oder der Domainname.
+
+Jetzt **alles außer `.htaccess`** hochladen:
+
+- alle `.html`-Dateien
+- `kontakt.php`
+- `robots.txt` und `sitemap.xml`
+- den kompletten Ordner `assets`
+
+**Nicht hochladen:** `README.md`, `CLAUDE.md`, den Ordner `werkzeuge` und den
+Ordner `.git`. Die gehören nicht ins Internet.
+
+Solange die alte `.htaccess` noch liegt, ist weiterhin die alte Seite zu
+sehen. Die neuen Dateien liegen nur daneben.
+
+### 3.5 Umschalten
+
+Jetzt die neue `.htaccess` hochladen. Ab diesem Moment ist die neue Seite
+online: Darin steht `DirectoryIndex index.html index.php`, und damit gewinnt
+`index.html` gegen die `index.php` der alten Installation.
+
+> Die Datei `.htaccess` beginnt mit einem Punkt und wird von manchen
+> FTP-Programmen ausgeblendet. In FileZilla:
+> *Server → Versteckte Dateien anzeigen erzwingen*.
+
+### 3.6 Prüfen
+
+- Startseite aufrufen – kommt die neue Seite?
+- Adresse ohne `www` eingeben: leitet sie auf `www` um?
+- `http://` eingeben: springt sie auf `https://`?
+- Jede Seite über das Menü einmal anklicken.
+- Das **Kontaktformular abschicken** und nachsehen, ob die E-Mail ankommt.
+- Eine alte Adresse testen, etwa `/kontakt/` – sie muss auf `kontakt.php`
+  weiterleiten.
+- Eine erfundene Adresse eingeben, etwa `/gibtsnicht` – es muss die eigene
+  404-Seite kommen.
+
+### 3.7 Falls etwas nicht stimmt
+
+Die alte `.htaccess` wieder hochladen. Die alte Seite ist sofort zurück, denn
+deren Dateien liegen ja noch alle da.
+
+### 3.8 Aufräumen – erst nach ein paar Wochen
+
+Die alten Dateien stören nicht, sie sind nur nicht mehr erreichbar. Wenn die
+neue Seite eine Weile stabil läuft:
+
+- Die Dateien der alten Installation löschen (bei WordPress: `wp-admin`,
+  `wp-includes`, `wp-content`, `wp-config.php`, `index.php`, `xmlrpc.php`
+  und was sonst nicht zur neuen Seite gehört).
+- Die alte Datenbank löschen – der Export liegt ja gesichert.
+
+Danach die Sitemap in der **Google Search Console** neu einreichen
+(`https://www.holm-psychotherapie.de/sitemap.xml`), damit Google die neuen
+Adressen zügig aufnimmt.
 
 ---
 
