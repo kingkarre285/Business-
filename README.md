@@ -208,8 +208,9 @@ muss am HTML nichts geändert werden.
 
 | Datei | Wo sie erscheint | Motiv |
 |---|---|---|
+| `banner` | Banner oben auf der Startseite | Vorhang, Wand und Sofalehne |
 | `praxis-sofa` | Zitatband auf der Startseite | Sofa mit Bild und Pflanze |
-| `praxis-licht` | Banner oben auf der Startseite | Fenster mit Lichteinfall |
+| `praxis-licht` | zurzeit nirgends – Quelle für `banner` | Fenster mit Lichteinfall |
 | `praxis-sessel` | „Ein Raum, der trägt", Psychotherapie-Seite | Sessel mit Bilderwand |
 | `praxis-bilderwand` | „Wo wir arbeiten", Coaching-Seite | Bilderwand mit Blumen |
 | `praxis-wartebereich` | „Wohin Sie kommen", Kontaktseite | Wartebereich mit zwei Sesseln |
@@ -233,10 +234,28 @@ an beide – sonst zeigen manche Browser weiterhin das alte Bild.
 Die Bildbeschreibungen für Screenreader (`alt`-Texte) im HTML beschreiben die
 jetzigen Motive und müssen beim Austausch mitgeändert werden.
 
-**Noch offen:** Das Porträtfoto stammt von der alten Website und liegt nur in
-356 × 399 px vor. Auf modernen Bildschirmen wirkt es dadurch etwas weich –
-falls die Originaldatei der Fotografin existiert, lohnt sich der Austausch.
-Außerdem gehören die Bildnachweise ins Impressum.
+**Noch offen – das Bannerbild.** Der Platz `banner` ist auf 2400 × 900 px
+ausgelegt, weil das Band über die ganze Bildschirmbreite läuft. Das jetzige
+Bild ist aus `praxis-licht.jpg` entstanden und hat nur 1080 × 405 px, weil
+die Vorlage nicht größer vorliegt. Auf einem breiten Monitor rechnet der
+Browser es hoch, es wirkt dort etwas weich. Die Abdunkelung kaschiert das
+weitgehend, aber mit der Originaldatei der Fotografin wird es deutlich
+besser:
+
+```
+python3 werkzeuge/bilder-aufbereiten.py banner ~/Bilder/original.jpg
+```
+
+Ein Querformat mit ruhiger Fläche auf der rechten Seite eignet sich am
+besten – links liegt die Überschrift darüber.
+
+`praxis-licht.jpg` bleibt im Ordner, obwohl es gerade auf keiner Seite
+erscheint: Es ist die Vorlage für das Bannerbild.
+
+**Noch offen – das Porträtfoto.** Es stammt von der alten Website und liegt
+nur in 356 × 399 px vor. Auf modernen Bildschirmen wirkt es dadurch etwas
+weich – falls die Originaldatei der Fotografin existiert, lohnt sich der
+Austausch. Außerdem gehören die Bildnachweise ins Impressum.
 
 ### Die Seite vorab ansehen
 

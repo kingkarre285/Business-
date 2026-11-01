@@ -533,20 +533,6 @@ hr {
 
 .btn--light:hover { background-color: var(--c-akzent); color: var(--c-heading); }
 
-/* Zweite, zurückhaltende Schaltfläche auf dunklem Grund – das Gegenstück
-   zu .btn--ghost auf hellem Grund. */
-.btn--umriss {
-  background-color: transparent;
-  border-color: rgba(255, 255, 255, 0.55);
-  color: #fff;
-}
-
-.btn--umriss:hover {
-  background-color: #fff;
-  border-color: #fff;
-  color: var(--c-heading);
-}
-
 .btn-row {
   display: flex;
   flex-wrap: wrap;
@@ -556,20 +542,23 @@ hr {
 
 /* --- 6. Banner ----------------------------------------------------------- */
 
-/* Vollbreites Auftaktband, zweigeteilt: links das Foto, rechts eine ruhige
-   dunkle Fläche mit der Überschrift. Schrift auf Farbe statt Schrift auf
-   Foto – das liest sich klarer, bleibt bei jedem Bildausschnitt lesbar und
-   zeigt das Foto unangetastet.
-
-   Nebeneffekt: Die Bildhälfte ist nie breiter als etwa 1000 Pixel. Die
-   Fotos haben 1080 Pixel Breite und werden also verkleinert statt
-   hochgerechnet – sie bleiben scharf. */
+/* Vollbreites Auftaktband über die ganze Seite: das Foto läuft von Rand zu
+   Rand, die Überschrift steht darauf. */
 .banner {
+  position: relative;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: clamp(24rem, 42vw, 34rem);
+  align-items: center;
+  min-height: clamp(25rem, 40vw, 34rem);
+  padding-block: var(--sp-8);
+  color: #fff;
+  /* Rückfall, falls das Bild nicht geladen werden kann */
   background-color: var(--c-bg-deep);
-  color: var(--c-text-invert);
+}
+
+.banner__bild {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 /* picture ist standardmäßig inline und hat keine eigene Höhe – ohne diese
@@ -585,22 +574,33 @@ hr {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Zeigt Fenster, Vorhang und die Lehne des Sofas; weiter oben wird der
-     Ausschnitt zu leer, weiter unten zu unruhig. */
-  object-position: center 55%;
+  /* Zeigt Vorhang, Wand und die Lehne des Sofas. */
+  object-position: center 52%;
 }
 
-/* Der Text endet bündig mit dem Inhaltsraster der übrigen Abschnitte:
-   außen so viel Abstand, wie der Container auf dieser Breite frei lässt. */
-.banner__inhalt {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-block: var(--sp-7);
-  padding-inline:
-    clamp(var(--sp-5), 4vw, var(--sp-7))
-    max(var(--sp-5), calc((100vw - var(--maxw)) / 2));
+/* Der Verlauf trägt links die Schrift und lässt das Foto nach rechts hin
+   frei. Wo Text liegt, deckt er mindestens 80 Prozent ab – damit bleibt
+   Weiß auch über den hellsten Stellen des Fotos sicher lesbar (dort rund
+   8,7:1, gefordert sind 4,5:1). */
+.banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(100deg,
+              rgba(43, 37, 30, 0.93) 0%,
+              rgba(43, 37, 30, 0.90) 40%,
+              rgba(43, 37, 30, 0.58) 70%,
+              rgba(43, 37, 30, 0.22) 100%);
 }
+
+/* Der Inhalt liegt über Bild und Verlauf */
+.banner > .container {
+  position: relative;
+  z-index: 2;
+}
+
+.banner__inhalt { max-width: 34rem; }
 
 .banner__inhalt > :last-child { margin-bottom: 0; }
 
@@ -610,7 +610,6 @@ hr {
 .banner h1 {
   position: relative;
   color: #fff;
-  font-size: clamp(2rem, 3.1vw, 2.75rem);
   margin-bottom: var(--sp-5);
   padding-bottom: var(--sp-5);
 }
@@ -620,8 +619,8 @@ hr {
   position: absolute;
   left: 0;
   bottom: 0;
-  width: 10rem;
-  max-width: 55%;
+  width: 13.5rem;
+  max-width: 60%;
   height: 3px;
   background-color: var(--c-akzent);
 }
@@ -630,20 +629,18 @@ hr {
 
 .banner :focus-visible { outline-color: var(--c-akzent); }
 
-/* Schmale Fenster: Foto oben, Text darunter */
+/* Schmale Fenster: Der Text nimmt die ganze Breite ein, deshalb deckt der
+   Verlauf hier gleichmäßig ab statt von links nach rechts. */
 @media (max-width: 56rem) {
   .banner {
-    grid-template-columns: 1fr;
     min-height: 0;
+    padding-block: var(--sp-7);
   }
 
-  .banner__bild img {
-    height: auto;
-    aspect-ratio: 16 / 9;
-  }
-
-  .banner__inhalt {
-    padding: var(--sp-7) var(--sp-5);
+  .banner::after {
+    background: linear-gradient(180deg,
+                rgba(43, 37, 30, 0.76) 0%,
+                rgba(43, 37, 30, 0.88) 100%);
   }
 }
 

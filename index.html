@@ -77,29 +77,33 @@
 
 <main id="inhalt">
   <!-- ================= Banner =================
-       Vollbreites Auftaktband: links das Foto, rechts die Überschrift auf
-       dunklem Grund. Das Bild steht als eigenes Element im Quelltext statt
-       als CSS-Hintergrund – so lädt der Browser es früh und kann die
-       kleinere WebP-Fassung wählen. -->
+       Vollbreites Auftaktband über die ganze Seite. Das Bild steht als
+       eigenes Element im Quelltext statt als CSS-Hintergrund – so lädt der
+       Browser es früh und kann die kleinere WebP-Fassung wählen.
+
+       Das Motiv liegt unter assets/img/banner.jpg. Ein neues Bild dafür mit
+       werkzeuge/bilder-aufbereiten.py auf den Platz "banner" bringen. -->
   <section class="banner">
     <div class="banner__bild">
       <picture>
-        <source srcset="assets/img/praxis-licht.webp" type="image/webp">
-        <img src="assets/img/praxis-licht.jpg" width="1080" height="810" fetchpriority="high"
+        <source srcset="assets/img/banner.webp" type="image/webp">
+        <img src="assets/img/banner.jpg" width="1080" height="405" fetchpriority="high"
              alt="Behandlungsraum der Praxis: Sonnenlicht fällt durch einen hellen Vorhang auf eine cremefarbene Wand und ein dunkelblaues Sofa mit einem terrakottafarbenen Kissen">
       </picture>
     </div>
 
-    <div class="banner__inhalt">
-      <span class="eyebrow">Praxis für Psychotherapie in Frankfurt am Main</span>
-      <h1>Verstehen, was unter der Oberfläche wirkt.</h1>
-      <p class="lead">
-        Manche Belastungen lassen sich nicht wegargumentieren. Sie haben eine
-        Geschichte – und oft einen guten Grund. Wir gehen ihr gemeinsam nach,
-        in Ihrem Tempo und in einem geschützten Rahmen.
-      </p>
-      <div class="btn-row">
-        <a class="btn btn--light" href="kontakt.php">Erstgespräch anfragen</a>
+    <div class="container">
+      <div class="banner__inhalt">
+        <span class="eyebrow">Praxis für Psychotherapie in Frankfurt am Main</span>
+        <h1>Verstehen, was unter der Oberfläche wirkt.</h1>
+        <p class="lead">
+          Manche Belastungen lassen sich nicht wegargumentieren. Sie haben eine
+          Geschichte – und oft einen guten Grund. Wir gehen ihr gemeinsam nach,
+          in Ihrem Tempo und in einem geschützten Rahmen.
+        </p>
+        <div class="btn-row">
+          <a class="btn btn--light" href="kontakt.php">Erstgespräch anfragen</a>
+        </div>
       </div>
     </div>
   </section>
