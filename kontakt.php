@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <h2 style="font-size: 1.1875rem; margin-bottom: 0.5rem;">Ihre Anfrage ist angekommen.</h2>
               <p>
                 Vielen Dank für Ihr Vertrauen. Ich melde mich in der Regel
-                innerhalb von <strong>drei Werktagen</strong> bei Ihnen.
+                innerhalb weniger Werktage bei Ihnen.
               </p>
               <p class="mb-0">
                 Sollten Sie in der Zwischenzeit dringend Unterstützung brauchen,
@@ -372,24 +372,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <dt>Telefon</dt>
               <dd><a href="tel:+491716581464">0171 6581464</a></dd>
 
-              <dt>Telefonzeit</dt>
-              <dd><span class="platzhalter">Dienstag und Donnerstag<br>12:00–13:00 Uhr</span></dd>
-
               <dt>E-Mail</dt>
               <dd><a href="mailto:kontakt@holm-psychotherapie.de">kontakt@holm-psychotherapie.de</a></dd>
             </dl>
 
             <hr style="margin: 1.5rem 0;">
 
-            <h3 style="font-size: 1.0625rem;">Sprechzeiten</h3>
-            <dl class="data-list text-sm">
-              <dt>Mo – Do</dt>
-              <dd><span class="platzhalter">09:00 – 18:00 Uhr</span></dd>
-              <dt>Freitag</dt>
-              <dd><span class="platzhalter">09:00 – 13:00 Uhr</span></dd>
-            </dl>
+            <!-- Bewusst ohne Sprechzeitentabelle: Termine gibt es ohnehin
+                 nur nach Vereinbarung, und erfundene Öffnungszeiten führen
+                 nur dazu, dass jemand vor verschlossener Tür steht. -->
             <p class="text-sm text-muted" style="margin-top: 1rem; margin-bottom: 0;">
-              Termine ausschließlich nach Vereinbarung.
+              Termine ausschließlich nach Vereinbarung. Am verlässlichsten
+              erreichen Sie mich über das Formular – eine Telefonnummer in
+              der Anfrage genügt, dann rufe ich zurück.
             </p>
           </div>
 

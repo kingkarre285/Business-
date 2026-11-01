@@ -166,21 +166,28 @@ bitte auch dieses `span` – dann wird die Prüfliste kürzer.
 
 | Wo | Angabe | Eingesetzt |
 |---|---|---|
-| `psychotherapie.html` | Wartezeit Therapieplatz / Sprechstunde | 6 bzw. 2 Wochen |
 | `psychotherapie.html` | Erstgespräch, Einzelsitzung | je 110 € |
 | `psychotherapie.html` | Ausfallhonorar | 80 € |
+| `adhs-diagnostik.html` | Vorgespräch | 110 € |
+| `adhs-diagnostik.html` | Gesamtpaket, Umfang | 690 €, 3–4 Termine über 4 Wochen |
 | `mental-health-coaching.html` | Doppelsitzung 100 Min | 380 €, aus den 200 € abgeleitet |
 | `mental-health-coaching.html` | Ausfallhonorar | 140 €, aus den 200 € abgeleitet |
 | `mental-health-coaching.html` | Umsatzsteuerhinweis | „inklusive“ |
-| `adhs-diagnostik.html` | Vorgespräch | 110 € |
-| `adhs-diagnostik.html` | Gesamtpaket, Umfang | 690 €, 3–4 Termine über 4 Wochen |
-| `kontakt.php` | Telefonzeit | Di und Do, 12–13 Uhr |
-| `kontakt.php` | Sprechzeiten | Mo–Do 9–18, Fr 9–13 Uhr |
-| `datenschutz.html` | Logfile-Speicherdauer | 7 Tage |
-| `datenschutz.html` | Löschfrist unbeantworteter Anfragen | sechs Monate |
-| `datenschutz.html` | Serverstandort, Stand | Deutschland, September 2026 |
 | `impressum.html` | Berufshaftpflichtversicherung | noch offen |
-| `impressum.html` | Bildnachweise Porträtfoto | noch offen |
+| `impressum.html` | Bildnachweis Porträtfoto | noch offen |
+| `datenschutz.html` | Logfile-Speicherdauer | 7 Tage |
+| `datenschutz.html` | Serverstandort | Deutschland |
+
+Die letzten beiden stehen im Auftragsverarbeitungsvertrag mit IONOS, den Sie
+ohnehin abschließen müssen – sie kosten also keinen zusätzlichen Schritt.
+
+**Entfernt statt ausgefüllt:** Sprechzeiten, Telefonzeit und Wartezeiten
+standen als erfundene Werte in den Seiten. Statt sie zu ersetzen, sind sie
+herausgenommen: Termine gibt es ohnehin nur nach Vereinbarung, und
+Wartezeiten ändern sich laufend – eine veraltete Angabe auf der Website
+ärgert mehr, als eine fehlende fehlt. Der Vorteil für Privatzahler steht
+weiterhin deutlich auf der Psychotherapie-Seite, nur ohne Wochenangabe.
+Wenn Sie feste Telefonzeiten haben, baue ich sie gern wieder ein.
 
 Drei Hinweise zu den Beträgen:
 
