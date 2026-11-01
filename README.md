@@ -115,10 +115,18 @@ Alle Farben stehen gesammelt im Block `:root` ganz oben in `style.css`.
 
 ### Unbedingt erforderlich
 
+- [ ] **Berufshaftpflichtversicherung ins Impressum eintragen.** Name und
+      Anschrift des Versicherers sowie der räumliche Geltungsbereich. Diese
+      Angabe ist nach § 2 Abs. 1 Nr. 11 DL-InfoV vorgeschrieben, ein
+      unvollständiges Impressum ist abmahnfähig. Die Daten stehen im
+      Versicherungsschein; bei der Kammer versicherte Mitglieder finden sie
+      in den Unterlagen der Kammer.
+- [ ] **Umsatzsteuer beim Coaching klären.** Siehe Abschnitt „Vorläufige
+      Angaben ersetzen" weiter unten – eine Frage für die Steuerberatung.
 - [ ] **Impressum durchlesen.** Anschrift, Kammer, Aufsichtsbehörde und
-      berufsrechtliche Regelungen sind eingetragen. Offen: die
-      Berufshaftpflichtversicherung und die Bildnachweise. Ein unvollständiges
-      Impressum ist abmahnfähig.
+      berufsrechtliche Regelungen sind eingetragen. Die Aufnahmen der
+      Praxisräume sind als eigene Fotos ausgewiesen; offen ist nur noch der
+      Nachweis zum Porträtfoto.
 - [ ] **Datenschutzerklärung prüfen.** Verantwortliche Stelle und Aufsichtsbehörde
       (Hessischer Beauftragter für Datenschutz) sind eingetragen. Offen: die
       Speicherdauer der Logfiles bei IONOS und das Datum unter „Stand".
@@ -161,8 +169,8 @@ bitte auch dieses `span` – dann wird die Prüfliste kürzer.
 | `psychotherapie.html` | Wartezeit Therapieplatz / Sprechstunde | 6 bzw. 2 Wochen |
 | `psychotherapie.html` | Erstgespräch, Einzelsitzung | je 110 € |
 | `psychotherapie.html` | Ausfallhonorar | 80 € |
-| `mental-health-coaching.html` | Doppelsitzung 100 Min | 340 €, aus den 180 € abgeleitet |
-| `mental-health-coaching.html` | Ausfallhonorar | 130 €, aus den 180 € abgeleitet |
+| `mental-health-coaching.html` | Doppelsitzung 100 Min | 380 €, aus den 200 € abgeleitet |
+| `mental-health-coaching.html` | Ausfallhonorar | 140 €, aus den 200 € abgeleitet |
 | `mental-health-coaching.html` | Umsatzsteuerhinweis | „inklusive“ |
 | `adhs-diagnostik.html` | Vorgespräch | 110 € |
 | `adhs-diagnostik.html` | Gesamtpaket, Umfang | 690 €, 3–4 Termine über 4 Wochen |
@@ -172,25 +180,39 @@ bitte auch dieses `span` – dann wird die Prüfliste kürzer.
 | `datenschutz.html` | Löschfrist unbeantworteter Anfragen | sechs Monate |
 | `datenschutz.html` | Serverstandort, Stand | Deutschland, September 2026 |
 | `impressum.html` | Berufshaftpflichtversicherung | noch offen |
-| `impressum.html` | Bildnachweise | noch offen |
+| `impressum.html` | Bildnachweise Porträtfoto | noch offen |
 
 Drei Hinweise zu den Beträgen:
 
-**Das Coaching-Honorar steht fest: 180 €** für das Erstgespräch und für jede
+**Das Coaching-Honorar steht fest: 200 €** für das Erstgespräch und für jede
 Sitzung von 50 Minuten. Diese beiden Beträge sind bestätigt und daher nicht
 mehr als Beispielwert markiert. Doppelsitzung und Ausfallhonorar sind aus den
-180 € abgeleitet und noch zu bestätigen.
+200 € abgeleitet und noch zu bestätigen.
 
 **Die 110 € orientieren sich an der GOP.** Die Ziffer 870 für eine Einzelsitzung
 von 50 Minuten ergibt beim 2,3-fachen Satz rund 100 €. Für Selbstzahler sind
 Sie in der Preisgestaltung frei.
 
-**Coaching ist umsatzsteuerpflichtig**, anders als eine Heilbehandlung nach
-§ 4 Nr. 14 UStG. Unter der Honorartabelle steht derzeit „inklusive der
-gesetzlichen Umsatzsteuer“. Bitte prüfen Sie, ob das für Sie zutrifft oder ob
-die Kleinunternehmerregelung nach § 19 UStG greift – im zweiten Fall muss der
-Satz weg und stattdessen ein entsprechender Hinweis stehen. Falls Sie
-umsatzsteuerpflichtig sind, gehört zusätzlich die USt-IdNr. ins Impressum.
+**Umsatzsteuer beim Coaching – eine Frage für die Steuerberatung.** Eine
+Heilbehandlung ist nach § 4 Nr. 14 UStG steuerfrei. Coaching ohne
+Krankheitsbezug ist das gerade nicht, deshalb fällt darauf grundsätzlich
+Umsatzsteuer an. Ob sie bei Ihnen tatsächlich anfällt, hängt an der
+Kleinunternehmerregelung nach § 19 UStG: Bleiben die steuerpflichtigen
+Umsätze – also das Coaching, nicht die Therapie – unter der Grenze, wird
+keine Umsatzsteuer erhoben.
+
+Die konkrete Frage an die Steuerberatung lautet: *Falle ich mit den
+Coaching-Honoraren unter die Kleinunternehmerregelung?* Aus der Antwort
+folgt dreierlei:
+
+| Antwort | Honorartabelle | Impressum |
+|---|---|---|
+| Kleinunternehmer | Satz „inklusive der gesetzlichen Umsatzsteuer" ersetzen durch einen Hinweis nach § 19 UStG | bleibt wie es ist |
+| umsatzsteuerpflichtig | Satz kann stehen bleiben | USt-IdNr. nach § 27 a UStG ergänzen |
+
+Bis das geklärt ist, bleibt der Satz unter der Tabelle als Beispielwert
+markiert. **Nicht live gehen, bevor das entschieden ist** – ein falscher
+Preisauszeichnungshinweis ist wettbewerbsrechtlich angreifbar.
 
 Weitere offene Punkte:
 
@@ -259,7 +281,9 @@ erscheint: Es ist die Vorlage für das Bannerbild.
 **Noch offen – das Porträtfoto.** Es stammt von der alten Website und liegt
 nur in 356 × 399 px vor. Auf modernen Bildschirmen wirkt es dadurch etwas
 weich – falls die Originaldatei der Fotografin existiert, lohnt sich der
-Austausch. Außerdem gehören die Bildnachweise ins Impressum.
+Austausch. Für das Impressum fehlt außerdem noch, wer es aufgenommen hat;
+die Aufnahmen der Praxisräume sind dort bereits als eigene Fotos
+ausgewiesen.
 
 ### Die Seite vorab ansehen
 
