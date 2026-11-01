@@ -238,16 +238,20 @@ jetzigen Motive und müssen beim Austausch mitgeändert werden.
 ausgelegt, weil das Band über die ganze Bildschirmbreite läuft. Das jetzige
 Bild ist aus `praxis-licht.jpg` entstanden und hat nur 1080 × 405 px, weil
 die Vorlage nicht größer vorliegt. Auf einem breiten Monitor rechnet der
-Browser es hoch, es wirkt dort etwas weich. Die Abdunkelung kaschiert das
-weitgehend, aber mit der Originaldatei der Fotografin wird es deutlich
-besser:
+Browser es hoch und es wirkt dort weich. Da auf dem Banner keine Schrift
+liegt und es nicht abgedunkelt ist, sieht man das – es ist die
+auffälligste offene Stelle der Seite. Mit der Originaldatei der Fotografin
+ist es mit einem Aufruf behoben:
 
 ```
 python3 werkzeuge/bilder-aufbereiten.py banner ~/Bilder/original.jpg
 ```
 
-Ein Querformat mit ruhiger Fläche auf der rechten Seite eignet sich am
-besten – links liegt die Überschrift darüber.
+Geeignet ist ein ruhiges Querformat, das auch als flacher Streifen noch
+etwas zeigt. Wie hoch der Streifen ist, hängt von der Fensterbreite ab:
+etwa ein Viertel davon, höchstens 30rem. Der Ausschnitt sitzt mittig,
+etwas über der Bildmitte – zu ändern über die Lage im Skript und
+`object-position` bei `.banner img` in `style.css`.
 
 `praxis-licht.jpg` bleibt im Ordner, obwohl es gerade auf keiner Seite
 erscheint: Es ist die Vorlage für das Bannerbild.

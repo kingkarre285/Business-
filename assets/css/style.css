@@ -542,107 +542,49 @@ hr {
 
 /* --- 6. Banner ----------------------------------------------------------- */
 
-/* Vollbreites Auftaktband über die ganze Seite: das Foto läuft von Rand zu
-   Rand, die Überschrift steht darauf. */
+/* Bannerband über die ganze Seitenbreite: nur das Foto, ohne Schrift
+   darauf. Der Text steht darunter im Abschnitt .auftakt.
+
+   Die Höhe wächst mit dem Fenster und bleibt dadurch im selben
+   Seitenverhältnis – etwa 4:1 auf dem Bildschirm, ruhiger im Hochformat. */
 .banner {
-  position: relative;
-  display: grid;
-  align-items: center;
-  min-height: clamp(25rem, 40vw, 34rem);
-  padding-block: var(--sp-8);
-  color: #fff;
-  /* Rückfall, falls das Bild nicht geladen werden kann */
-  background-color: var(--c-bg-deep);
+  display: block;
+  background-color: var(--c-bg-alt);
 }
 
-.banner__bild {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
+/* picture ist standardmäßig inline; als Block sitzt das Bild bündig und
+   lässt keinen Spalt zur nächsten Fläche. */
+.banner picture { display: block; }
 
-/* picture ist standardmäßig inline und hat keine eigene Höhe – ohne diese
-   Regel liefe height: 100% am Bild ins Leere. */
-.banner__bild picture {
+.banner img {
   display: block;
   width: 100%;
-  height: 100%;
-}
-
-.banner__bild img {
-  display: block;
-  width: 100%;
-  height: 100%;
+  height: clamp(12rem, 24vw, 30rem);
   object-fit: cover;
   /* Zeigt Vorhang, Wand und die Lehne des Sofas. */
   object-position: center 52%;
 }
 
-/* Der Verlauf trägt links die Schrift und lässt das Foto nach rechts hin
-   frei. Wo Text liegt, deckt er mindestens 80 Prozent ab – damit bleibt
-   Weiß auch über den hellsten Stellen des Fotos sicher lesbar (dort rund
-   8,7:1, gefordert sind 4,5:1). */
-.banner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(100deg,
-              rgba(43, 37, 30, 0.93) 0%,
-              rgba(43, 37, 30, 0.90) 40%,
-              rgba(43, 37, 30, 0.58) 70%,
-              rgba(43, 37, 30, 0.22) 100%);
+/* Auftakt unter dem Band: links die Überschrift, rechts der Einstiegstext.
+   Eigener Umbruchpunkt bei 56rem, weil die Überschrift in einer halben
+   Spalte sonst zu eng steht. */
+.auftakt {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-7);
+  align-items: start;
 }
 
-/* Der Inhalt liegt über Bild und Verlauf */
-.banner > .container {
-  position: relative;
-  z-index: 2;
-}
-
-.banner__inhalt { max-width: 34rem; }
-
-.banner__inhalt > :last-child { margin-bottom: 0; }
-
-.banner .eyebrow { color: var(--c-akzent); }
-
-/* Akzentlinie wie bei allen übrigen Überschriften */
-.banner h1 {
-  position: relative;
-  color: #fff;
-  margin-bottom: var(--sp-5);
-  padding-bottom: var(--sp-5);
-}
-
-.banner h1::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 13.5rem;
-  max-width: 60%;
-  height: 3px;
-  background-color: var(--c-akzent);
-}
-
-.banner .lead { color: #ece3d6; }
-
-.banner :focus-visible { outline-color: var(--c-akzent); }
-
-/* Schmale Fenster: Der Text nimmt die ganze Breite ein, deshalb deckt der
-   Verlauf hier gleichmäßig ab statt von links nach rechts. */
 @media (max-width: 56rem) {
-  .banner {
-    min-height: 0;
-    padding-block: var(--sp-7);
-  }
-
-  .banner::after {
-    background: linear-gradient(180deg,
-                rgba(43, 37, 30, 0.76) 0%,
-                rgba(43, 37, 30, 0.88) 100%);
+  .auftakt {
+    grid-template-columns: 1fr;
+    gap: var(--sp-4);
   }
 }
+
+.auftakt .section__head { margin-bottom: 0; }
+
+.auftakt .lead { margin-bottom: 0; }
 
 /* Kontaktstreifen direkt unter dem Banner: eine ruhige Zeile mit den
    vier Angaben, die beim ersten Besuch zählen. */
