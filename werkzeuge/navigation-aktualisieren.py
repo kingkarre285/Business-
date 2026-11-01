@@ -29,10 +29,12 @@ import os, re, sys
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # --- Navigation: die Reihenfolge spiegelt die Gewichtung der Angebote -------
+# Im Menü steht die Kurzform "Coaching"; die Seite selbst heißt
+# "Mental Health Coaching". Der volle Name sprengt sonst die Kopfzeile.
 NAVIGATION = [
     ('index.html',           'Startseite'),
     ('psychotherapie.html',  'Psychotherapie'),
-    ('coaching.html',        'Coaching'),
+    ('mental-health-coaching.html', 'Coaching'),
     ('adhs-diagnostik.html', 'ADHS-Diagnostik'),
     ('ueber-mich.html',      'Über mich'),
     ('kontakt.php',          'Kontakt'),
@@ -181,7 +183,7 @@ def navigation_erneuern(datei: str) -> None:
 
 # ---------------------------------------------------------------------------
 
-SEITEN = ['index.html', 'psychotherapie.html', 'coaching.html',
+SEITEN = ['index.html', 'psychotherapie.html', 'mental-health-coaching.html',
           'adhs-diagnostik.html', 'ueber-mich.html', 'kontakt.php',
           'impressum.html', 'datenschutz.html', '404.html']
 

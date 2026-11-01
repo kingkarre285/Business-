@@ -34,7 +34,7 @@ os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SEITEN = [
     ('index.html',           'Startseite'),
     ('psychotherapie.html',  'Psychotherapie'),
-    ('coaching.html',        'Coaching'),
+    ('mental-health-coaching.html', 'Coaching'),
     ('adhs-diagnostik.html', 'ADHS-Diagnostik'),
     ('ueber-mich.html',      'Über mich'),
     ('kontakt.php',          'Kontakt'),

@@ -821,6 +821,15 @@ hr {
   .angebot--gross h3 { font-size: var(--fs-xl); }
 }
 
+/* Hervorgehobene Karte: hebt in einer Gegenüberstellung die eigene Option
+   heraus, ohne die anderen abzuwerten. */
+.card--hervor {
+  background: var(--c-accent-light);
+  border-color: var(--c-akzent);
+}
+
+.card--hervor h3::after { width: 6rem; }
+
 /* Aufzählung mit Häkchen */
 .checklist {
   list-style: none;

@@ -16,7 +16,7 @@ Das ist bei Gesundheitsdaten der sauberste Weg und spart Ihnen dauerhaft Ärger.
 |---|---|
 | `index.html` | Startseite: Angebotsübersicht, Arbeitsweise, Krisenhinweise |
 | `psychotherapie.html` | Hauptseite: Verfahren, Anlässe, Formen, Ablauf, Kosten, FAQ |
-| `coaching.html` | Coaching und Beratung ohne Krankheitsbezug |
+| `mental-health-coaching.html` | Mental Health Coaching, ohne Krankheitsbezug |
 | `adhs-diagnostik.html` | ADHS-Abklärung für Erwachsene |
 | `ueber-mich.html` | Person, Werdegang, Qualifikationen |
 | `kontakt.php` | Kontaktdaten, Anfahrt und Formular (verschickt die Anfrage per E-Mail) |
@@ -51,7 +51,7 @@ fertig.
 
 Für eine eigene Unterseite:
 
-1. `coaching.html` kopieren und umbenennen, dann den Inhalt zwischen
+1. `mental-health-coaching.html` kopieren und umbenennen, dann den Inhalt zwischen
    `<main id="inhalt">` und `</main>` ersetzen.
 2. In `werkzeuge/navigation-aktualisieren.py` die Liste `NAVIGATION` ergänzen
    und die Datei zu `SEITEN` hinzufügen.
@@ -161,10 +161,10 @@ bitte auch dieses `span` – dann wird die Prüfliste kürzer.
 | `psychotherapie.html` | Wartezeit Therapieplatz / Sprechstunde | 6 bzw. 2 Wochen |
 | `psychotherapie.html` | Erstgespräch, Einzelsitzung | je 110 € |
 | `psychotherapie.html` | Ausfallhonorar | 80 € |
-| `coaching.html` | Erstgespräch, Sitzung | je 150 € |
-| `coaching.html` | Doppelsitzung 100 Min | 280 € |
-| `coaching.html` | Ausfallhonorar | 110 € |
-| `coaching.html` | Umsatzsteuerhinweis | „inklusive“ |
+| `mental-health-coaching.html` | Erstgespräch, Sitzung | je 150 € |
+| `mental-health-coaching.html` | Doppelsitzung 100 Min | 280 € |
+| `mental-health-coaching.html` | Ausfallhonorar | 110 € |
+| `mental-health-coaching.html` | Umsatzsteuerhinweis | „inklusive“ |
 | `adhs-diagnostik.html` | Vorgespräch | 110 € |
 | `adhs-diagnostik.html` | Gesamtpaket, Umfang | 690 €, 3–4 Termine über 4 Wochen |
 | `kontakt.php` | Telefonzeit | Di und Do, 12–13 Uhr |

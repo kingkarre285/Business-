@@ -25,8 +25,12 @@ import sys
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# vorschau.html wird erzeugt und enthält alle Seiten doppelt
+ERZEUGT = {'vorschau.html'}
+
 DATEIEN = sorted(
-    [d for d in os.listdir('.') if d.endswith('.html') or d.endswith('.php')]
+    d for d in os.listdir('.')
+    if (d.endswith('.html') or d.endswith('.php')) and d not in ERZEUGT
 )
 
 MARKIERT = re.compile(r'<span class="platzhalter">(.*?)</span>', re.S)

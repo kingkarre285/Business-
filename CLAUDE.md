@@ -26,6 +26,10 @@ auffallen.
 Mit `werkzeuge/vorschau-bauen.py` entsteht eine einzelne `vorschau.html` zum
 Durchklicken – praktisch, um dem Nutzer den Stand zu zeigen.
 
+Das Coaching-Angebot heißt **Mental Health Coaching** (Datei
+`mental-health-coaching.html`). Im Menü steht die Kurzform „Coaching“, weil
+der volle Name die Kopfzeile sprengt.
+
 Grundregel für dieses Projekt: **keine externen Ressourcen** – keine Schriften,
 Karten, Skripte oder Trackingdienste von fremden Servern. Nur so bleibt die
 Seite ohne Cookie-Banner zulässig. Details in `README.md`.

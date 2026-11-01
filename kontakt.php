@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <ul class="nav__list">
         <li><a class="nav__link" href="index.html">Startseite</a></li>
         <li><a class="nav__link" href="psychotherapie.html">Psychotherapie</a></li>
-        <li><a class="nav__link" href="coaching.html">Coaching</a></li>
+        <li><a class="nav__link" href="mental-health-coaching.html">Coaching</a></li>
         <li><a class="nav__link" href="adhs-diagnostik.html">ADHS-Diagnostik</a></li>
         <li><a class="nav__link" href="ueber-mich.html">Über mich</a></li>
         <li><a class="nav__link" href="kontakt.php" aria-current="page">Kontakt</a></li>
@@ -472,7 +472,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="footer__title">Seiten</p>
         <ul class="footer__list">
           <li><a href="psychotherapie.html">Psychotherapie</a></li>
-          <li><a href="coaching.html">Coaching</a></li>
+          <li><a href="mental-health-coaching.html">Coaching</a></li>
           <li><a href="adhs-diagnostik.html">ADHS-Diagnostik</a></li>
           <li><a href="ueber-mich.html">Über mich</a></li>
           <li><a href="kontakt.php">Kontakt</a></li>
